@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<h1>@@@장바구니 테스트@@@@</h1>
+	
+	<div>
+		<div>임시 도서 상품 담기</div>
+		<button type="button" onclick="addCartItem1()">삼국지 담기</button>
+		<button type="button" onclick="addCartItem2()">레 미제라블 담기</button>	
+	</div>
+	<hr>
+	<a href="/cart">장바구니 이동</a>
+</body>
+<script>
+    async function addCartItem1() {
+        const params = new URLSearchParams();
+
+        params.append("bookId", "1");
+        params.append("bookTitle", "삼국지 원전 세트");
+        params.append("price", "22000");
+        params.append("stock", "50");
+        params.append("quantity", "1");
+
+        try {
+            const response = await fetch("/api/cart/items", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: params
+            });
+
+            const message = await response.text();
+
+            if (!response.ok) {
+                console.error("서버 오류:", message);
+                alert("장바구니 추가에 실패했습니다.");
+                return;
+            }
+
+            alert(message);
+
+        } catch (error) {
+            console.error(error);
+            alert("요청 중 오류가 발생했습니다.");
+        }
+    }
+    async function addCartItem2() {
+        const params = new URLSearchParams();
+
+        params.append("bookId", "2");
+        params.append("bookTitle", "레 미제라블");
+        params.append("price", "12000");
+        params.append("stock", "50");
+        params.append("quantity", "1");
+
+        try {
+            const response = await fetch("/api/cart/items", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: params
+            });
+
+            const message = await response.text();
+
+            if (!response.ok) {
+                console.error("서버 오류:", message);
+                alert("장바구니 추가에 실패했습니다.");
+                return;
+            }
+
+            alert(message);
+
+        } catch (error) {
+            console.error(error);
+            alert("요청 중 오류가 발생했습니다.");
+        }
+    }
+</script>
+</html>

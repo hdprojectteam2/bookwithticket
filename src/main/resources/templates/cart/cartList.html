@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>장바구니</title>
+</head>
+<body>
+	<h1>장바구니</h1>
+
+	<!-- 도서, 티켓 장바구니 탭 -->	
+	<div>
+		<div>장바구니 카테고리 변경 버튼</div>
+	    <button type="button" onclick="cartTab('bookCart')">
+	     	도서
+	    </button>
+	
+	    <button type="button" onclick="cartTab('ticketCart')">
+	        티켓
+	    </button>
+	</div>
+	<hr>
+	<!-- 도서 장바구니 -->
+	<div id="bookCart">
+	<!-- 장바구니가 비어있음 -->
+	<div th:if="${#lists.isEmpty(cartItems)}">
+		<p>장바구니가 비어있습니다</p>
+	</div>
+		<!-- 장바구니에 도서가 있음 -->
+		<div th:unless="${#lists.isEmpty(cartItems)}">
+			<div th:each="item : ${cartItems}">
+				<!-- 임시 이미지 -->
+				<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvxq2V8QO4kB5KeiVR0p-LW7hBNCzAs5dUPvtGap4mxg&s=10" width="120" height="160">
+				
+				<p>
+					도서명: <span th:text="${item.bookTitle}"/>
+				</p>
+				<p>
+					저자: <span>@@임시 데이터@@</span>
+				</p>
+				<p>
+					출판사: <span>@@임시 데이터@@</span>
+				</p>
+				<p>
+					가격: <span th:text="${item.totalPrice}"/>
+				</p>
+				<p class="quantity-box">
+					수량: 
+					<span><button>-</button></span>
+					<input type="number" min="1"
+			   		th:value="${item.quantity}">
+					<span><button>+</button></span>
+				</p>
+				<button>도서 삭제</button>
+			</div>
+			<hr>
+			<div>
+				<p>
+					총 상품 수량: <span th:text="${totalQuantity}"></span>
+				</p>
+				<p>
+					총 결제 금액: <span th:text="${totalPrice}"/>
+				</p>
+				<button onclick="location.href='/order/addressform'">주문하기</button>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 공연 티켓 -->
+	<div id="ticketCart" hidden>
+		<p>현재 공연 장바구니가 비어 있습니다.</p>
+	</div>
+</body>
+<script>
+	// 도서, 티켓 탭 관리
+	function cartTab(tabId) {
+		const bookCart = document.getElementById("bookCart");
+		const ticketCart = document.getElementById("ticketCart");
+
+		bookCart.hidden = true;
+		ticketCart.hidden = true;
+
+		document.getElementById(tabId).hidden = false;
+	}
+
+
+</script>
+</html>
