@@ -92,7 +92,8 @@ public class CartItemEntity {
         this.quantity += quantity;
     }
 
-    public void changeQuantity(int quantity) {
+    public void updateQuantity(int quantity) {
         this.quantity = quantity;
     }
+
 }
