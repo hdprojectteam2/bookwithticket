@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.example.bookwithticket.member.exception.LoginFailedException;
 import com.example.bookwithticket.member.jwt.JwtUtil;
+import com.example.bookwithticket.member.dto.MemberUpdateRequestDto;
 
 @Service
 public class MemberService {
@@ -82,6 +83,9 @@ public class MemberService {
                 .orElseThrow(() ->
                         new LoginFailedException("이메일 또는 비밀번호가 틀렸습니다.")
                 );
+        if (!member.isActive()) {
+            throw new LoginFailedException("탈퇴한 회원입니다.");
+        }
 
         // 암호화된 비밀번호 비교
         if (!passwordEncoder.matches(
@@ -101,5 +105,46 @@ public class MemberService {
                 .orElseThrow(() ->
                         new LoginFailedException("회원을 찾을 수 없습니다.")
                 );
+    }
+
+    // 회원 정보 수정
+    public Member update(
+            String email,
+            MemberUpdateRequestDto requestDto
+    ) {
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new LoginFailedException("회원을 찾을 수 없습니다.")
+                );
+
+
+        // 이름 변경
+        if (requestDto.getName() != null) {
+            member.setName(requestDto.getName());
+        }
+
+
+        // 비밀번호 변경
+        if (requestDto.getPassword() != null) {
+            member.setPassword(
+                    passwordEncoder.encode(requestDto.getPassword())
+            );
+        }
+
+
+        return memberRepository.save(member);
+    }
+    public Member delete(String email) {
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new LoginFailedException("회원을 찾을 수 없습니다.")
+                );
+
+
+        member.setActive(false);
+
+        return memberRepository.save(member);
     }
 }

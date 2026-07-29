@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import com.example.bookwithticket.member.dto.LoginRequestDto;
 import com.example.bookwithticket.member.dto.LoginResponseDto;
 import org.springframework.security.core.Authentication;
+import com.example.bookwithticket.member.dto.MemberUpdateRequestDto;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 @RestController
 public class MemberController {
@@ -54,4 +57,29 @@ public class MemberController {
         return new LoginResponseDto(token);
     }
 
+    @PutMapping("/members/me")
+    public MemberResponseDto update(
+            @RequestBody MemberUpdateRequestDto requestDto,
+            Authentication authentication
+    ) {
+
+        String email = authentication.getName();
+
+        Member member = memberService.update(
+                email,
+                requestDto
+        );
+
+        return new MemberResponseDto(member);
+    }
+
+    @DeleteMapping("/members/me")
+    public String delete(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        memberService.delete(email);
+
+        return "회원 탈퇴 완료";
+    }
 }

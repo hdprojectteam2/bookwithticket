@@ -21,4 +21,15 @@ public class GlobalExceptionHandler {
                         "message", e.getMessage()
                 ));
     }
+
+    @ExceptionHandler(LoginFailedException.class)
+    public ResponseEntity<?> loginFailed(
+            LoginFailedException e) {
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of(
+                        "message", e.getMessage()
+                ));
+    }
 }
