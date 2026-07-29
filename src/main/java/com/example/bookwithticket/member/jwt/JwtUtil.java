@@ -29,4 +29,14 @@ public class JwtUtil {
                 .signWith(key)
                 .compact();
     }
+
+    public String getEmail(String token) {
+
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
 }
