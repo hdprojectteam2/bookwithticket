@@ -22,7 +22,14 @@ public class MemberService {
         member.setPassword(requestDto.getPassword());
         member.setName(requestDto.getName());
 
+        member.setRole("USER");
+        member.setActive(true);
+
         return memberRepository.save(member);
     }
 
+    public Member findById(Long id) {
+        return memberRepository.findById(id)
+                .orElseThrow(()->new RuntimeException("회원을 찾을 수 없습니다."));
+    }
 }

@@ -1,11 +1,10 @@
 package com.example.bookwithticket.member.controller;
 
 import com.example.bookwithticket.member.dto.MemberRequestDto;
+import com.example.bookwithticket.member.dto.MemberResponseDto;
 import com.example.bookwithticket.member.entity.Member;
 import com.example.bookwithticket.member.service.MemberService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class MemberController {
@@ -16,8 +15,22 @@ public class MemberController {
         this.memberService = memberService;
     }
 
+
     @PostMapping("/members/signup")
-    public Member signup(@RequestBody MemberRequestDto requestDto) {
-        return memberService.save(requestDto);
+    public MemberResponseDto signup(@RequestBody MemberRequestDto requestDto) {
+
+        Member member = memberService.save(requestDto);
+
+        return new MemberResponseDto(member);
     }
+
+
+    @GetMapping("/members/{id}")
+    public MemberResponseDto findMember(@PathVariable Long id) {
+
+        Member member = memberService.findById(id);
+
+        return new MemberResponseDto(member);
+    }
+
 }
