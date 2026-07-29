@@ -12,8 +12,7 @@ public interface CartItemRepository
 
     List<CartItemEntity> findByCartId(Long cartId);
 
-    Optional<CartItemEntity> findByCartIdAndBookId(
-            Long cartId,
-            Long bookId
-    );
+    Optional<CartItemEntity> findByCartIdAndBookId(Long cartId, Long bookId);
+
+    void deleteByCartId(Long cartId);
 }
