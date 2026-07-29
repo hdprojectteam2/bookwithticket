@@ -1,10 +1,12 @@
 package com.example.bookwithticket.cart.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.bookwithticket.cart.dto.CartItemDto;
 import com.example.bookwithticket.cart.entity.CartEntity;
 import com.example.bookwithticket.cart.entity.CartItemEntity;
 import com.example.bookwithticket.cart.repository.CartItemRepository;
@@ -13,8 +15,6 @@ import com.example.bookwithticket.cart.repository.CartRepository;
 @Service
 @Transactional
 public class CartServiceImpl implements CartService {
-
-    private static final int MAX_QUANTITY = 99;
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
@@ -26,6 +26,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public void addCartItem(Long memberId, Long bookId, String bookTitle, int price, int stock, int quantity) {
+
 
         if (stock <= 0) {
             throw new IllegalArgumentException(
@@ -77,16 +78,64 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CartItemEntity> findCartItems(
-            Long memberId
-    ) {
+    public List<CartItemDto> findCartItems(Long memberId) {
+
         return cartRepository.findByMemberId(memberId)
                 .map(cart ->
-                        cartItemRepository.findByCartId(
-                                cart.getId()
-                        )
+                        cartItemRepository.findByCartId(cart.getId())
+                                .stream()
+                                .map(cartItem -> new CartItemDto(
+                                        cartItem.getId(),
+                                        cartItem.getBookId(),
+                                        cartItem.getBookTitle(),
+                                        cartItem.getPrice(),
+                                        cartItem.getQuantity()
+                                ))
+                                .toList()
                 )
                 .orElse(List.of());
     }
+
+	@Override
+	public void deleteCartItem(Long memberId, Long cartItemId) {
+		CartItemEntity cartItem = findMyCartItem(memberId, cartItemId);
+		cartItemRepository.delete(cartItem);
+		cartItem.getCart().updateModifiedTime();
+	}
+	
+	@Override
+	public void updateQuantity(Long memberId, Long cartItemId, int quantity) {
+		CartItemEntity cartItem = findMyCartItem(memberId, cartItemId);
+		cartItem.updateQuantity(quantity);
+		cartItem.getCart().updateModifiedTime();
+	}
+	
+	private CartItemEntity findMyCartItem(Long memberId, Long cartItemId) {
+		CartItemEntity cartItem = cartItemRepository.findById(cartItemId)
+				.orElseThrow(() ->
+						new IllegalArgumentException("장바구니에서 상품을 찾을 수 없습니다"));
+		if(!cartItem.getCart()
+				.getMemberId()
+				.equals(memberId)) {
+			throw new IllegalArgumentException("본인 장바구니만 수정 가능합니다.");
+		}
+		return cartItem;
+	}
+
+	@Override
+	public void deleteExpiredCarts() {
+		LocalDateTime expireDate = LocalDateTime.now().minusDays(30);
+		
+		List<CartEntity> expiredCarts = cartRepository.findByUpdatedAtBefore(expireDate);
+		
+		for(CartEntity cart : expiredCarts) {
+			cartItemRepository.deleteByCartId(cart.getId());
+			cartRepository.delete(cart);
+		}
+		
+	}
+
+	
+
 
 }
