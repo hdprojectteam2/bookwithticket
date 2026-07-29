@@ -94,4 +94,12 @@ public class MemberService {
 
         return jwtUtil.createToken(member.getEmail());
     }
+
+    public Member findMyInfo(String email) {
+
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new LoginFailedException("회원을 찾을 수 없습니다.")
+                );
+    }
 }

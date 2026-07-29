@@ -7,6 +7,7 @@ import com.example.bookwithticket.member.service.MemberService;
 import org.springframework.web.bind.annotation.*;
 import com.example.bookwithticket.member.dto.LoginRequestDto;
 import com.example.bookwithticket.member.dto.LoginResponseDto;
+import org.springframework.security.core.Authentication;
 
 @RestController
 public class MemberController {
@@ -26,6 +27,15 @@ public class MemberController {
         return new MemberResponseDto(member);
     }
 
+    @GetMapping("/members/me")
+    public MemberResponseDto myInfo(Authentication authentication) {
+
+        String email = authentication.getName();
+
+        Member member = memberService.findMyInfo(email);
+
+        return new MemberResponseDto(member);
+    }
 
     @GetMapping("/members/{id}")
     public MemberResponseDto findMember(@PathVariable Long id) {
