@@ -5,6 +5,8 @@ import com.example.bookwithticket.member.dto.MemberResponseDto;
 import com.example.bookwithticket.member.entity.Member;
 import com.example.bookwithticket.member.service.MemberService;
 import org.springframework.web.bind.annotation.*;
+import com.example.bookwithticket.member.dto.LoginRequestDto;
+import com.example.bookwithticket.member.dto.LoginResponseDto;
 
 @RestController
 public class MemberController {
@@ -31,6 +33,15 @@ public class MemberController {
         Member member = memberService.findById(id);
 
         return new MemberResponseDto(member);
+    }
+
+
+    @PostMapping("/members/login")
+    public LoginResponseDto login(@RequestBody LoginRequestDto requestDto) {
+
+        String token = memberService.login(requestDto);
+
+        return new LoginResponseDto(token);
     }
 
 }

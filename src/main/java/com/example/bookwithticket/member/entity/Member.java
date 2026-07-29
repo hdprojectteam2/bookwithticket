@@ -1,11 +1,7 @@
 package com.example.bookwithticket.member.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import jakarta.persistence.*;
+import jakarta.persistence.Column;
 
 import java.time.LocalDateTime;
 
@@ -16,6 +12,7 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
     private String email;
     private String password;
     private String name;
