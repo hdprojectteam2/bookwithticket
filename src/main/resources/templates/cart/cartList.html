@@ -43,14 +43,16 @@
 				<p>
 					가격: <span th:text="${item.totalPrice}"/>
 				</p>
-				<p class="quantity-box">
+				<p id="quantityBox">
 					수량: 
-					<span><button>-</button></span>
+					<span><button onclick="changeQuantity(this, -1)">-</button></span>
 					<input type="number" min="1"
-			   		th:value="${item.quantity}">
-					<span><button>+</button></span>
+			   		th:value="${item.quantity}"
+			   		th:data-cart-item-id="${item.cartItemId}"
+			   		onchange="updateQuantity(this)">
+					<span><button onclick="changeQuantity(this, 1)">+</button></span>
 				</p>
-				<button>도서 삭제</button>
+				<button th:onclick="|deleteCartItem(${item.cartItemId})|" >도서 삭제</button>
 			</div>
 			<hr>
 			<div>
@@ -60,7 +62,7 @@
 				<p>
 					총 결제 금액: <span th:text="${totalPrice}"/>
 				</p>
-				<button onclick="location.href='/order/addressform'">주문하기</button>
+				<button onclick="location.href='/order'">주문하기</button>
 			</div>
 		</div>
 	</div>
@@ -82,6 +84,80 @@
 		document.getElementById(tabId).hidden = false;
 	}
 
+	// 도서 수량 버튼
+	function changeQuantity(button, amount) {
+		const quantityBox = document.getElementById("quantityBox");
+		const input = quantityBox.querySelector("input");
 
+		const currentQuantity = Number(input.value);
+		const newQuantity = currentQuantity + amount;
+
+		if (newQuantity < 1) {
+			alert("수량은 1개 이상이어야 합니다.");
+			return;
+		}
+		
+		if (newQuantity > 99) {
+			alert("수량은 최대 99개까지 구매 가능합니다.");
+			return;
+		}
+
+		input.value = newQuantity;
+		updateQuantity(input);
+	}
+
+	// 도서 수량 변경
+	function updateQuantity(input) {
+		const cartItemId = input.dataset.cartItemId;
+		const quantity = Number(input.value);
+
+		if (!Number.isInteger(quantity) || quantity < 1) {
+			alert("수량은 1 이상의 정수만 입력할 수 있습니다.");
+			location.reload();
+			return;
+		}else if (quantity > 99) {
+			alert("수량은 99개까지 입력할 수 있습니다.");
+			location.reload();
+			return;
+		}
+
+		const params = new URLSearchParams();
+		params.append("quantity", quantity);
+
+		fetch("/api/cart/items/" + cartItemId, {
+			method: "PATCH",
+			headers: {
+				"Content-Type": "application/x-www-form-urlencoded"
+			},
+			body: params
+		})
+		.then(response => {
+			if (!response.ok) {
+				throw new Error("수량 변경에 실패했습니다.");
+			}
+
+			location.reload();
+		})
+		.catch(error => {
+			alert(error.message);
+			location.reload();
+		});
+	}
+	
+	// 도서 삭제 버튼
+	function deleteCartItem(itemId){
+		fetch("/api/cart/items/" + itemId, {
+			method: "DELETE"
+		})
+		.then(response => {
+			if(!response.ok){
+				throw new Error("삭제에 실패했습니다.");				
+			}
+			location.reload();
+		})
+		.catch(error =>{
+			alert(error.message);
+		});
+	}
 </script>
 </html>

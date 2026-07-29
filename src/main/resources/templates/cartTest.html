@@ -8,9 +8,19 @@
 	<h1>@@@장바구니 테스트@@@@</h1>
 	
 	<div>
+		<div>memberId 입력(장바구니 담기 전용 / DB 확인용)</div>
+		<input type="number" id="memberId" value="1">
+		<button onclick="changeMemberId()">변경</button>
+		<p>
+            현재 memberId:
+            <span id="currentMemberId">1</span>
+        </p>
+	</div>
+	
+	<div>
 		<div>임시 도서 상품 담기</div>
-		<button type="button" onclick="addCartItem1()">삼국지 담기</button>
-		<button type="button" onclick="addCartItem2()">레 미제라블 담기</button>	
+		<button onclick="addCartItem1()">삼국지 담기</button>
+		<button onclick="addCartItem2()">레 미제라블 담기</button>	
 	</div>
 	<hr>
 	<a href="/cart">장바구니 이동</a>
@@ -19,6 +29,7 @@
     async function addCartItem1() {
         const params = new URLSearchParams();
 
+        params.append("memberId", getTestMemberId());
         params.append("bookId", "1");
         params.append("bookTitle", "삼국지 원전 세트");
         params.append("price", "22000");
@@ -52,6 +63,7 @@
     async function addCartItem2() {
         const params = new URLSearchParams();
 
+		params.append("memberId", getTestMemberId());
         params.append("bookId", "2");
         params.append("bookTitle", "레 미제라블");
         params.append("price", "12000");
@@ -81,6 +93,28 @@
             console.error(error);
             alert("요청 중 오류가 발생했습니다.");
         }
+    }
+    
+ 	/*테스트 회원 변경 */
+    function changeMemberId() {
+        const memberIdInput = document.getElementById("memberId");
+
+        const memberId = Number(memberIdInput.value);
+
+        if (!Number.isInteger(memberId) || memberId < 1) {
+            alert("회원 ID는 1 이상의 정수로 입력해주세요.");
+            return;
+        }
+
+        localStorage.setItem("testMemberId", String(memberId));
+
+        document.getElementById("currentMemberId").textContent = memberId;
+
+    }
+ 	
+ 	/*현재 테스트 회원 ID 가져오기 */
+    function getTestMemberId() {
+        return localStorage.getItem("testMemberId") || "1";
     }
 </script>
 </html>
