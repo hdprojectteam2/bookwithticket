@@ -116,5 +116,17 @@ public class CartController {
     	return ResponseEntity.ok("장바구니 상품 수량 변경 완료");
     }
 
+    /* 장바구니 전체 삭제 */
+    @ResponseBody
+    @DeleteMapping("/api/cart/items")
+    public ResponseEntity<String> deleteAllCartItems() {
+        Long memberId = getCurrentMemberId();
+
+        cartService.deleteAllItems(memberId);
+
+        return ResponseEntity.ok(
+                "장바구니 상품을 모두 삭제했습니다."
+        );
+    }
    
 }

@@ -15,4 +15,6 @@ public interface CartService {
     void updateQuantity(Long memberId, Long cartItemId, int quantity);
 
     void deleteExpiredCarts();
+    
+    void deleteAllItems(Long memberId);
 }

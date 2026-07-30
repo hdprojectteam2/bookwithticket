@@ -215,6 +215,20 @@ public class CartServiceImpl implements CartService {
 		
 	}
 
+	@Override
+	public void deleteAllItems(Long memberId) {
+		 CartEntity cart = cartRepository.findByMemberId(memberId)
+		                    .orElseThrow(() ->
+		                            new IllegalArgumentException(
+		                                    "장바구니를 찾을 수 없습니다."
+		                            )
+		                    );
+
+		    cartItemRepository.deleteByCartId(
+		            cart.getId()
+		    );
+	}
+
 
 
 	
