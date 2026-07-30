@@ -69,20 +69,19 @@ public class CartController {
     @ResponseBody
     @PostMapping("/api/cart/items")
     public ResponseEntity<String> addCartItem(
-    		@RequestParam(name = "memberId", defaultValue = "1") Long memberId,
-    		@RequestParam(name = "bookId") Long bookId,
-            @RequestParam(name = "bookTitle") String bookTitle,
-            @RequestParam(name = "price") int price,
-            @RequestParam(name = "stock") int stock,
-            @RequestParam(name = "quantity", defaultValue = "1") int quantity
-    		) {
-
+            @RequestParam(
+                    name = "memberId",
+                    defaultValue = "1"
+            ) Long memberId,
+            @RequestParam(name = "bookId") Long bookId,
+            @RequestParam(
+                    name = "quantity",
+                    defaultValue = "1"
+            ) int quantity
+    ) {
         cartService.addCartItem(
                 memberId,
                 bookId,
-                bookTitle,
-                price,
-                stock,
                 quantity
         );
 
