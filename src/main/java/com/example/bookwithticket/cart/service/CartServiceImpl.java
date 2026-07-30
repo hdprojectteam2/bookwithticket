@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.bookwithticket.book.entity.BookEntity;
+import com.example.bookwithticket.book.repository.BookRepository;
 import com.example.bookwithticket.cart.dto.CartItemDto;
 import com.example.bookwithticket.cart.entity.CartEntity;
 import com.example.bookwithticket.cart.entity.CartItemEntity;
@@ -18,25 +20,63 @@ public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
+    private final BookRepository bookRepository;
 
-    public CartServiceImpl(CartRepository cartRepository, CartItemRepository cartItemRepository) {
+    public CartServiceImpl(CartRepository cartRepository, CartItemRepository cartItemRepository, BookRepository bookRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
+        this.bookRepository = bookRepository;
     }
 
     @Override
-    public void addCartItem(Long memberId, Long bookId, String bookTitle, int price, int stock, int quantity) {
+    public void addCartItem(
+            Long memberId,
+            Long bookId,
+            int quantity
+    ) {
+        if (quantity < 1) {
+            throw new IllegalArgumentException(
+                    "수량은 1개 이상이어야 합니다."
+            );
+        }
 
+        BookEntity book = bookRepository.findById(bookId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "도서를 찾을 수 없습니다."
+                        )
+                );
 
-        if (stock <= 0) {
+	     // 비활성화 도서 검사
+	     if (!book.isActive()) {
+	         throw new IllegalArgumentException(
+	                 "현재 판매하지 않는 도서입니다."
+	         );
+	     }
+	
+	     // 삭제된 도서 검사
+	     if (book.isDeleted()) {
+	         throw new IllegalArgumentException(
+	                 "삭제된 도서입니다."
+	         );
+	     }
+	     
+	    //품절 도서 검사
+        if (book.getStock() <= 0) {
             throw new IllegalArgumentException(
                     "품절된 도서입니다."
             );
         }
 
-        if (quantity > stock) {
+        if (quantity > book.getStock()) {
             throw new IllegalArgumentException(
                     "도서 재고가 부족합니다."
+            );
+        }
+
+        if (quantity > book.getMaxPurchaseQty()) {
+            throw new IllegalArgumentException(
+                    "최대 구매 수량을 초과했습니다."
             );
         }
 
@@ -59,21 +99,30 @@ public class CartServiceImpl implements CartService {
             int newQuantity =
                     cartItem.getQuantity() + quantity;
 
-
-            if (newQuantity > stock) {
+            if (newQuantity > book.getStock()) {
                 throw new IllegalArgumentException(
                         "재고보다 많이 담을 수 없습니다."
+                );
+            }
+
+            if (newQuantity > book.getMaxPurchaseQty()) {
+                throw new IllegalArgumentException(
+                        "최대 구매 수량을 초과했습니다."
                 );
             }
 
             cartItem.increaseQuantity(quantity);
 
         } else {
-            cartItem = new CartItemEntity(cart, bookId, bookTitle, price, quantity);
+            cartItem = new CartItemEntity(
+                    cart,
+                    book,
+                    quantity
+            );
         }
 
         cartItemRepository.save(cartItem);
-        cartItem.getCart().updateModifiedTime();
+        cart.updateModifiedTime();
     }
 
     @Override
@@ -82,15 +131,10 @@ public class CartServiceImpl implements CartService {
 
         return cartRepository.findByMemberId(memberId)
                 .map(cart ->
-                        cartItemRepository.findByCartId(cart.getId())
+                        cartItemRepository
+                                .findByCartId(cart.getId())
                                 .stream()
-                                .map(cartItem -> new CartItemDto(
-                                        cartItem.getId(),
-                                        cartItem.getBookId(),
-                                        cartItem.getBookTitle(),
-                                        cartItem.getPrice(),
-                                        cartItem.getQuantity()
-                                ))
+                                .map(CartItemDto::new)
                                 .toList()
                 )
                 .orElse(List.of());
@@ -104,10 +148,46 @@ public class CartServiceImpl implements CartService {
 	}
 	
 	@Override
-	public void updateQuantity(Long memberId, Long cartItemId, int quantity) {
-		CartItemEntity cartItem = findMyCartItem(memberId, cartItemId);
-		cartItem.updateQuantity(quantity);
-		cartItem.getCart().updateModifiedTime();
+	public void updateQuantity(
+	        Long memberId,
+	        Long cartItemId,
+	        int quantity
+	) {
+	    CartItemEntity cartItem =
+	            findMyCartItem(memberId, cartItemId);
+
+	    BookEntity book = cartItem.getBook();
+
+	    if (book.isDeleted()) {
+	        throw new IllegalArgumentException("삭제된 도서입니다.");
+	    }
+
+	    if (!book.isActive()) {
+	        throw new IllegalArgumentException("판매가 중지된 도서입니다.");
+	    }
+
+	    if (!"ON_SALE".equals(book.getSaleStatus())) {
+	        throw new IllegalArgumentException("품절된 도서입니다.");
+	    }
+
+	    if (book.getStock() <= 0) {
+	        throw new IllegalArgumentException("품절된 도서입니다.");
+	    }
+
+	    if (quantity < 1) {
+	        throw new IllegalArgumentException("수량은 1개 이상이어야 합니다.");
+	    }
+
+	    if (quantity > book.getStock()) {
+	        throw new IllegalArgumentException("현재 재고는 " + book.getStock() + "개입니다.");
+	    }
+
+	    if (quantity > book.getMaxPurchaseQty()) {
+	        throw new IllegalArgumentException("최대 " + book.getMaxPurchaseQty() + "개까지 구매할 수 있습니다.");
+	    }
+
+	    cartItem.updateQuantity(quantity);
+	    cartItem.getCart().updateModifiedTime();
 	}
 	
 	private CartItemEntity findMyCartItem(Long memberId, Long cartItemId) {
@@ -134,6 +214,8 @@ public class CartServiceImpl implements CartService {
 		}
 		
 	}
+
+
 
 	
 
