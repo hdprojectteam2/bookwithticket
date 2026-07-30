@@ -1,7 +1,10 @@
 package com.example.bookwithticket.book.dto;
 
+
 public class BookRequestDto {
 
+
+    private String isbn;
 
     private String title;
 
@@ -11,10 +14,17 @@ public class BookRequestDto {
 
     private int price;
 
-    private int stock;
+    private String thumbnail;
 
     private String description;
 
+    private int stock;
+
+
+
+    public String getIsbn() {
+        return isbn;
+    }
 
 
     public String getTitle() {
@@ -37,12 +47,58 @@ public class BookRequestDto {
     }
 
 
-    public int getStock() {
-        return stock;
+    public String getThumbnail() {
+        return thumbnail;
     }
 
 
     public String getDescription() {
         return description;
+    }
+
+
+    public int getStock() {
+        return stock;
+    }
+
+
+
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
+    }
+
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+
+    public void setPublisher(String publisher) {
+        this.publisher = publisher;
+    }
+
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+
+    public void setStock(int stock) {
+        this.stock = stock;
     }
 }

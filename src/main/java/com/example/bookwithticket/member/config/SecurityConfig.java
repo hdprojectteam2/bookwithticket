@@ -1,46 +1,28 @@
 package com.example.bookwithticket.member.config;
 
-import com.example.bookwithticket.member.jwt.JwtAuthenticationFilter;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
 @Configuration
 public class SecurityConfig {
 
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
-
-
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+            HttpSecurity http
+    ) throws Exception {
 
 
         http
                 .csrf(csrf -> csrf.disable())
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                )
-
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/members/signup",
-                                "/members/login",
-                                "/error"
-                        ).permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/books/**").permitAll()
+                        .anyRequest().permitAll()
                 );
 
 
