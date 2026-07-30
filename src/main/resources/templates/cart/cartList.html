@@ -27,42 +27,72 @@
 	</div>
 		<!-- 장바구니에 도서가 있음 -->
 		<div th:unless="${#lists.isEmpty(cartItems)}">
-			<div th:each="item : ${cartItems}">
-				<!-- 임시 이미지 -->
-				<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvxq2V8QO4kB5KeiVR0p-LW7hBNCzAs5dUPvtGap4mxg&s=10" width="120" height="160">
-				
-				<p>
-					도서명: <span th:text="${item.bookTitle}"/>
-				</p>
-				<p>
-					저자: <span>@@임시 데이터@@</span>
-				</p>
-				<p>
-					출판사: <span>@@임시 데이터@@</span>
-				</p>
-				<p>
-					가격: <span th:text="${item.totalPrice}"/>
-				</p>
-				<p id="quantityBox">
-					수량: 
-					<span><button onclick="changeQuantity(this, -1)">-</button></span>
-					<input type="number" min="1"
-			   		th:value="${item.quantity}"
-			   		th:data-cart-item-id="${item.cartItemId}"
-			   		onchange="updateQuantity(this)">
-					<span><button onclick="changeQuantity(this, 1)">+</button></span>
-				</p>
-				<button th:onclick="|deleteCartItem(${item.cartItemId})|" >도서 삭제</button>
-			</div>
+			<div th:each="item : ${cartItems}" class="cart-item" th:data-price="${item.price}">
+		    <input type="checkbox"
+		           class="item-checkbox"
+		           th:value="${item.cartItemId}"
+		           th:checked="${item.purchasable}"
+		           th:disabled="${!item.purchasable}"
+		           onchange="updateSelectedSummary()">		
+		    <img th:src="${item.thumbnailUrl}" width="120" height="160">
+		    <p>
+		        도서명:
+		        <span th:text="${item.bookTitle}"></span>
+		    </p>
+		    <p>
+		        저자:
+		        <span th:text="${item.author}"></span>
+		    </p>
+		    <p>
+		        출판사:
+		        <span th:text="${item.publisher}"></span>
+		    </p>
+		    <p>
+		        가격:
+		        <span th:text="${item.price}"></span>
+		    </p>
+		    <!-- 구매 불가능한 상품 상태 표시 -->
+		    <p th:if="${!item.purchasable}">
+		        상태:
+		        <strong th:text="${item.unavailableReason}"></strong>
+		    </p>
+		    <p class="quantityBox">
+		        수량:
+		        <span>
+		            <button type="button" th:disabled="${!item.purchasable}" onclick="changeQuantity(this, -1)">
+		                -
+		            </button>
+		        </span>
+		        <input type="number"
+		               min="1"
+		               th:max="${item.stock < item.maxPurchaseQty
+		                        ? item.stock
+		                        : item.maxPurchaseQty}"
+		               th:value="${item.quantity}"
+		               th:data-cart-item-id="${item.cartItemId}"
+		               th:disabled="${!item.purchasable}"
+		               onchange="updateQuantity(this)">
+		        <span>
+		            <button type="button" th:disabled="${!item.purchasable}" onclick="changeQuantity(this, 1)">
+		                +
+		            </button>
+		        </span>
+		    </p>
+		
+		    <button type="button"
+		            th:onclick="|deleteCartItem(${item.cartItemId})|">
+		        도서 삭제
+		    </button>
+		</div>
 			<hr>
 			<div>
 				<p>
-					총 상품 수량: <span th:text="${totalQuantity}"></span>
+					총 상품 수량: <span id="selectTotalQuantity"></span>
 				</p>
 				<p>
-					총 결제 금액: <span th:text="${totalPrice}"/>
+					총 결제 금액: <span id="selectTotalPrice"></span>
 				</p>
-				<button onclick="location.href='/order'">주문하기</button>
+				<button onclick="orderDelivery()">주문하기</button>
 			</div>
 		</div>
 	</div>
@@ -86,62 +116,68 @@
 
 	// 도서 수량 버튼
 	function changeQuantity(button, amount) {
-		const quantityBox = document.getElementById("quantityBox");
-		const input = quantityBox.querySelector("input");
-
-		const currentQuantity = Number(input.value);
-		const newQuantity = currentQuantity + amount;
-
-		if (newQuantity < 1) {
-			alert("수량은 1개 이상이어야 합니다.");
-			return;
-		}
-		
-		if (newQuantity > 99) {
-			alert("수량은 최대 99개까지 구매 가능합니다.");
-			return;
-		}
-
-		input.value = newQuantity;
-		updateQuantity(input);
+	    const quantityBox = button.closest(".quantityBox");
+	    const input = quantityBox.querySelector("input");
+	
+	    const currentQuantity = Number(input.value);
+	    const maxQuantity = Number(input.max);
+	    const newQuantity = currentQuantity + amount;
+	
+	    if (newQuantity < 1) {
+	        alert("수량은 1개 이상이어야 합니다.");
+	        return;
+	    }
+	
+	    if (newQuantity > maxQuantity) {
+	        alert("최대 " + maxQuantity + "개까지 구매할 수 있습니다.");
+	        return;
+	    }
+	
+	    input.value = newQuantity;
+	    updateQuantity(input);
 	}
 
 	// 도서 수량 변경
 	function updateQuantity(input) {
-		const cartItemId = input.dataset.cartItemId;
-		const quantity = Number(input.value);
-
-		if (!Number.isInteger(quantity) || quantity < 1) {
-			alert("수량은 1 이상의 정수만 입력할 수 있습니다.");
-			location.reload();
-			return;
-		}else if (quantity > 99) {
-			alert("수량은 99개까지 입력할 수 있습니다.");
-			location.reload();
-			return;
-		}
-
-		const params = new URLSearchParams();
-		params.append("quantity", quantity);
-
-		fetch("/api/cart/items/" + cartItemId, {
-			method: "PATCH",
-			headers: {
-				"Content-Type": "application/x-www-form-urlencoded"
-			},
-			body: params
-		})
-		.then(response => {
-			if (!response.ok) {
-				throw new Error("수량 변경에 실패했습니다.");
-			}
-
-			location.reload();
-		})
-		.catch(error => {
-			alert(error.message);
-			location.reload();
-		});
+	    const cartItemId = input.dataset.cartItemId;
+	    const quantity = Number(input.value);
+	    const maxQuantity = Number(input.max);
+	
+	    if (!Number.isInteger(quantity) || quantity < 1) {
+	        alert("수량은 1 이상의 정수만 입력할 수 있습니다.");
+	        location.reload();
+	        return;
+	    }
+	
+	    if (quantity > maxQuantity) {
+	        alert("최대 " + maxQuantity + "개까지 구매할 수 있습니다.");
+	        location.reload();
+	        return;
+	    }
+	
+	    const params = new URLSearchParams();
+	    params.append("quantity", quantity);
+	
+	    fetch("/api/cart/items/" + cartItemId, {
+	        method: "PATCH",
+	        headers: {
+	            "Content-Type": "application/x-www-form-urlencoded"
+	        },
+	        body: params
+	    })
+	    .then(async response => {
+	        const message = await response.text();
+	
+	        if (!response.ok) {
+	            throw new Error(message || "수량 변경에 실패했습니다.");
+	        }
+	
+	        location.reload();
+	    })
+	    .catch(error => {
+	        alert(error.message);
+	        location.reload();
+	    });
 	}
 	
 	// 도서 삭제 버튼
@@ -158,6 +194,93 @@
 		.catch(error =>{
 			alert(error.message);
 		});
+	}
+	
+	document.addEventListener("DOMContentLoaded", updateSelectedSummary);
+	
+	// 선택 상품 확인
+	function updateSelectedSummary() {
+	    const cartItems =
+	        document.querySelectorAll(".cart-item");
+	
+	    let selectedTotalQuantity = 0;
+	    let selectedTotalPrice = 0;
+	
+	    cartItems.forEach(cartItem => {
+	        const checkbox =
+	            cartItem.querySelector(".item-checkbox");
+	
+	        if (checkbox.disabled || !checkbox.checked) {
+	            return;
+	        }
+	
+	        const price =
+	            Number(cartItem.dataset.price);
+	
+	        const quantityInput =
+	            cartItem.querySelector(".quantityBox input");
+	
+	        const quantity =
+	            Number(quantityInput.value);
+	
+	        selectedTotalQuantity += quantity;
+	        selectedTotalPrice += price * quantity;
+	    });
+	
+	    document.getElementById(
+	        "selectTotalQuantity"
+	    ).textContent = selectedTotalQuantity;
+	
+	    document.getElementById(
+	        "selectTotalPrice"
+	    ).textContent =
+	        selectedTotalPrice.toLocaleString();
+	}
+	
+	// 주문자 정보 페이지 이동
+	function orderDelivery() {
+		const checkedItems =
+	        document.querySelectorAll(
+	            ".item-checkbox:checked:not(:disabled)"
+	        );
+
+	    if (checkedItems.length === 0) {
+	        alert("주문할 상품을 선택해주세요.");
+	        return;
+	    }
+
+	    const cartItemIds =
+	        Array.from(checkedItems)
+	            .map(checkbox => Number(checkbox.value));
+
+	    fetch("/api/orders/prepare", {
+	        method: "POST",
+	        headers: {
+	            "Content-Type": "application/json"
+	        },
+	        body: JSON.stringify({
+	            cartItemIds: cartItemIds
+	        })
+	    })
+	    .then(async response => {
+	        if (!response.ok) {
+	            const message = await response.text();
+
+	            throw new Error(
+	                message || "주문 준비에 실패했습니다."
+	            );
+	        }
+
+	        return response.json();
+	    })
+	    .then(order => {
+	        location.href =
+	            "/order?orderNumber="
+	            + encodeURIComponent(order.orderNumber);
+	    })
+	    .catch(error => {
+	        alert(error.message);
+	    });
 	}
 </script>
 </html>
