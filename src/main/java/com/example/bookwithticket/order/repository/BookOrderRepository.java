@@ -30,4 +30,10 @@ public interface BookOrderRepository
             OrderStatus orderStatus
     );
     
+    /* 주문번호와 회원 번호 검증 */
+    Optional<BookOrderEntity> findByOrderNumberAndMemberId(
+            String orderNumber,
+            Long memberId
+    );
+    
 }

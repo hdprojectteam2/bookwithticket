@@ -13,27 +13,33 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.bookwithticket.book.entity.BookEntity;
 import com.example.bookwithticket.cart.entity.CartItemEntity;
 import com.example.bookwithticket.cart.repository.CartItemRepository;
+import com.example.bookwithticket.order.dto.DeliveryRequest;
 import com.example.bookwithticket.order.dto.OrderPageDto;
 import com.example.bookwithticket.order.dto.OrderPreparedRequest;
 import com.example.bookwithticket.order.dto.OrderPreparedResponse;
+import com.example.bookwithticket.order.entity.AddressEntity;
 import com.example.bookwithticket.order.entity.BookOrderEntity;
 import com.example.bookwithticket.order.entity.BookOrderItemEntity;
 import com.example.bookwithticket.order.entity.OrderStatus;
+import com.example.bookwithticket.order.repository.AddressRepository;
 import com.example.bookwithticket.order.repository.BookOrderRepository;
 
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
 
-    private final CartItemRepository cartItemRepository;
+    private final AddressRepository addressRepository;
+	private final CartItemRepository cartItemRepository;
     private final BookOrderRepository bookOrderRepository;
 
     public OrderServiceImpl(
             CartItemRepository cartItemRepository,
-            BookOrderRepository bookOrderRepository
+            BookOrderRepository bookOrderRepository,
+            AddressRepository addressReposityory, AddressRepository addressRepository
     ) {
         this.cartItemRepository = cartItemRepository;
         this.bookOrderRepository = bookOrderRepository;
+        this.addressRepository = addressRepository;
     }
 
     
@@ -245,4 +251,73 @@ public class OrderServiceImpl implements OrderService {
 
         return "B" + date + randomValue;
     }
+
+
+	@Override
+	public void saveDelivery(Long memberId, String orderNumber, DeliveryRequest request) {
+		validateDeliveryRequest(request);
+		
+		BookOrderEntity order =
+	            bookOrderRepository
+	                    .findByOrderNumberAndMemberIdAndOrderStatus(
+	                            orderNumber,
+	                            memberId,
+	                            OrderStatus.PAYMENT_PENDING
+	                    )
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException(
+	                                    "배송지를 저장할 수 없는 주문입니다."
+	                            )
+	                    );
+		
+		String deliveryRequest = request.getDeliveryRequest();
+
+		if (deliveryRequest == null || deliveryRequest.trim().isEmpty()) {
+			deliveryRequest = null;
+		} else {
+			deliveryRequest = deliveryRequest.trim();
+		}
+		
+		AddressEntity address = new AddressEntity(
+				memberId,
+				request.getRecipient(),
+				request.getPhone(),
+				request.getZipcode(),
+				request.getAddress(),
+				request.getDetailAddress(),
+				deliveryRequest
+		); 
+		
+		AddressEntity saveAddress = addressRepository.save(address);
+		
+		order.updateAddress(saveAddress);
+	}
+
+
+	private void validateDeliveryRequest(DeliveryRequest request) {
+		if(request == null) {
+			throw new IllegalArgumentException("배송지 주소를 입력하세요.");
+		}
+		
+		if(request.getRecipient() == null || request.getRecipient().isEmpty()) {
+			throw new IllegalArgumentException("받는 사람 이름을 입력하세요.");
+		}
+		
+		if(request.getPhone() == null || request.getPhone().isEmpty()) {
+			throw new IllegalArgumentException("전화 번호를 입력하세요.");
+		}
+		
+		if(request.getZipcode() == null || request.getZipcode().isEmpty()) {
+			throw new IllegalArgumentException("우편 번호를 입력하세요.");
+		}
+		
+		if(request.getAddress() == null || request.getAddress().isEmpty()) {
+			throw new IllegalArgumentException("주소를 입력하세요.");
+		}
+		
+		if(request.getDetailAddress() == null || request.getDetailAddress().isEmpty()) {
+			throw new IllegalArgumentException("상세 주소를 입력하세요.");
+		}
+		
+	}
 }
