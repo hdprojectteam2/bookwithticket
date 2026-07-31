@@ -1,7 +1,9 @@
 package com.example.bookwithticket.book.service;
 
+
 import com.example.bookwithticket.book.dto.BookImportRequestDto;
 import com.example.bookwithticket.book.dto.BookRequestDto;
+import com.example.bookwithticket.book.dto.StockRequestDto;
 import com.example.bookwithticket.book.entity.Book;
 import com.example.bookwithticket.book.repository.BookRepository;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,9 @@ public class BookService {
     public BookService(
             BookRepository bookRepository
     ) {
+
         this.bookRepository = bookRepository;
+
     }
 
 
@@ -43,6 +47,7 @@ public class BookService {
 
 
         return bookRepository.save(book);
+
     }
 
 
@@ -51,6 +56,7 @@ public class BookService {
     public List<Book> findAll() {
 
         return bookRepository.findAll();
+
     }
 
 
@@ -58,10 +64,12 @@ public class BookService {
     // 단건 조회
     public Book findById(Long id) {
 
+
         return bookRepository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException("도서를 찾을 수 없습니다.")
                 );
+
     }
 
 
@@ -92,6 +100,7 @@ public class BookService {
 
 
         return bookRepository.save(book);
+
     }
 
 
@@ -99,13 +108,19 @@ public class BookService {
     // 삭제
     public void delete(Long id) {
 
+
         Book book = findById(id);
 
+
         bookRepository.delete(book);
+
     }
 
-    // 도서 검색 (임시)
+
+
+    // 도서 검색
     public List<Book> search(String keyword) {
+
 
         return bookRepository.findAll()
                 .stream()
@@ -113,8 +128,12 @@ public class BookService {
                         book.getTitle().contains(keyword)
                 )
                 .toList();
+
     }
 
+
+
+    // 알라딘 도서 저장
     public Book saveImport(BookImportRequestDto dto) {
 
 
@@ -130,5 +149,64 @@ public class BookService {
 
 
         return bookRepository.save(book);
+
     }
+
+
+
+    // 관리자가 재고 설정
+    public Book updateStock(
+            Long id,
+            StockRequestDto requestDto
+    ) {
+
+
+        Book book = findById(id);
+
+
+        book.setStock(requestDto.getStock());
+
+
+        return bookRepository.save(book);
+
+    }
+
+
+
+    // 주문 시 재고 감소
+    public Book decreaseStock(
+            Long id,
+            int quantity
+    ) {
+
+
+        Book book = findById(id);
+
+
+        book.decreaseStock(quantity);
+
+
+        return bookRepository.save(book);
+
+    }
+
+
+
+    // 주문 취소 시 재고 증가
+    public Book increaseStock(
+            Long id,
+            int quantity
+    ) {
+
+
+        Book book = findById(id);
+
+
+        book.increaseStock(quantity);
+
+
+        return bookRepository.save(book);
+
+    }
+
 }

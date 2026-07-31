@@ -38,6 +38,7 @@ public class Book {
     private String description;
 
 
+    // 재고
     private int stock;
 
 
@@ -64,6 +65,7 @@ public class Book {
         this.price = price;
         this.thumbnail = thumbnail;
         this.description = description;
+
         this.stock = 0;
     }
 
@@ -148,4 +150,40 @@ public class Book {
     public void setStock(int stock) {
         this.stock = stock;
     }
+
+
+
+    // 주문 시 재고 감소
+    public void decreaseStock(int quantity) {
+
+
+        if(quantity <= 0) {
+            throw new RuntimeException("수량은 1개 이상이어야 합니다.");
+        }
+
+
+        if(stock < quantity) {
+            throw new RuntimeException("재고가 부족합니다.");
+        }
+
+
+        this.stock -= quantity;
+
+    }
+
+
+
+    // 취소/입고 시 재고 증가
+    public void increaseStock(int quantity) {
+
+
+        if(quantity <= 0) {
+            throw new RuntimeException("수량은 1개 이상이어야 합니다.");
+        }
+
+
+        this.stock += quantity;
+
+    }
+
 }
