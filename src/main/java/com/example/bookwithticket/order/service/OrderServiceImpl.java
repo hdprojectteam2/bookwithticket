@@ -1,6 +1,7 @@
 package com.example.bookwithticket.order.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.bookwithticket.book.entity.BookEntity;
+import com.example.bookwithticket.book.repository.BookRepository;
 import com.example.bookwithticket.cart.entity.CartItemEntity;
 import com.example.bookwithticket.cart.repository.CartItemRepository;
 import com.example.bookwithticket.order.dto.DeliveryRequest;
@@ -31,50 +33,41 @@ public class OrderServiceImpl implements OrderService {
     private final AddressRepository addressRepository;
 	private final CartItemRepository cartItemRepository;
     private final BookOrderRepository bookOrderRepository;
-
+    private final BookRepository bookRepository;
+    
     public OrderServiceImpl(
             CartItemRepository cartItemRepository,
             BookOrderRepository bookOrderRepository,
-            AddressRepository addressReposityory, AddressRepository addressRepository
+            AddressRepository addressRepository,
+            BookRepository bookRepository
     ) {
         this.cartItemRepository = cartItemRepository;
         this.bookOrderRepository = bookOrderRepository;
         this.addressRepository = addressRepository;
+        this.bookRepository = bookRepository;
     }
 
     
     @Override
-    public OrderPreparedResponse prepareOrder(
-            Long memberId,
-            OrderPreparedRequest request
-    ) {
+    public OrderPreparedResponse prepareOrder(Long memberId, OrderPreparedRequest request) {
         validateRequest(request);
 
         List<Long> cartItemIds = request.getCartItemIds();
 
 
-        Set<Long> uniqueCartItemIds =
-                new HashSet<>(cartItemIds);
+        Set<Long> uniqueCartItemIds = new HashSet<>(cartItemIds);
 
-        if (uniqueCartItemIds.size()
-                != cartItemIds.size()) {
-            throw new IllegalArgumentException(
-                    "중복된 장바구니 상품이 포함되어 있습니다."
-            );
+        if (uniqueCartItemIds.size() != cartItemIds.size()) {
+            throw new IllegalArgumentException("중복된 장바구니 상품이 포함되어 있습니다.");
         }
 
         List<CartItemEntity> cartItems =
                 cartItemRepository
-                        .findByIdInAndCartMemberId(
-                                cartItemIds,
-                                memberId
-                        );
+                        .findByIdInAndCartMemberId(cartItemIds, memberId);
 
         
         if (cartItems.size() != cartItemIds.size()) {
-            throw new IllegalArgumentException(
-                    "주문할 수 없는 장바구니 상품이 포함되어 있습니다."
-            );
+            throw new IllegalArgumentException("주문할 수 없는 장바구니 상품이 포함되어 있습니다.");
         }
 
         
@@ -89,24 +82,30 @@ public class OrderServiceImpl implements OrderService {
             calculatedTotalPrice +=
                     book.getSalePrice() * quantity;
         }
+        
+        for (CartItemEntity cartItem : cartItems) {
+            BookEntity book = cartItem.getBook();
+            int quantity = cartItem.getQuantity();
+
+            int updatedCount =
+                    bookRepository.decreaseStock(book.getId(), quantity);
+
+            if (updatedCount == 0) {
+                throw new IllegalStateException(book.getTitle() + " 도서의 재고가 부족합니다.");
+            }
+        }
 
         final int totalPrice = calculatedTotalPrice;
 
-        /* PAYMENT_PENDING 주문 상태 유무 조회 */
-        BookOrderEntity order =
-                bookOrderRepository
-                        .findFirstByMemberIdAndOrderStatusOrderByCreatedAtDesc(
-                                memberId,
-                                OrderStatus.PAYMENT_PENDING
-                        )
-                        .orElseGet(() ->
-                                new BookOrderEntity(
-                                        memberId,
-                                        createOrderNumber(),
-                                        totalPrice
-                                )
-                        );
+        BookOrderEntity order = new BookOrderEntity(memberId, createOrderNumber(), totalPrice);
 
+		/*
+		 * BookOrderEntity order = bookOrderRepository
+		 * .findFirstByMemberIdAndOrderStatusOrderByCreatedAtDesc( memberId,
+		 * OrderStatus.PAYMENT_PENDING ) .orElseGet(() -> new BookOrderEntity( memberId,
+		 * createOrderNumber(), totalPrice ) );
+		 */
+        
         /* 기존 주문 정보 초기화 */
         order.clearOrderItems();
         order.updateTotalPrice(totalPrice);
@@ -136,18 +135,15 @@ public class OrderServiceImpl implements OrderService {
         );
     }
 
-    /* 회원의 PAYMENT_PENDING 상태의 주문 조회 ㄴ*/
+    /* 회원의 PAYMENT_PENDING 상태의 주문 조회 */
     @Override
     @Transactional(readOnly = true)
     public OrderPageDto findPendingOrder(
             Long memberId,
             String orderNumber
     ) {
-        if (orderNumber == null
-                || orderNumber.isBlank()) {
-            throw new IllegalArgumentException(
-                    "주문번호가 없습니다."
-            );
+        if (orderNumber == null || orderNumber.isBlank()) {
+            throw new IllegalArgumentException("주문번호가 없습니다.");
         }
 
         BookOrderEntity order =
@@ -167,69 +163,44 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /* 주문 요청값 검사 */
-    private void validateRequest(
-            OrderPreparedRequest request
-    ) {
-        if (request == null
-                || request.getCartItemIds() == null
-                || request.getCartItemIds().isEmpty()) {
-            throw new IllegalArgumentException(
-                    "주문할 상품을 선택해주세요."
-            );
+    private void validateRequest(OrderPreparedRequest request) {
+        if (request == null || request.getCartItemIds() == null || request.getCartItemIds().isEmpty()) {
+            throw new IllegalArgumentException("주문할 상품을 선택해주세요.");
         }
 
         if (request.getCartItemIds().contains(null)) {
-            throw new IllegalArgumentException(
-                    "잘못된 장바구니 상품 정보가 포함되어 있습니다."
-            );
+            throw new IllegalArgumentException("잘못된 장바구니 상품 정보가 포함되어 있습니다.");
         }
     }
 
     /* 도서 주문 가능 여부 검사 */
-    private void validateBook(
-            BookEntity book,
-            int quantity
-    ) {
+    private void validateBook(BookEntity book, int quantity) {
         if (book.isDeleted()) {
-            throw new IllegalArgumentException(
-                    book.getTitle() + " 도서는 삭제된 상품입니다."
-            );
+            throw new IllegalArgumentException(book.getTitle() + " 도서는 삭제된 상품입니다.");
         }
 
         if (!book.isActive()) {
-            throw new IllegalArgumentException(
-                    book.getTitle() + " 도서는 판매가 중지되었습니다."
-            );
+            throw new IllegalArgumentException(book.getTitle() + " 도서는 판매가 중지되었습니다.");
         }
 
         if (!"ON_SALE".equals(book.getSaleStatus())) {
-            throw new IllegalArgumentException(
-                    book.getTitle() + " 도서는 현재 판매 중이 아닙니다."
-            );
+            throw new IllegalArgumentException(book.getTitle() + " 도서는 현재 판매 중이 아닙니다.");
         }
 
         if (book.getStock() <= 0) {
-            throw new IllegalArgumentException(
-                    book.getTitle() + " 도서는 품절되었습니다."
-            );
+            throw new IllegalArgumentException(book.getTitle() + " 도서는 품절되었습니다.");
         }
 
         if (quantity < 1) {
-            throw new IllegalArgumentException(
-                    book.getTitle() + " 도서의 주문 수량이 올바르지 않습니다."
-            );
+            throw new IllegalArgumentException(book.getTitle() + " 도서의 주문 수량이 올바르지 않습니다.");
         }
 
         if (quantity > book.getStock()) {
-            throw new IllegalArgumentException(
-                    book.getTitle() + " 도서의 재고가 부족합니다. 현재 재고는 " + book.getStock() + "개입니다."
-            );
+            throw new IllegalArgumentException(book.getTitle() + " 도서의 재고가 부족합니다. 현재 재고는 " + book.getStock() + "개입니다.");
         }
 
         if (quantity > book.getMaxPurchaseQty()) {
-            throw new IllegalArgumentException(
-                    book.getTitle() + " 도서는 최대 " + book.getMaxPurchaseQty() + "권까지 구매할 수 있습니다."
-            );
+            throw new IllegalArgumentException(book.getTitle() + " 도서는 최대 " + book.getMaxPurchaseQty() + "권까지 구매할 수 있습니다.");
         }
     }
 
@@ -265,9 +236,7 @@ public class OrderServiceImpl implements OrderService {
 	                            OrderStatus.PAYMENT_PENDING
 	                    )
 	                    .orElseThrow(() ->
-	                            new IllegalArgumentException(
-	                                    "배송지를 저장할 수 없는 주문입니다."
-	                            )
+	                            new IllegalArgumentException("배송지를 저장할 수 없는 주문입니다.")
 	                    );
 		
 		String deliveryRequest = request.getDeliveryRequest();
@@ -319,5 +288,45 @@ public class OrderServiceImpl implements OrderService {
 			throw new IllegalArgumentException("상세 주소를 입력하세요.");
 		}
 		
+	}
+	
+	@Transactional
+	@Override
+	public void cancelExpiredOrders() {
+
+	    /* 주문 생성 후 15분 이상 지난 기준 */
+	    LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(15);
+
+	    List<BookOrderEntity> expiredOrders =
+	            bookOrderRepository
+	                    .findByOrderStatusAndCreatedAtBefore(OrderStatus.PAYMENT_PENDING, expirationTime);
+
+	    for (BookOrderEntity order : expiredOrders) {
+
+	        /* 주문했던 수량만큼 재고 복구 */
+	        for (BookOrderItemEntity orderItem : order.getOrderItems()) {
+
+	            bookRepository.increaseStock(orderItem.getBook().getId(), orderItem.getQuantity());
+	        }
+
+	        /* 주문 상태를 CANCELLED로 변경 */
+	        order.cancel();
+	    }
+	}
+	
+	@Transactional
+	@Override
+	public void cancelOrder(Long memberId, String orderNumber) {
+	    BookOrderEntity order = bookOrderRepository .findByOrderNumberAndMemberIdAndOrderStatus(orderNumber, memberId, OrderStatus.PAYMENT_PENDING)
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("취소할 수 있는 주문이 없습니다.")
+	                    );
+
+	    for (BookOrderItemEntity orderItem : order.getOrderItems()) {
+
+	        bookRepository.increaseStock(orderItem.getBook().getId(), orderItem.getQuantity());
+	    }
+
+	    order.cancel();
 	}
 }

@@ -167,4 +167,22 @@ public class BookOrderEntity {
     public void resetAddress() {
         this.address = null;
     }
+    
+    public void completePayment() {
+        if (this.orderStatus != OrderStatus.PAYMENT_PENDING) {
+            throw new IllegalStateException("결제 대기 상태의 주문만 결제할 수 있습니다.");
+        }
+
+        this.orderStatus = OrderStatus.PAID;
+    }
+    
+    public void cancel() {
+
+        if (this.orderStatus != OrderStatus.PAYMENT_PENDING) {
+
+            throw new IllegalStateException("결제 대기 주문만 취소할 수 있습니다.");
+        }
+
+        this.orderStatus = OrderStatus.CANCELLED;
+    }
 }

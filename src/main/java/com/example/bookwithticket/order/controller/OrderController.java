@@ -92,6 +92,17 @@ public class OrderController {
     	
     	orderService.saveDelivery(memberId, orderNumber, request);
     	return ResponseEntity.ok("배송지 정보 저장 완료");
-    	
+    }
+    
+    @PostMapping("/api/orders/{orderNumber}/cancel")
+    public ResponseEntity<Void> cancelOrder(
+            @PathVariable(name = "orderNumber")
+            String orderNumber
+    ) {
+        Long memberId = getCurrentMemberId();
+
+        orderService.cancelOrder(memberId, orderNumber);
+
+        return ResponseEntity.ok().build();
     }
 }

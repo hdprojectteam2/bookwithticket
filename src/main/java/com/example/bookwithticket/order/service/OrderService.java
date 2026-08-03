@@ -12,4 +12,8 @@ public interface OrderService {
     OrderPageDto findPendingOrder(Long memberId, String orderNumber);
 
     void saveDelivery(Long memberId, String orderNumber, DeliveryRequest request);
+
+    void cancelExpiredOrders();
+    
+    void cancelOrder(Long memberId, String orderNumber);
 }

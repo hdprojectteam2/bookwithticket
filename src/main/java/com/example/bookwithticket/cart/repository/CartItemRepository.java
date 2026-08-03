@@ -17,4 +17,6 @@ public interface CartItemRepository
     void deleteByCartId(Long cartId);
     
     List<CartItemEntity> findByIdInAndCartMemberId(List<Long> cartItemIds, Long memberId);
+    
+    void deleteByCartMemberId(Long memberId);
 }
