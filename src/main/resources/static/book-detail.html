@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>도서 상세</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+
+<body>
+
+
+<h1>
+    📖 도서 상세
+</h1>
+
+
+
+
+<div class="detail-container">
+
+
+    <div class="book-image">
+
+        <img id="thumbnail"
+             width="250">
+
+    </div>
+
+
+
+
+
+    <div class="book-info">
+
+
+        <h2 id="title"></h2>
+
+
+
+        <p>
+            저자 :
+            <span id="author"></span>
+        </p>
+
+
+
+        <p>
+            출판사 :
+            <span id="publisher"></span>
+        </p>
+
+
+
+
+        <p>
+            가격 :
+            <span id="price"></span>
+            원
+        </p>
+
+
+
+
+        <p>
+            카테고리 :
+            <span id="category"></span>
+        </p>
+
+
+
+
+        <p>
+            재고 :
+            <span id="stock"></span>
+            개
+        </p>
+
+
+
+
+
+        <button onclick="favorite()">
+
+            ❤️ 관심 도서
+
+        </button>
+
+
+
+
+
+        <button onclick="cart()">
+
+            🛒 장바구니
+
+        </button>
+
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+
+
+<div class="description-box">
+
+
+    <h2>
+        책 소개
+    </h2>
+
+
+    <p id="description"></p>
+
+
+</div>
+
+
+
+
+
+
+
+<script src="/js/book-detail.js"></script>
+
+
+</body>
+
+</html>

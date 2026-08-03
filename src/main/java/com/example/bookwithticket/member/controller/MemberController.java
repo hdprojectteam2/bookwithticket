@@ -1,85 +1,215 @@
 package com.example.bookwithticket.member.controller;
 
-import com.example.bookwithticket.member.dto.MemberRequestDto;
-import com.example.bookwithticket.member.dto.MemberResponseDto;
-import com.example.bookwithticket.member.entity.Member;
-import com.example.bookwithticket.member.service.MemberService;
-import org.springframework.web.bind.annotation.*;
+
 import com.example.bookwithticket.member.dto.LoginRequestDto;
-import com.example.bookwithticket.member.dto.LoginResponseDto;
-import org.springframework.security.core.Authentication;
+import com.example.bookwithticket.member.dto.MemberRequestDto;
 import com.example.bookwithticket.member.dto.MemberUpdateRequestDto;
+import com.example.bookwithticket.member.entity.Member;
+import com.example.bookwithticket.member.repository.MemberRepository;
+import com.example.bookwithticket.member.service.MemberService;
+
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+
+
 
 @RestController
+@RequestMapping("/members")
 public class MemberController {
+
+
 
     private final MemberService memberService;
 
-    public MemberController(MemberService memberService) {
+    private final MemberRepository memberRepository;
+
+
+
+    public MemberController(
+            MemberService memberService,
+            MemberRepository memberRepository
+    ){
+
         this.memberService = memberService;
+        this.memberRepository = memberRepository;
+
     }
 
 
-    @PostMapping("/members/signup")
-    public MemberResponseDto signup(@RequestBody MemberRequestDto requestDto) {
 
-        Member member = memberService.save(requestDto);
 
-        return new MemberResponseDto(member);
-    }
 
-    @GetMapping("/members/me")
-    public MemberResponseDto myInfo(Authentication authentication) {
+    // 회원가입
 
-        String email = authentication.getName();
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(
+            @RequestBody MemberRequestDto requestDto
+    ){
 
-        Member member = memberService.findMyInfo(email);
 
-        return new MemberResponseDto(member);
-    }
+        Member member =
+                memberService.save(requestDto);
 
-    @GetMapping("/members/{id}")
-    public MemberResponseDto findMember(@PathVariable Long id) {
 
-        Member member = memberService.findById(id);
+        return ResponseEntity.ok(member);
 
-        return new MemberResponseDto(member);
     }
 
 
-    @PostMapping("/members/login")
-    public LoginResponseDto login(@RequestBody LoginRequestDto requestDto) {
 
-        String token = memberService.login(requestDto);
 
-        return new LoginResponseDto(token);
-    }
 
-    @PutMapping("/members/me")
-    public MemberResponseDto update(
-            @RequestBody MemberUpdateRequestDto requestDto,
-            Authentication authentication
-    ) {
 
-        String email = authentication.getName();
+    // 로그인
 
-        Member member = memberService.update(
-                email,
-                requestDto
+    @PostMapping("/login")
+    public ResponseEntity<?> login(
+            @RequestBody LoginRequestDto requestDto
+    ){
+
+
+        String token =
+                memberService.login(requestDto);
+
+
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "token",
+                        token
+                )
         );
 
-        return new MemberResponseDto(member);
     }
 
-    @DeleteMapping("/members/me")
-    public String delete(Authentication authentication) {
 
-        String email = authentication.getName();
 
-        memberService.delete(email);
 
-        return "회원 탈퇴 완료";
+
+
+    // 이메일 중복 확인
+
+    @GetMapping("/check-email")
+    public ResponseEntity<?> checkEmail(
+            @RequestParam String email
+    ){
+
+
+        boolean exists =
+                memberRepository.findByEmail(email)
+                        .isPresent();
+
+
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "available",
+                        !exists
+                )
+        );
+
+
     }
+
+
+
+
+
+
+
+    // 내 정보 조회
+
+    @GetMapping("/me")
+    public ResponseEntity<?> myInfo(
+            Authentication authentication
+    ){
+
+
+        String email =
+                authentication.getName();
+
+
+
+        Member member =
+                memberService.findMyInfo(email);
+
+
+
+        return ResponseEntity.ok(member);
+
+
+    }
+
+
+
+
+
+
+
+    // 회원정보 수정
+
+    @PutMapping("/me")
+    public ResponseEntity<?> update(
+
+            Authentication authentication,
+
+            @RequestBody MemberUpdateRequestDto requestDto
+
+    ){
+
+
+        String email =
+                authentication.getName();
+
+
+
+        Member member =
+                memberService.update(
+                        email,
+                        requestDto
+                );
+
+
+
+        return ResponseEntity.ok(member);
+
+
+    }
+
+
+
+
+
+
+
+    // 회원 탈퇴
+
+    @DeleteMapping("/me")
+    public ResponseEntity<?> delete(
+
+            Authentication authentication
+
+    ){
+
+
+        String email =
+                authentication.getName();
+
+
+
+        Member member =
+                memberService.delete(email);
+
+
+
+        return ResponseEntity.ok(member);
+
+
+    }
+
+
 }

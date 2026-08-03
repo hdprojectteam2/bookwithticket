@@ -19,9 +19,7 @@ public class SecurityConfig {
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter
     ) {
-
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-
     }
 
 
@@ -33,27 +31,59 @@ public class SecurityConfig {
 
 
         http
-                .csrf(csrf -> csrf.disable())
+
+                // CSRF 비활성화
+                .csrf(csrf ->
+                        csrf.disable()
+                )
+
+
+                // JWT 사용 → 기본 로그인 페이지 제거
+                .formLogin(form ->
+                        form.disable()
+                )
+
+
+                // 기본 로그아웃 비활성화
+                .logout(logout ->
+                        logout.disable()
+                )
 
 
                 .authorizeHttpRequests(auth -> auth
 
+
                         // 회원가입
-                        .requestMatchers("/members/signup").permitAll()
+                        .requestMatchers(
+                                "/members/signup"
+                        ).permitAll()
+
 
                         // 로그인
-                        .requestMatchers("/members/login").permitAll()
+                        .requestMatchers(
+                                "/members/login"
+                        ).permitAll()
 
-                        // 도서 조회 (현재는 열어둠)
-                        .requestMatchers("/books/**").permitAll()
+
+                        // 도서 조회
+                        .requestMatchers(
+                                "/books/**"
+                        ).permitAll()
 
 
-                        // 나머지는 로그인 필요
-                        .anyRequest().authenticated()
+                        // 회원 정보
+                        .requestMatchers(
+                                "/members/me"
+                        ).authenticated()
+
+
+                        // 나머지 허용
+                        .anyRequest().permitAll()
+
                 )
 
 
-                // JWT 필터 연결
+                // JWT Filter 등록
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -61,5 +91,7 @@ public class SecurityConfig {
 
 
         return http.build();
+
     }
+
 }

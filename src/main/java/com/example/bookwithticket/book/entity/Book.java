@@ -3,6 +3,8 @@ package com.example.bookwithticket.book.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "book")
@@ -38,13 +40,41 @@ public class Book {
     private String description;
 
 
+
+    // 카테고리
+
+    private String category;
+
+
+
+    // 인기 도서용
+
+    private int viewCount;
+
+
+    private int salesCount;
+
+
+
+    // 등록일
+
+    private LocalDateTime createdAt;
+
+
+
     // 재고
+
     private int stock;
 
 
 
-    public Book() {
+
+
+    public Book(){
+
     }
+
+
 
 
 
@@ -56,7 +86,7 @@ public class Book {
             int price,
             String thumbnail,
             String description
-    ) {
+    ){
 
         this.isbn = isbn;
         this.title = title;
@@ -67,103 +97,177 @@ public class Book {
         this.description = description;
 
         this.stock = 0;
+
+        this.viewCount = 0;
+
+        this.salesCount = 0;
+
     }
 
 
 
-    public Long getId() {
+
+
+    @PrePersist
+    public void prePersist(){
+
+        this.createdAt =
+                LocalDateTime.now();
+
+    }
+
+
+
+
+
+
+    public Long getId(){
         return id;
     }
 
 
-    public String getIsbn() {
+    public String getIsbn(){
         return isbn;
     }
 
 
-    public String getTitle() {
+    public String getTitle(){
         return title;
     }
 
 
-    public String getAuthor() {
+    public String getAuthor(){
         return author;
     }
 
 
-    public String getPublisher() {
+    public String getPublisher(){
         return publisher;
     }
 
 
-    public int getPrice() {
+    public int getPrice(){
         return price;
     }
 
 
-    public String getThumbnail() {
+    public String getThumbnail(){
         return thumbnail;
     }
 
 
-    public String getDescription() {
+    public String getDescription(){
         return description;
     }
 
 
-    public int getStock() {
+    public String getCategory(){
+        return category;
+    }
+
+
+    public int getViewCount(){
+        return viewCount;
+    }
+
+
+    public int getSalesCount(){
+        return salesCount;
+    }
+
+
+    public LocalDateTime getCreatedAt(){
+        return createdAt;
+    }
+
+
+    public int getStock(){
         return stock;
     }
 
 
 
-    public void setTitle(String title) {
+
+
+
+    public void setTitle(String title){
         this.title = title;
     }
 
 
-    public void setAuthor(String author) {
+    public void setAuthor(String author){
         this.author = author;
     }
 
 
-    public void setPublisher(String publisher) {
+    public void setPublisher(String publisher){
         this.publisher = publisher;
     }
 
 
-    public void setPrice(int price) {
+    public void setPrice(int price){
         this.price = price;
     }
 
 
-    public void setThumbnail(String thumbnail) {
+    public void setThumbnail(String thumbnail){
         this.thumbnail = thumbnail;
     }
 
 
-    public void setDescription(String description) {
+    public void setDescription(String description){
         this.description = description;
     }
 
 
-    public void setStock(int stock) {
+    public void setCategory(String category){
+        this.category = category;
+    }
+
+
+    public void setStock(int stock){
         this.stock = stock;
     }
 
 
 
-    // 주문 시 재고 감소
-    public void decreaseStock(int quantity) {
+    public void increaseViewCount(){
+
+        this.viewCount++;
+
+    }
 
 
-        if(quantity <= 0) {
-            throw new RuntimeException("수량은 1개 이상이어야 합니다.");
+
+    public void increaseSalesCount(){
+
+        this.salesCount++;
+
+    }
+
+
+
+
+
+
+    public void decreaseStock(int quantity){
+
+
+        if(quantity <= 0){
+
+            throw new RuntimeException(
+                    "수량은 1개 이상이어야 합니다."
+            );
+
         }
 
 
-        if(stock < quantity) {
-            throw new RuntimeException("재고가 부족합니다.");
+        if(stock < quantity){
+
+            throw new RuntimeException(
+                    "재고가 부족합니다."
+            );
+
         }
 
 
@@ -173,17 +277,23 @@ public class Book {
 
 
 
-    // 취소/입고 시 재고 증가
-    public void increaseStock(int quantity) {
 
 
-        if(quantity <= 0) {
-            throw new RuntimeException("수량은 1개 이상이어야 합니다.");
+    public void increaseStock(int quantity){
+
+
+        if(quantity <= 0){
+
+            throw new RuntimeException(
+                    "수량은 1개 이상이어야 합니다."
+            );
+
         }
 
 
         this.stock += quantity;
 
     }
+
 
 }

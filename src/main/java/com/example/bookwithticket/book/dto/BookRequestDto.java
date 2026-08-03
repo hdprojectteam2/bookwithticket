@@ -18,7 +18,14 @@ public class BookRequestDto {
 
     private String description;
 
+
+    // 추가
+    private String category;
+
+
     private int stock;
+
+
 
 
 
@@ -57,9 +64,16 @@ public class BookRequestDto {
     }
 
 
+    public String getCategory() {
+        return category;
+    }
+
+
     public int getStock() {
         return stock;
     }
+
+
 
 
 
@@ -98,7 +112,13 @@ public class BookRequestDto {
     }
 
 
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+
     public void setStock(int stock) {
         this.stock = stock;
     }
+
 }

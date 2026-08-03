@@ -1,5 +1,6 @@
 package com.example.bookwithticket.member.jwt;
 
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,12 +8,14 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.List;
+
+
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -21,9 +24,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
 
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+    public JwtAuthenticationFilter(
+            JwtUtil jwtUtil
+    ) {
+
         this.jwtUtil = jwtUtil;
+
     }
+
 
 
     @Override
@@ -37,28 +45,66 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
 
+
         if (header != null && header.startsWith("Bearer ")) {
+
 
             String token = header.substring(7);
 
 
-            String email = jwtUtil.getEmail(token);
+
+            try {
 
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            email,
-                            null,
-                            List.of(new SimpleGrantedAuthority("ROLE_USER"))
-                    );
+                String email = jwtUtil.getEmail(token);
 
 
-            SecurityContextHolder
-                    .getContext()
-                    .setAuthentication(authentication);
+
+                // 인증 정보가 없는 경우만 저장
+                if (SecurityContextHolder
+                        .getContext()
+                        .getAuthentication() == null) {
+
+
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    email,
+                                    null,
+                                    List.of(
+                                            new SimpleGrantedAuthority(
+                                                    "ROLE_USER"
+                                            )
+                                    )
+                            );
+
+
+
+                    SecurityContextHolder
+                            .getContext()
+                            .setAuthentication(authentication);
+
+                }
+
+
+
+            } catch (Exception e) {
+
+
+                // 잘못된 토큰이면 인증 제거
+                SecurityContextHolder
+                        .clearContext();
+
+            }
+
         }
 
 
-        filterChain.doFilter(request, response);
+
+        filterChain.doFilter(
+                request,
+                response
+        );
+
     }
+
 }
