@@ -25,7 +25,8 @@ public class PaymentApiController {
         return 1L;
     }
 
-    @PostMapping("/api/payments/confirm")
+    /* 결제 승인 */
+    @PostMapping("/api/payments")
     public ResponseEntity<PaymentConfirmResponse>
             confirmPayment(
                     @RequestBody

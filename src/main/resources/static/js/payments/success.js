@@ -22,7 +22,7 @@ async function confirmPayment() {
 
   try {
     const response =
-      await fetch("/api/payments/confirm", {
+      await fetch("/api/payments", {
         method: "POST",
 
         headers: {

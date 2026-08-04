@@ -16,11 +16,9 @@ async function cancelOrder(orderNumber) {
 }
 
 async function main() {
-  const paymentData =
-    document.getElementById("payment-data");
+  const paymentData = document.getElementById("payment-data");
 
-  const paymentButton =
-    document.getElementById("payment-button");
+  const paymentButton = document.getElementById("payment-button");
 
   if (!paymentData || !paymentButton) {
     console.error("결제 화면 정보를 찾을 수 없습니다.");
