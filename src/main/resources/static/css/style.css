@@ -2,12 +2,216 @@ body {
 
     font-family: Arial, sans-serif;
 
+    background: #f5f5f5;
+
     padding: 40px;
 
 }
 
 
+
+/* 전체 컨테이너 */
+
+.mypage-container {
+
+    width: 800px;
+
+    margin: 0 auto;
+
+}
+
+
+
+/* 제목 */
+
+h1 {
+
+    text-align: center;
+
+    margin-bottom: 40px;
+
+}
+
+
+
+h2 {
+
+    margin-bottom: 25px;
+
+}
+
+
+
+/* 박스 */
+
+.member-box {
+
+    background: white;
+
+    border-radius: 12px;
+
+    padding: 25px;
+
+    margin-bottom: 25px;
+
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+
+}
+
+
+
+/* 회원 정보 */
+
+.member-box p {
+
+    font-size: 16px;
+
+    margin: 15px 0;
+
+}
+
+
+
+
+
+/* 버튼 */
+
+button {
+
+
+    background: white;
+
+    border: 1px solid #ccc;
+
+    border-radius: 8px;
+
+    padding: 12px 20px;
+
+    margin: 5px;
+
+    cursor:pointer;
+
+
+}
+
+
+
+button:hover {
+
+
+    background:#eee;
+
+
+}
+
+
+
+
+
+
+
+/* 책 목록 */
+
+#recentBooks,
+#favoriteBooks {
+
+
+    display:flex;
+
+    gap:20px;
+
+    flex-wrap:wrap;
+
+
+}
+
+
+
+
+
+
+
+/* 책 카드 */
+
+.book-card {
+
+
+    width:160px;
+
+
+    background:white;
+
+
+    border-radius:12px;
+
+
+    padding:15px;
+
+
+    box-shadow:0 3px 10px rgba(0,0,0,0.1);
+
+
+}
+
+
+
+
+
+
+.book-card img {
+
+
+    width:120px;
+
+    height:170px;
+
+    object-fit:cover;
+
+    display:block;
+
+    margin:auto;
+
+
+}
+
+
+
+
+
+.book-card h4 {
+
+
+    font-size:16px;
+
+    margin-top:15px;
+
+
+}
+
+
+
+
+
+.book-card p {
+
+
+    color:#666;
+
+    font-size:14px;
+
+
+}
+
+
+
+
+
+
+
+/* 입력 */
+
 input {
+
 
     display:block;
 
@@ -17,13 +221,5 @@ input {
 
     margin:10px 0;
 
-}
-
-
-button {
-
-    padding:10px 20px;
-
-    cursor:pointer;
 
 }

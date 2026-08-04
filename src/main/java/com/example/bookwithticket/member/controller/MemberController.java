@@ -4,16 +4,31 @@ package com.example.bookwithticket.member.controller;
 import com.example.bookwithticket.member.dto.LoginRequestDto;
 import com.example.bookwithticket.member.dto.MemberRequestDto;
 import com.example.bookwithticket.member.dto.MemberUpdateRequestDto;
+import com.example.bookwithticket.member.dto.MyPageResponseDto;
+import com.example.bookwithticket.member.dto.RecentBookResponseDto;
+
+
 import com.example.bookwithticket.member.entity.Member;
+
+
 import com.example.bookwithticket.member.repository.MemberRepository;
+
+
 import com.example.bookwithticket.member.service.MemberService;
+import com.example.bookwithticket.member.service.RecentBookService;
 
 
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.core.Authentication;
+
 import org.springframework.web.bind.annotation.*;
 
+
+import java.util.List;
 import java.util.Map;
+
+
 
 
 
@@ -25,19 +40,34 @@ public class MemberController {
 
     private final MemberService memberService;
 
+
     private final MemberRepository memberRepository;
+
+
+    private final RecentBookService recentBookService;
+
+
 
 
 
     public MemberController(
             MemberService memberService,
-            MemberRepository memberRepository
+            MemberRepository memberRepository,
+            RecentBookService recentBookService
     ){
 
+
         this.memberService = memberService;
+
         this.memberRepository = memberRepository;
 
+        this.recentBookService = recentBookService;
+
     }
+
+
+
+
 
 
 
@@ -58,6 +88,8 @@ public class MemberController {
         return ResponseEntity.ok(member);
 
     }
+
+
 
 
 
@@ -91,6 +123,8 @@ public class MemberController {
 
 
 
+
+
     // 이메일 중복 확인
 
     @GetMapping("/check-email")
@@ -112,8 +146,9 @@ public class MemberController {
                 )
         );
 
-
     }
+
+
 
 
 
@@ -129,20 +164,66 @@ public class MemberController {
     ){
 
 
-        String email =
-                authentication.getName();
-
-
-
         Member member =
-                memberService.findMyInfo(email);
-
+                memberService.findMyInfo(
+                        authentication.getName()
+                );
 
 
         return ResponseEntity.ok(member);
 
+    }
+
+
+
+
+
+
+
+
+
+    // 마이페이지 조회
+
+    @GetMapping("/mypage")
+    public ResponseEntity<?> myPage(
+            Authentication authentication
+    ){
+
+
+        Member member =
+                memberService.findMyInfo(
+                        authentication.getName()
+                );
+
+
+
+        List<RecentBookResponseDto> recentBooks =
+
+                recentBookService.findAll(member)
+
+                        .stream()
+
+                        .map(RecentBookResponseDto::new)
+
+                        .toList();
+
+
+
+
+        MyPageResponseDto response =
+
+                new MyPageResponseDto(
+                        member,
+                        recentBooks
+                );
+
+
+
+        return ResponseEntity.ok(response);
 
     }
+
+
 
 
 
@@ -162,14 +243,10 @@ public class MemberController {
     ){
 
 
-        String email =
-                authentication.getName();
-
-
-
         Member member =
+
                 memberService.update(
-                        email,
+                        authentication.getName(),
                         requestDto
                 );
 
@@ -177,8 +254,9 @@ public class MemberController {
 
         return ResponseEntity.ok(member);
 
-
     }
+
+
 
 
 
@@ -196,18 +274,15 @@ public class MemberController {
     ){
 
 
-        String email =
-                authentication.getName();
-
-
-
         Member member =
-                memberService.delete(email);
+
+                memberService.delete(
+                        authentication.getName()
+                );
 
 
 
         return ResponseEntity.ok(member);
-
 
     }
 
