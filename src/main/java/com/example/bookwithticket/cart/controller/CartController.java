@@ -14,15 +14,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.bookwithticket.cart.dto.CartItemDto;
+import com.example.bookwithticket.cart.dto.PerformanceCartItemDto;
 import com.example.bookwithticket.cart.service.CartService;
+import com.example.bookwithticket.cart.service.PerformanceCartService;
 
 @Controller
 public class CartController {
 
     private final CartService cartService;
+    private final PerformanceCartService performanceCartService;
 
-    public CartController(CartService cartService) {
+    public CartController(CartService cartService, PerformanceCartService performanceCartService) {
         this.cartService = cartService;
+        this.performanceCartService = performanceCartService;
     }
 
     // 임시 ID 1
@@ -36,6 +40,7 @@ public class CartController {
 
         Long memberId = getCurrentMemberId();
 
+        /* 도서 장바구니 */
         List<CartItemDto> cartItems = cartService.findCartItems(memberId);
 
         int totalPrice = cartItems.stream()
@@ -50,6 +55,17 @@ public class CartController {
         model.addAttribute("totalPrice", totalPrice);
         model.addAttribute("totalQuantity", totalQuantity);
 
+        /* 공연 장바구니 */
+        List<PerformanceCartItemDto> performanceCartItems = performanceCartService.getCartItems(memberId);
+
+        model.addAttribute("cartItems", cartItems);
+
+        model.addAttribute("totalPrice", totalPrice);
+
+        model.addAttribute("totalQuantity", totalQuantity);
+
+        model.addAttribute("performanceCartItems", performanceCartItems);
+        
         return "cart/cartList";
     }
 
@@ -79,15 +95,9 @@ public class CartController {
                     defaultValue = "1"
             ) int quantity
     ) {
-        cartService.addCartItem(
-                memberId,
-                bookId,
-                quantity
-        );
+        cartService.addCartItem(memberId, bookId, quantity);
 
-        return ResponseEntity.ok(
-                "장바구니 등록 완료"
-        );
+        return ResponseEntity.ok("장바구니 등록 완료");
     }
     
     /*장바구니 상품 삭제 */
@@ -124,9 +134,54 @@ public class CartController {
 
         cartService.deleteAllItems(memberId);
 
-        return ResponseEntity.ok(
-                "장바구니 상품을 모두 삭제했습니다."
-        );
+        return ResponseEntity.ok("장바구니 상품을 모두 삭제했습니다.");
     }
    
+    /* 공연 장바구니 추가 */
+    @ResponseBody
+    @PostMapping("/api/cart/performances")
+    public ResponseEntity<String> addPerformanceCartItem(
+            @RequestParam(
+                    name = "memberId",
+                    defaultValue = "1"
+            )
+            Long memberId,
+
+            @RequestParam(name = "performanceScheduleId")
+            Long performanceScheduleId
+    ) {
+        performanceCartService.addCartItem(memberId, performanceScheduleId);
+
+        return ResponseEntity.ok("공연 장바구니 등록 완료");
+    }
+    
+    /* 공연 장바구니 삭제 */
+    @ResponseBody
+    @DeleteMapping("/api/cart/performances/{performanceCartItemId}")
+    public ResponseEntity<String>
+    deletePerformanceCartItem(
+            @PathVariable(
+                    name = "performanceCartItemId"
+            )
+            Long performanceCartItemId
+    ) {
+        Long memberId = getCurrentMemberId();
+
+        performanceCartService.deleteCartItem(memberId, performanceCartItemId);
+
+        return ResponseEntity.ok("공연 장바구니 상품 삭제 완료");
+    }
+    
+    /* 공연 장바구니 전체 삭제 */
+    @ResponseBody
+    @DeleteMapping("/api/cart/performances")
+    public ResponseEntity<String>
+    deleteAllPerformanceCartItems() {
+
+        Long memberId = getCurrentMemberId();
+
+        performanceCartService.deleteAllItems(memberId);
+
+        return ResponseEntity.ok("공연 장바구니를 모두 삭제했습니다.");
+    }
 }

@@ -24,10 +24,22 @@
 		<button onclick="addCartItem3()">도서 담기(book_id=3 / 품절)</button>
 		<button onclick="addCartItem4()">도서 담기(book_id=4 / 비활성화 도서)</button>
 	</div>
+	
+	<div>
+		<div>티켓 담기</div>
+		<button onclick="addPerformance(1)">공연 담기(perfermance_id=1 / 오픈 전)</button>
+		<button onclick="addPerformance(2)">공연 담기(perfermance_id=2 / 예매 중)</button>
+		<button onclick="addPerformance(3)">공연 담기(perfermance_id=3 / 종료)</button>
+	</div>
 	<hr>
+	
 	<a href="/cart">장바구니 이동</a>
+	
+
 </body>
 <script>
+
+	/* 임시 도서 담기 */
     async function addCartItem1() {
         const params = new URLSearchParams();
 
@@ -176,5 +188,51 @@
     function getTestMemberId() {
         return localStorage.getItem("testMemberId") || "1";
     }
+ 	
+ 	/* 임시 공연 담기 */
+ 	async function addPerformance(performanceScheduleId) {
+    const params = new URLSearchParams();
+
+    params.append("memberId", getTestMemberId());
+
+    params.append("performanceScheduleId", String(performanceScheduleId));
+
+    try {
+        const response = await fetch(
+            "/api/cart/performances",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/x-www-form-urlencoded"
+                },
+                body: params
+            }
+        );
+
+        const message = await response.text();
+
+        if (!response.ok) {
+            console.error("서버 오류:", message);
+
+            alert(
+                message ||
+                "공연 장바구니 추가에 실패했습니다."
+            );
+            return;
+        }
+
+        alert(message);
+
+    } catch (error) {
+        console.error(error);
+
+        alert("요청 중 오류가 발생했습니다.");
+    }
+    
+    
+}
+ 	
+
 </script>
 </html>

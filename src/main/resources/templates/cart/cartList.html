@@ -21,10 +21,10 @@
 	<hr>
 	<!-- 도서 장바구니 -->
 	<div id="bookCart">
-	<!-- 장바구니가 비어있음 -->
-	<div th:if="${#lists.isEmpty(cartItems)}">
-		<p>장바구니가 비어있습니다</p>
-	</div>
+		<!-- 장바구니가 비어있음 -->
+		<div th:if="${#lists.isEmpty(cartItems)}">
+			<p>장바구니가 비어있습니다</p>
+		</div>
 		<!-- 장바구니에 도서가 있음 -->
 		<div th:unless="${#lists.isEmpty(cartItems)}">
 			<button onclick="deleteAllItems()">전체 삭제</button>
@@ -100,7 +100,72 @@
 	
 	<!-- 공연 티켓 -->
 	<div id="ticketCart" hidden>
-		<p>현재 공연 장바구니가 비어 있습니다.</p>
+		<!-- 공연 장바구니가 비어 있음 -->
+		<div th:if="${#lists.isEmpty(performanceCartItems)}">
+			<p>현재 공연 장바구니가 비어 있습니다.</p>
+		</div>
+		<!-- 공연 장바구니에 항목이 있음 -->
+    	<div th:unless="${#lists.isEmpty(performanceCartItems)}">
+    		<button type="button" onclick="deleteAllPerformanceItems()">
+	            공연 전체 삭제
+       		</button>
+    		<div th:each="item : ${performanceCartItems}" class="performance-cart-item">
+	
+	            <img th:if="${item.posterUrl != null}" th:src="${item.posterUrl}"
+	                width="120" height="160" alt="공연 포스터">
+				
+	            <p>
+	                공연명:
+	                <span th:text="${item.title}"></span>
+	            </p>
+	            
+	            <p>
+	                공연장:
+	                <span th:text="${item.venue}"></span>
+	            </p>
+	
+	
+	            <p>
+	                공연 일시:
+	                <span th:text="${#temporals.format(item.performanceStartAt, 'yyyy.MM.dd HH:mm')}"></span>
+	            </p>
+	
+	            <p>
+	                예매 시작:
+	                <span th:text="${#temporals.format(item.reservationStartAt, 'yyyy.MM.dd HH:mm')}">
+	                </span>
+	            </p>
+	
+	            <p>
+	                예매 종료:
+	                <span th:text="${#temporals.format(item.reservationEndAt, 'yyyy.MM.dd HH:mm')}"></span>
+	            </p>
+	
+	            <!-- 오픈 예정 -->
+	            <button th:if="${item.status.name() == 'OPEN_SCHEDULED'}" type="button" disabled>
+	                오픈 예정
+	            </button>
+	
+	            <!-- 예매 가능 -->
+	            <button th:if="${item.status.name() == 'AVAILABLE'}"
+	                type="button" th:onclick="|moveToPerformance(${item.performanceId}, ${item.scheduleId})|">
+	                예매하기
+	            </button>
+	
+	            <!-- 예매 기간 만료 -->
+	            <button th:if="${item.status.name() == 'EXPIRED'}" type="button" disabled>
+	                종료된 공연
+	            </button>
+	
+	            <button type="button" th:onclick="|deletePerformanceCartItem(${item.cartItemId})|">
+	                공연 삭제
+	            </button>
+	
+	            <hr>
+	        </div>
+    	
+		</div>
+		
 	</div>
 </body>
 <script>
@@ -113,6 +178,7 @@
 		ticketCart.hidden = true;
 
 		document.getElementById(tabId).hidden = false;
+
 	}
 
 	// 도서 수량 버튼
@@ -197,32 +263,55 @@
 		});
 	}
 	
-	document.addEventListener("DOMContentLoaded", updateSelectedSummary);
+	document.addEventListener("DOMContentLoaded", function () {
+		const quantityElement = document.getElementById("selectTotalQuantity");
+
+	    const priceElement = document.getElementById("selectTotalPrice");
+
+	    if (quantityElement && priceElement) {
+	        updateSelectedSummary();
+	    }
+		
+	    updateSelectedSummary();
+
+	    const openPerformanceCart = localStorage.getItem("openPerformanceCart");
+
+	    if (openPerformanceCart === "true") {
+	        cartTab("ticketCart");
+	        localStorage.removeItem("openPerformanceCart");
+	    } else {
+	        cartTab("bookCart");
+	    }
+	});
 	
 	// 선택 상품 확인
 	function updateSelectedSummary() {
-	    const cartItems =
-	        document.querySelectorAll(".cart-item");
+		const quantityElement = document.getElementById("selectTotalQuantity");
+
+	    const priceElement = document.getElementById("selectTotalPrice");
+
+	    if (!quantityElement || !priceElement) {
+	        return;
+	    }
+		
+		
+	    const cartItems = document.querySelectorAll(".cart-item");
 	
 	    let selectedTotalQuantity = 0;
 	    let selectedTotalPrice = 0;
 	
 	    cartItems.forEach(cartItem => {
-	        const checkbox =
-	            cartItem.querySelector(".item-checkbox");
+	        const checkbox = cartItem.querySelector(".item-checkbox");
 	
 	        if (checkbox.disabled || !checkbox.checked) {
 	            return;
 	        }
 	
-	        const price =
-	            Number(cartItem.dataset.price);
+	        const price = Number(cartItem.dataset.price);
 	
-	        const quantityInput =
-	            cartItem.querySelector(".quantityBox input");
+	        const quantityInput = cartItem.querySelector(".quantityBox input");
 	
-	        const quantity =
-	            Number(quantityInput.value);
+	        const quantity = Number(quantityInput.value);
 	
 	        selectedTotalQuantity += quantity;
 	        selectedTotalPrice += price * quantity;
@@ -240,19 +329,23 @@
 	
 	// 주문자 정보 페이지 이동
 	function orderDelivery() {
-		const checkedItems =
-	        document.querySelectorAll(
-	            ".item-checkbox:checked:not(:disabled)"
-	        );
+		
+		const quantityElement = document.getElementById("selectTotalQuantity");
+
+	    const priceElement = document.getElementById("selectTotalPrice");
+
+	    if (quantityElement === null || priceElement === null) {
+	        return;
+	    }
+		
+		const checkedItems = document.querySelectorAll(".item-checkbox:checked:not(:disabled)");
 
 	    if (checkedItems.length === 0) {
 	        alert("주문할 상품을 선택해주세요.");
 	        return;
 	    }
 
-	    const cartItemIds =
-	        Array.from(checkedItems)
-	            .map(checkbox => Number(checkbox.value));
+	    const cartItemIds = Array.from(checkedItems).map(checkbox => Number(checkbox.value));
 
 	    fetch("/api/orders/prepare", {
 	        method: "POST",
@@ -267,17 +360,13 @@
 	        if (!response.ok) {
 	            const message = await response.text();
 
-	            throw new Error(
-	                message || "주문 준비에 실패했습니다."
-	            );
+	            throw new Error(message || "주문 준비에 실패했습니다.");
 	        }
 
 	        return response.json();
 	    })
 	    .then(order => {
-	        location.href =
-	            "/order?orderNumber="
-	            + encodeURIComponent(order.orderNumber);
+	        location.href = "/order?orderNumber=" + encodeURIComponent(order.orderNumber);
 	    })
 	    .catch(error => {
 	        alert(error.message);
@@ -305,6 +394,43 @@
 	    .catch(error => {
 	        alert(error.message);
 	    });
+	}
+	
+	//선택 공연 삭제
+	function deletePerformanceCartItem(itemId){
+		fetch("/api/cart/performances/" + itemId, {
+			method: "DELETE"
+		})		
+		.then(response =>{
+			if(!response.ok){
+				throw new Error("삭제에 실패했습니다.");
+			}
+			
+			localStorage.setItem("openPerformanceCart", "true");
+			location.reload();
+		})
+		.catch(error =>{
+			alert(error.message);
+		});
+	}
+	
+	/* 공연 전체 삭제 */
+	function deleteAllPerformanceItems(){
+		fetch("/api/cart/performances", {
+			method: "DELETE"
+		})
+		.then(async response => {
+			const message = await response.text();
+			if(!response.ok){
+				throw new Error(message || "장바구니 전체 삭제에 실패했습니다.");
+			}
+			alert(message || "장바구니 상품을 모두 삭제했습니다.");
+			localStorage.setItem("openPerformanceCart", "true");
+			location.reload();
+		})
+		.catch(error =>{
+			alert(error.message);
+		});
 	}
 </script>
 </html>

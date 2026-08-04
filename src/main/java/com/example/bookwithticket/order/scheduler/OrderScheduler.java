@@ -14,7 +14,7 @@ public class OrderScheduler {
         this.orderService = orderService;
     }
 
-    // 이전 실행이 끝난 뒤 1분마다 실행
+    // 1분마다 실행
     @Scheduled(fixedDelay = 60000)
     public void cancelExpiredOrders() {
         orderService.cancelExpiredOrders();
