@@ -111,7 +111,6 @@ function loadBook(){
                 book.description ?? "";
 
 
-
         });
 
 
@@ -125,7 +124,7 @@ function loadBook(){
 
 
 
-// 관심 도서 추가 / 삭제
+// 관심 도서
 
 function favorite(){
 
@@ -152,6 +151,7 @@ function favorite(){
 
 
     if(!favoriteStatus){
+
 
 
         fetch(
@@ -182,7 +182,6 @@ function favorite(){
 
                 if(!response.ok){
 
-
                     throw new Error(
                         "관심 도서 등록 실패"
                     );
@@ -204,24 +203,11 @@ function favorite(){
 
 
                 alert(
-                    "❤️ 관심 도서에 추가되었습니다."
-                );
-
-
-            })
-
-
-
-            .catch(error=>{
-
-
-                alert(
-                    error.message
+                    "❤️ 관심 도서 추가"
                 );
 
 
             });
-
 
 
     }
@@ -261,7 +247,7 @@ function favorite(){
 
 
                 alert(
-                    "관심 도서에서 삭제되었습니다."
+                    "관심 도서 삭제"
                 );
 
 
@@ -285,9 +271,47 @@ function cart(){
 
 
     alert(
-        "장바구니 기능은 담당자 구현 예정"
+        "장바구니 기능 준비중"
     );
 
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// 내 회원 id 가져오기
+
+function getMyEmail(){
+
+
+    const token =
+        localStorage.getItem("token");
+
+
+    if(!token){
+
+        return null;
+
+    }
+
+
+    const payload =
+        JSON.parse(
+            atob(
+                token.split(".")[1]
+            )
+        );
+
+
+    return payload.sub;
 
 }
 
@@ -304,6 +328,7 @@ function cart(){
 // 리뷰 조회
 
 function loadReviews(){
+
 
 
     fetch(
@@ -326,9 +351,7 @@ function loadReviews(){
 
 
 
-            box.innerHTML="";
-
-
+            box.innerHTML = "";
 
 
 
@@ -348,43 +371,99 @@ function loadReviews(){
 
 
 
+            const myEmail =
+                getMyEmail();
+
+
+
+
+
 
             reviews.forEach(review=>{
+
+
+
+                let deleteButton = "";
+
+                console.log(
+                    "내 이메일 : ",
+                    myEmail
+                );
+
+
+                console.log(
+                    "리뷰 이메일 : ",
+                    review.email
+                );
+
+
+                if(
+                    myEmail != null &&
+                    myEmail === review.email
+                ){
+
+
+                    deleteButton = `
+
+
+                <button onclick="deleteReview(${review.id})">
+
+                    삭제
+
+                </button>
+
+
+                `;
+
+
+                }
+
+
+
+
 
 
                 box.innerHTML += `
 
 
-                <div class="review-card">
+            <div class="review-card">
 
 
-                    <h4>
-                        ${review.name}
-                    </h4>
-
-
-
-                    <p>
-                        ${"⭐".repeat(review.rating)}
-                    </p>
+                <h4>
+                    ${review.name}
+                </h4>
 
 
 
-                    <p>
-                        ${review.content}
-                    </p>
+                <p>
+                    ${"⭐".repeat(review.rating)}
+                </p>
 
 
 
-                    <small>
-                        ${review.createdAt}
-                    </small>
+                <p>
+                    ${review.content}
+                </p>
 
 
-                </div>
+
+                <small>
+                    ${review.createdAt}
+                </small>
+
+
+
+                <br>
+
+
+                ${deleteButton}
+
+
+            </div>
 
 
             `;
+
 
 
             });
@@ -392,6 +471,7 @@ function loadReviews(){
 
 
         });
+
 
 
 }
@@ -404,7 +484,9 @@ function loadReviews(){
 
 
 
-// 리뷰 등록
+
+
+// 리뷰 작성
 
 function saveReview(){
 
@@ -424,6 +506,7 @@ function saveReview(){
 
 
         return;
+
 
     }
 
@@ -499,6 +582,7 @@ function saveReview(){
                     "리뷰 등록 실패"
                 );
 
+
             }
 
 
@@ -506,7 +590,6 @@ function saveReview(){
 
 
         })
-
 
 
         .then(()=>{
@@ -531,16 +614,102 @@ function saveReview(){
 
 
 
+        });
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// 리뷰 삭제
+
+function deleteReview(reviewId){
+
+
+
+    const token =
+        localStorage.getItem("token");
+
+
+
+    if(!confirm(
+        "리뷰를 삭제하시겠습니까?"
+    )){
+
+        return;
+
+    }
+
+
+
+
+
+    fetch(
+        "/reviews/" + reviewId,
+        {
+
+
+            method:"DELETE",
+
+
+            headers:{
+
+
+                "Authorization":
+                    "Bearer " + token
+
+
+            }
+
+
+        }
+
+    )
+
+
+
+        .then(response=>{
+
+
+            if(!response.ok){
+
+
+                throw new Error(
+                    "삭제 실패"
+                );
+
+
+            }
+
+
+            return response.text();
+
+
         })
 
 
-
-        .catch(error=>{
+        .then(()=>{
 
 
             alert(
-                error.message
+                "리뷰 삭제 완료"
             );
+
+
+
+            loadReviews();
+
+
+            loadReviewInfo();
 
 
         });
@@ -559,7 +728,7 @@ function saveReview(){
 
 
 
-// 평균 평점 조회
+// 평균 평점
 
 function loadReviewInfo(){
 
@@ -590,9 +759,7 @@ function loadReviewInfo(){
                 + "개 리뷰)";
 
 
-
         });
-
 
 
 }

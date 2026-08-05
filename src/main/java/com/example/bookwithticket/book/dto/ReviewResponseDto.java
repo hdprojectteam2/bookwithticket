@@ -3,13 +3,13 @@ package com.example.bookwithticket.book.dto;
 
 
 import com.example.bookwithticket.book.entity.Review;
-
+import lombok.Getter;
 
 
 import java.time.LocalDateTime;
 
 
-
+@Getter
 public class ReviewResponseDto {
 
 
@@ -29,9 +29,9 @@ public class ReviewResponseDto {
     private LocalDateTime createdAt;
 
 
+    private Long memberId;
 
-
-
+    private String email;
 
 
     public ReviewResponseDto(
@@ -42,6 +42,10 @@ public class ReviewResponseDto {
         this.id =
                 review.getId();
 
+
+        this.memberId =
+                review.getMember()
+                        .getId();
 
 
         this.name =
@@ -64,6 +68,9 @@ public class ReviewResponseDto {
                 review.getCreatedAt();
 
 
+        this.email =
+                review.getMember()
+                        .getEmail();
     }
 
 
@@ -111,4 +118,15 @@ public class ReviewResponseDto {
     }
 
 
+    public Long getMemberId(){
+
+        return memberId;
+
+    }
+
+    public String getEmail(){
+
+        return email;
+
+    }
 }
