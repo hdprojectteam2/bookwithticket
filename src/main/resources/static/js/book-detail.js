@@ -3,7 +3,9 @@ const params =
         location.search
     );
 
+
 console.log("book-detail.js 실행됨");
+
 
 const id =
     params.get("id");
@@ -14,11 +16,24 @@ let favoriteStatus = false;
 
 
 
-window.onload=function(){
+
+
+window.onload = function(){
+
 
     loadBook();
 
+
+    loadReviews();
+
+
+    loadReviewInfo();
+
+
 };
+
+
+
 
 
 
@@ -33,7 +48,9 @@ function loadBook(){
     )
 
 
-        .then(response=>response.json())
+        .then(response =>
+            response.json()
+        )
 
 
         .then(book=>{
@@ -108,7 +125,7 @@ function loadBook(){
 
 
 
-// 관심 도서 추가/삭제
+// 관심 도서 추가 / 삭제
 
 function favorite(){
 
@@ -120,9 +137,11 @@ function favorite(){
 
     if(!token){
 
+
         alert(
             "로그인이 필요합니다."
         );
+
 
         return;
 
@@ -133,7 +152,6 @@ function favorite(){
 
 
     if(!favoriteStatus){
-
 
 
         fetch(
@@ -163,6 +181,7 @@ function favorite(){
 
 
                 if(!response.ok){
+
 
                     throw new Error(
                         "관심 도서 등록 실패"
@@ -208,8 +227,8 @@ function favorite(){
     }
 
 
-    else {
 
+    else {
 
 
         fetch(
@@ -249,11 +268,12 @@ function favorite(){
             });
 
 
-
     }
 
 
 }
+
+
 
 
 
@@ -267,6 +287,312 @@ function cart(){
     alert(
         "장바구니 기능은 담당자 구현 예정"
     );
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// 리뷰 조회
+
+function loadReviews(){
+
+
+    fetch(
+        "/books/" + id + "/reviews"
+    )
+
+
+        .then(response =>
+            response.json()
+        )
+
+
+        .then(reviews=>{
+
+
+            const box =
+                document.getElementById(
+                    "reviewList"
+                );
+
+
+
+            box.innerHTML="";
+
+
+
+
+
+            if(reviews.length === 0){
+
+
+                box.innerHTML =
+                    "<p>작성된 리뷰가 없습니다.</p>";
+
+
+                return;
+
+
+            }
+
+
+
+
+
+
+            reviews.forEach(review=>{
+
+
+                box.innerHTML += `
+
+
+                <div class="review-card">
+
+
+                    <h4>
+                        ${review.name}
+                    </h4>
+
+
+
+                    <p>
+                        ${"⭐".repeat(review.rating)}
+                    </p>
+
+
+
+                    <p>
+                        ${review.content}
+                    </p>
+
+
+
+                    <small>
+                        ${review.createdAt}
+                    </small>
+
+
+                </div>
+
+
+            `;
+
+
+            });
+
+
+
+        });
+
+
+}
+
+
+
+
+
+
+
+
+
+// 리뷰 등록
+
+function saveReview(){
+
+
+
+    const token =
+        localStorage.getItem("token");
+
+
+
+    if(!token){
+
+
+        alert(
+            "로그인이 필요합니다."
+        );
+
+
+        return;
+
+    }
+
+
+
+
+
+
+    const data = {
+
+
+        content:
+        document.getElementById(
+            "reviewContent"
+        ).value,
+
+
+
+        rating:
+            Number(
+                document.getElementById(
+                    "rating"
+                ).value
+            )
+
+
+    };
+
+
+
+
+
+
+    fetch(
+        "/books/" + id + "/reviews",
+        {
+
+
+            method:"POST",
+
+
+            headers:{
+
+
+                "Content-Type":
+                    "application/json",
+
+
+                "Authorization":
+                    "Bearer " + token
+
+
+            },
+
+
+            body:
+                JSON.stringify(data)
+
+
+        }
+
+    )
+
+
+
+        .then(response=>{
+
+
+            if(!response.ok){
+
+
+                throw new Error(
+                    "리뷰 등록 실패"
+                );
+
+            }
+
+
+            return response.json();
+
+
+        })
+
+
+
+        .then(()=>{
+
+
+            alert(
+                "리뷰 등록 완료"
+            );
+
+
+
+            document.getElementById(
+                "reviewContent"
+            ).value="";
+
+
+
+            loadReviews();
+
+
+            loadReviewInfo();
+
+
+
+        })
+
+
+
+        .catch(error=>{
+
+
+            alert(
+                error.message
+            );
+
+
+        });
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// 평균 평점 조회
+
+function loadReviewInfo(){
+
+
+
+    fetch(
+        "/books/" + id + "/reviews/info"
+    )
+
+
+        .then(response =>
+            response.json()
+        )
+
+
+        .then(info=>{
+
+
+            document.getElementById(
+                "reviewInfo"
+            ).innerText =
+
+
+                "⭐ "
+                + info.averageRating
+                + " / 5  ("
+                + info.reviewCount
+                + "개 리뷰)";
+
+
+
+        });
+
 
 
 }

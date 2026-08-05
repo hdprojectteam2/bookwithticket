@@ -22,13 +22,17 @@
 
 
 
+
 <div class="detail-container">
+
 
 
     <div class="book-image">
 
+
         <img id="thumbnail"
              width="250">
+
 
     </div>
 
@@ -39,7 +43,9 @@
     <div class="book-info">
 
 
+
         <h2 id="title"></h2>
+
 
 
 
@@ -114,15 +120,20 @@
 
 
 
+
+
 <div class="description-box">
 
 
+
     <h2>
-        책 소개
+        📖 책 소개
     </h2>
 
 
+
     <p id="description"></p>
+
 
 
 </div>
@@ -133,7 +144,139 @@
 
 
 
+
+
+<!-- 리뷰 영역 -->
+
+<div class="review-box">
+
+
+
+    <h2>
+        ⭐ 리뷰
+    </h2>
+
+
+
+
+
+    <!-- 평균 평점 -->
+
+    <div id="reviewInfo">
+
+    </div>
+
+
+
+
+
+
+    <!-- 리뷰 목록 -->
+
+    <div id="reviewList">
+
+
+    </div>
+
+
+
+
+
+
+
+
+    <hr>
+
+
+
+
+
+    <!-- 리뷰 작성 -->
+
+
+    <h3>
+        리뷰 작성
+    </h3>
+
+
+
+
+
+    <select id="rating">
+
+
+        <option value="5">
+            ⭐⭐⭐⭐⭐
+        </option>
+
+
+        <option value="4">
+            ⭐⭐⭐⭐
+        </option>
+
+
+        <option value="3">
+            ⭐⭐⭐
+        </option>
+
+
+        <option value="2">
+            ⭐⭐
+        </option>
+
+
+        <option value="1">
+            ⭐
+        </option>
+
+
+    </select>
+
+
+
+
+
+
+
+
+    <textarea
+
+            id="reviewContent"
+
+            placeholder="리뷰를 작성해주세요">
+
+    </textarea>
+
+
+
+
+
+
+
+
+    <button onclick="saveReview()">
+
+
+        리뷰 등록
+
+
+    </button>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
 <script src="/js/book-detail.js"></script>
+
 
 
 </body>

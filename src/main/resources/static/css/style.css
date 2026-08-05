@@ -223,3 +223,55 @@ input {
 
 
 }
+
+.review-box {
+
+    background:white;
+
+    padding:30px;
+
+    margin-top:30px;
+
+    border-radius:15px;
+
+}
+
+
+
+.review-card {
+
+
+    border-bottom:1px solid #ddd;
+
+    padding:20px 0;
+
+
+}
+
+
+
+.review-card h4 {
+
+
+    margin:0;
+
+
+}
+
+
+
+textarea {
+
+
+    width:400px;
+
+    height:100px;
+
+    display:block;
+
+    margin:15px 0;
+
+    padding:10px;
+
+
+}
