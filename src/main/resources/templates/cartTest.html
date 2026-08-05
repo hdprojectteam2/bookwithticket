@@ -35,7 +35,12 @@
 	
 	<a href="/cart">장바구니 이동</a>
 	
-
+	<div>테스트용 예매 번호 생성</div>
+	<input id="reservationNumber">
+	<button onclick="moveToPerformancePayment()">공연 결제 페이지 이동</button>
+	
+	<hr>
+	<a href="/history">구매내역 이동</a>
 </body>
 <script>
 
@@ -233,6 +238,15 @@
     
 }
  	
+function moveToPerformancePayment() {
+	const reservationNumber = document.getElementById("reservationNumber").value.trim();
 
+	if (!reservationNumber) {
+		alert("예매번호를 입력해주세요.");
+		return;
+	}
+        
+	location.href =  "/payments/checkout?orderNumber=" + encodeURIComponent(reservationNumber);
+}
 </script>
 </html>

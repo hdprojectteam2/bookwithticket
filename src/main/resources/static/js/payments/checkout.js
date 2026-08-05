@@ -1,4 +1,4 @@
-async function cancelOrder(orderNumber) {
+async function cancelBookOrder(orderNumber) {
   const response = await fetch(
     `/api/orders/${orderNumber}/cancel`,
     {
@@ -48,78 +48,59 @@ async function main() {
     return;
   }
 
-  try {
-    const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 
-    const tossPayments = TossPayments(clientKey);
+  const clientKey =  paymentData.dataset.clientKey;
+  
+  if (!clientKey) {
+    alert("토스 클라이언트 키를 확인할 수 없습니다.");
+    return;
+  }	
 
-    const widgets = tossPayments.widgets({
-        customerKey: TossPayments.ANONYMOUS,
-      });
+  const tossPayments = TossPayments(clientKey);
 
-    await widgets.setAmount({
-      currency: "KRW",
-      value: totalPrice,
+
+  const payment =
+    tossPayments.payment({
+      customerKey:
+        TossPayments.ANONYMOUS,
     });
 
-    await widgets.renderPaymentMethods({
-      selector: "#payment-method",
-      variantKey: "DEFAULT",
-    });
+  paymentButton.disabled = false;
 
-    await widgets.renderAgreement({
-      selector: "#agreement",
-      variantKey: "AGREEMENT",
-    });
+  paymentButton.addEventListener(
+    "click",
+    async function () {
+      paymentButton.disabled = true;
 
-    paymentButton.disabled = false;
+	  try {
+	    await payment.requestPayment({
+	      method: "CARD",
 
-    paymentButton.addEventListener(
-      "click",
-      async function () {
-        paymentButton.disabled = true;
+	      amount: {
+	        currency: "KRW",
+	        value: totalPrice,
+	      },
 
-        try {
-          await widgets.requestPayment({
-            orderId: orderNumber,
-            orderName: orderName,
+	      orderId: orderNumber,
+	      orderName: orderName,
 
-            successUrl:
-              window.location.origin + "/payments/success",
+	      successUrl: window.location.origin + "/payments/success",
 
-            failUrl:
-              window.location.origin + "/payments/fail",
-          });
+	      failUrl: window.location.origin + "/payments/fail",
 
-        } catch (error) {
-          console.error(
-            "결제 요청 중단:",
-            error
-          );
+	      customerName: "테스트 구매자",
+	    });
 
-          try {
-            await cancelOrder(orderNumber);
+	  } catch (error) {
+	    console.error("토스 결제창 오류:", error);
+	    console.error("오류 코드:", error.code);
+	    console.error("오류 메시지:", error.message);
 
-            alert("결제가 취소되었습니다.");
 
-            window.location.href = "/cart";
-
-          } catch (cancelError) {
-            console.error("주문 취소 처리 실패:", cancelError);
-
-            alert("주문 취소 처리에 실패했습니다.");
-
-            paymentButton.disabled = false;
-          }
-        }
-      }
-    );
-
-  } catch (error) {
-    console.error(error);
-
-    alert(error.message || "결제위젯을 불러오지 못했습니다.");
-  }
+	    paymentButton.disabled = false;
+	  }
+    }
+  );
 }
 
 main();

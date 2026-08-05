@@ -8,5 +8,8 @@ public enum PaymentMethod {
     PAYCO,				// 페이코
     KAKAO_PAY,			// 카카오 페이
     NAVER_PAY,			// 네이버 페이
+    L_PAY,				// 엘페이
+    SSG_PAY,			// SSG 페이
+    SAMSUNG_PAY,		// 삼성 페이
     UNKNOWN				// 이외
 }

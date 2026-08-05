@@ -30,6 +30,9 @@ import com.example.bookwithticket.payment.entity.PaymentMethod;
 import com.example.bookwithticket.payment.entity.PaymentStatus;
 import com.example.bookwithticket.payment.exception.TossPaymentException;
 import com.example.bookwithticket.payment.repository.PaymentRepository;
+import com.example.bookwithticket.reservation.entity.ReservationEntity;
+import com.example.bookwithticket.reservation.entity.ReservationStatus;
+import com.example.bookwithticket.reservation.repository.ReservationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,6 +53,8 @@ public class PaymentServiceImpl implements PaymentService {
     
     private final PaymentFailureService paymentFailureService;
     
+    private final ReservationRepository reservationRepository;
+    
     public PaymentServiceImpl(
             PaymentRepository paymentRepository,
             BookOrderRepository bookOrderRepository,
@@ -57,7 +62,8 @@ public class PaymentServiceImpl implements PaymentService {
             @Value("${toss.payments.secret-key}")
             String secretKey,
             CartItemRepository cartItemRepository,
-            PaymentFailureService paymentFailureService
+            PaymentFailureService paymentFailureService,
+            ReservationRepository reservationRepository
     ) {
         this.paymentRepository = paymentRepository;
         this.bookOrderRepository = bookOrderRepository;
@@ -66,6 +72,7 @@ public class PaymentServiceImpl implements PaymentService {
         this.secretKey = secretKey;
         this.cartItemRepository = cartItemRepository;
         this.paymentFailureService = paymentFailureService;
+        this.reservationRepository = reservationRepository;
     }
 
     @Transactional
@@ -73,8 +80,23 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentConfirmResponse confirmPayment(Long memberId, PaymentConfirmRequest request) {
         /* 값 검사 */
     	validateRequest(request);
-
-        /* 주문번호, 회원번호, 결제 대기 상태 검사 */
+    	
+    	String orderId = request.getOrderId();
+    	
+    	/* 도서, 공연 주문 번호 판별 */
+    	if(orderId.startsWith("B")) {
+    		return confirmBookPayment(memberId, request);
+    	}
+    	
+    	if(orderId.startsWith("R")) {
+    		return confirmPerformancePayment(memberId,request);
+    	}
+    	
+    	throw new IllegalArgumentException("올바르지 않은 주문번호입니다.");
+    }
+    
+    private PaymentConfirmResponse confirmBookPayment(Long memberId, PaymentConfirmRequest request) {
+    	/* 주문번호, 회원번호, 결제 대기 상태 검사 */
         BookOrderEntity order =
                 bookOrderRepository
                         .findByOrderNumberAndMemberIdAndOrderStatus(
@@ -163,18 +185,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         OffsetDateTime approvedAt = OffsetDateTime.parse(approvedAtValue);
 
-        PaymentEntity payment =
-                new PaymentEntity(
-                        order,
-                        confirmedPaymentKey,
-                        idempotencyKey,
-                        paymentMethod,
-                        confirmedAmount,
-                        approvedAt.toLocalDateTime()
-                );
+        PaymentEntity payment = new PaymentEntity(order, confirmedPaymentKey, idempotencyKey, paymentMethod, confirmedAmount, approvedAt.toLocalDateTime());
 
-        PaymentEntity savedPayment =
-                paymentRepository.save(payment);
+        PaymentEntity savedPayment = paymentRepository.save(payment);
 
         /* 결제 성공 PAYMENT_PENDING - PAID */
         order.completePayment();
@@ -184,6 +197,129 @@ public class PaymentServiceImpl implements PaymentService {
         return new PaymentConfirmResponse(
                 savedPayment.getId(),
                 order.getOrderNumber(),
+                savedPayment.getAmount(),
+                savedPayment.getMethod().name(),
+                savedPayment.getStatus().name()
+        );
+    }
+    
+    private PaymentConfirmResponse confirmPerformancePayment(Long memberId, PaymentConfirmRequest request) {
+        ReservationEntity reservation =
+                reservationRepository
+                        .findByReservationNumberAndMemberIdAndStatus(
+                                request.getOrderId(),
+                                memberId,
+                                ReservationStatus.PAYMENT_PENDING
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException(
+                                        "결제할 수 없는 공연 예매입니다."
+                                )
+                        );
+
+        /*
+         * 프론트에서 전달한 금액과
+         * DB 예매 금액 비교
+         */
+        if (reservation.getTotalPrice()!= request.getAmount()) {
+
+            throw new IllegalArgumentException("결제 금액이 일치하지 않습니다.");
+        }
+
+        /* 같은 paymentKey가 이미 처리됐는지 확인 */
+        if (paymentRepository.existsByPaymentKey(request.getPaymentKey())) {
+            throw new IllegalArgumentException("이미 처리된 결제입니다.");
+        }
+
+        /* 해당 예매에 완료 결제가 이미 있는지 확인 */
+        if (paymentRepository.existsByReservationIdAndStatus( reservation.getId(), PaymentStatus.DONE)) {
+            throw new IllegalArgumentException("이미 결제가 완료된 예매입니다.");
+        }
+
+        String idempotencyKey =
+                createIdempotencyKey(
+                        reservation.getReservationNumber(),
+                        request.getPaymentKey()
+                );
+
+
+        JsonNode tossResponse;
+
+        try {
+            tossResponse =
+                    requestTossConfirmation(
+                            request,
+                            idempotencyKey
+                    );
+
+        } catch (TossPaymentException exception) {
+
+            paymentFailureService.savePerformanceFailure(
+                    reservation.getId(),
+                    request.getPaymentKey(),
+                    idempotencyKey,
+                    reservation.getTotalPrice(),
+                    exception.getCode(),
+                    exception.getMessage()
+            );
+
+            throw exception;
+        }
+        
+        
+        String confirmedOrderId = tossResponse.path("orderId").asText();
+
+        int confirmedAmount = tossResponse.path("totalAmount").asInt();
+
+        String confirmedPaymentKey = tossResponse.path("paymentKey").asText();
+
+
+        if (!reservation.getReservationNumber().equals(confirmedOrderId)) {
+
+            throw new IllegalStateException("예매번호가 일치하지 않습니다.");
+        }
+
+        if (reservation.getTotalPrice() != confirmedAmount) {
+
+            throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
+        }
+
+        if (!request.getPaymentKey().equals(confirmedPaymentKey)) {
+
+            throw new IllegalStateException("결제 키가 일치하지 않습니다.");
+        }
+
+        String tossMethod = tossResponse.path("method").asText();
+
+        String easyPayProvider = tossResponse.path("easyPay").path("provider").asText(null);
+
+        PaymentMethod paymentMethod = convertPaymentMethod(tossMethod, easyPayProvider);
+
+        String approvedAtValue = tossResponse.path("approvedAt").asText();
+
+        OffsetDateTime approvedAt =
+                OffsetDateTime.parse(
+                        approvedAtValue
+                );
+
+        PaymentEntity payment =
+                PaymentEntity.performancePayment(
+                        reservation.getId(),
+                        confirmedPaymentKey,
+                        idempotencyKey,
+                        paymentMethod,
+                        confirmedAmount,
+                        approvedAt.toLocalDateTime()
+                );
+
+        PaymentEntity savedPayment = paymentRepository.save(payment);
+
+
+        reservation.completePayment();
+
+        return new PaymentConfirmResponse(
+                savedPayment.getId(),
+                reservation.getReservationNumber(),
                 savedPayment.getAmount(),
                 savedPayment.getMethod().name(),
                 savedPayment.getStatus().name()
@@ -253,7 +389,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private String createIdempotencyKey(String orderNumber, String paymentKey) {
-        return UUID.nameUUIDFromBytes(("BOOK_ORDER_PAYMENT:" + orderNumber + ":" + paymentKey).getBytes(StandardCharsets.UTF_8)).toString();
+        return UUID.nameUUIDFromBytes(("PAYMENT:" + orderNumber + ":" + paymentKey).getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     private PaymentMethod convertPaymentMethod(String method, String easyPayProvider) {
@@ -288,7 +424,19 @@ public class PaymentServiceImpl implements PaymentService {
         if ("네이버페이".equals(provider)) {
             return PaymentMethod.NAVER_PAY;
         }
-
+        
+        if("SSG페이".equals(provider)) {
+        	return PaymentMethod.SSG_PAY;
+        }
+        
+        if("엘페이".equals(provider)) {
+        	return PaymentMethod.L_PAY;
+        }
+        
+        if("삼성페이".equals(provider)) {
+        	return PaymentMethod.SAMSUNG_PAY;
+        }
+        
         return PaymentMethod.UNKNOWN;
     }
 
@@ -330,6 +478,26 @@ public class PaymentServiceImpl implements PaymentService {
     
     @Override
     public void savePaymentFailure(Long memberId, PaymentFailureRequest request) {
+    	String orderId = request.getOrderId();
+
+        if (orderId == null || orderId.isBlank()) {
+            throw new IllegalArgumentException("주문번호가 없습니다.");
+        }
+
+        if (orderId.startsWith("B")) {
+            saveBookPaymentFailure(memberId, request);
+            return;
+        }
+
+        if (orderId.startsWith("R")) {
+            savePerformancePaymentFailure(memberId, request);
+            return;
+        }
+
+        throw new IllegalArgumentException("올바르지 않은 주문번호입니다");
+    }
+    
+    private void saveBookPaymentFailure(Long memberId, PaymentFailureRequest request) {
         BookOrderEntity order =
                 bookOrderRepository
                         .findByOrderNumberAndMemberIdAndOrderStatus(
@@ -338,17 +506,40 @@ public class PaymentServiceImpl implements PaymentService {
                                 OrderStatus.PAYMENT_PENDING
                         )
                         .orElseThrow(() ->
-                                new IllegalArgumentException("실패 처리할 주문이 없습니다.")
+                                new IllegalArgumentException("실패 처리할 도서 주문이 없습니다.")
                         );
 
-        String idempotencyKey =
-                UUID.randomUUID().toString();
+        String idempotencyKey = UUID.randomUUID().toString();
 
         paymentFailureService.saveFailure(
                 order,
                 null,
                 idempotencyKey,
                 order.getTotalPrice(),
+                request.getCode(),
+                request.getMessage()
+        );
+    }
+
+    private void savePerformancePaymentFailure(Long memberId, PaymentFailureRequest request) {
+        ReservationEntity reservation =
+                reservationRepository
+                        .findByReservationNumberAndMemberIdAndStatus(
+                                request.getOrderId(),
+                                memberId,
+                                ReservationStatus.PAYMENT_PENDING
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException("실패 처리할 공연 예매가 없습니다.")
+                        );
+
+        String idempotencyKey = UUID.randomUUID().toString();
+
+        paymentFailureService.savePerformanceFailure(
+                reservation.getId(),
+                null,
+                idempotencyKey,
+                reservation.getTotalPrice(),
                 request.getCode(),
                 request.getMessage()
         );

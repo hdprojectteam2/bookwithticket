@@ -12,4 +12,6 @@ public interface PaymentRepository
     boolean existsByPaymentKey(String paymentKey);
 
     boolean existsByBookOrderIdAndStatus(Long bookOrderId, PaymentStatus status);
+
+    boolean existsByReservationIdAndStatus(Long reservationId, PaymentStatus status);
 }

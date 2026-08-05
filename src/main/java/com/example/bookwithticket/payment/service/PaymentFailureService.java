@@ -17,9 +17,7 @@ public class PaymentFailureService {
         this.paymentRepository = paymentRepository;
     }
 
-    @Transactional(
-            propagation = Propagation.REQUIRES_NEW
-    )
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveFailure(
             BookOrderEntity order,
             String paymentKey,
@@ -28,16 +26,23 @@ public class PaymentFailureService {
             String failCode,
             String failMessage
     ) {
-        PaymentEntity failedPayment =
-                PaymentEntity.failed(
-                        order,
-                        paymentKey,
-                        idempotencyKey,
-                        amount,
-                        failCode,
-                        failMessage
-                );
+        PaymentEntity failedPayment = PaymentEntity.failed(order, paymentKey, idempotencyKey, amount, failCode, failMessage);
 
         paymentRepository.save(failedPayment);
     }
+    
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void savePerformanceFailure(
+    		Long reservationId,
+    		String paymentKey,
+    		String idempotencyKey,
+    		int amount,
+    		String failCode,
+    		String failMessage
+    ) {
+    	PaymentEntity failedPayment = PaymentEntity.failedPerformance(reservationId, paymentKey, idempotencyKey, amount, failCode, failMessage);
+    	
+    	paymentRepository.save(failedPayment);
+    }
+    
 }

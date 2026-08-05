@@ -31,24 +31,14 @@ public class PaymentEntity {
     @JoinColumn(name = "book_order_id")
     private BookOrderEntity bookOrder;
 
-    /* 공연 예매 결제 구현 전까지는 null */
+    
     @Column(name = "reservation_id")
     private Long reservationId;
 
-    @Column(
-            name = "payment_key",
-            nullable = false,
-            unique = true,
-            length = 200
-    )
+    @Column(name = "payment_key", nullable = false, unique = true, length = 200)
     private String paymentKey;
 
-    @Column(
-            name = "idempotency_key",
-            nullable = false,
-            unique = true,
-            length = 100
-    )
+    @Column(name = "idempotency_key", nullable = false, unique = true, length = 100)
     private String idempotencyKey;
 
     @Enumerated(EnumType.STRING)
@@ -139,6 +129,10 @@ public class PaymentEntity {
         return approvedAt;
     }
     
+    public Long getReservationId() {
+        return reservationId;
+    }
+    
     public static PaymentEntity failed(
             BookOrderEntity order,
             String paymentKey,
@@ -151,6 +145,56 @@ public class PaymentEntity {
 
         payment.bookOrder = order;
         payment.reservationId = null;
+        payment.paymentKey = paymentKey;
+        payment.idempotencyKey = idempotencyKey;
+        payment.method = PaymentMethod.UNKNOWN;
+        payment.amount = amount;
+        payment.status = PaymentStatus.FAILED;
+        payment.approvedAt = null;
+        payment.canceledAt = null;
+        payment.failCode = failCode;
+        payment.failMessage = failMessage;
+
+        return payment;
+    }
+    
+    public static PaymentEntity performancePayment(
+            Long reservationId,
+            String paymentKey,
+            String idempotencyKey,
+            PaymentMethod method,
+            int amount,
+            LocalDateTime approvedAt
+    ) {
+        PaymentEntity payment = new PaymentEntity();
+
+        payment.bookOrder = null;
+        payment.reservationId = reservationId;
+        payment.paymentKey = paymentKey;
+        payment.idempotencyKey = idempotencyKey;
+        payment.method = method;
+        payment.amount = amount;
+        payment.status = PaymentStatus.DONE;
+        payment.approvedAt = approvedAt;
+        payment.canceledAt = null;
+        payment.failCode = null;
+        payment.failMessage = null;
+
+        return payment;
+    }
+    
+    public static PaymentEntity failedPerformance(
+            Long reservationId,
+            String paymentKey,
+            String idempotencyKey,
+            int amount,
+            String failCode,
+            String failMessage
+    ) {
+        PaymentEntity payment = new PaymentEntity();
+
+        payment.bookOrder = null;
+        payment.reservationId = reservationId;
         payment.paymentKey = paymentKey;
         payment.idempotencyKey = idempotencyKey;
         payment.method = PaymentMethod.UNKNOWN;

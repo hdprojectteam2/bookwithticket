@@ -43,7 +43,9 @@ async function confirmPayment() {
 
       const message = encodeURIComponent(result.message || "결제 승인에 실패했습니다.");
 
-      window.location.href = `/payments/fail?code=${code}&message=${message}`;
+	  const encodedOrderId = encodeURIComponent(orderId);
+	  
+      window.location.href = `/payments/fail?code=${code}&message=${message}&orderId=${encodedOrderId}`;
 
       return;
     }
