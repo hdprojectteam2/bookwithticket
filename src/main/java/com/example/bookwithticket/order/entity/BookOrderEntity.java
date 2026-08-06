@@ -36,12 +36,7 @@ public class BookOrderEntity {
     @JoinColumn(name = "address_id")
     private AddressEntity address;
 
-    @Column(
-            name = "order_number",
-            nullable = false,
-            unique = true,
-            length = 30
-    )
+    @Column(name = "order_number", nullable = false, unique = true, length = 30)
     private String orderNumber;
 
     @Enumerated(EnumType.STRING)
@@ -177,12 +172,22 @@ public class BookOrderEntity {
     }
     
     public void cancel() {
-
         if (this.orderStatus != OrderStatus.PAYMENT_PENDING) {
-
             throw new IllegalStateException("결제 대기 주문만 취소할 수 있습니다.");
         }
 
         this.orderStatus = OrderStatus.CANCELLED;
     }
+    
+    public void refund() {
+    	if(this.orderStatus != OrderStatus.PAID) {
+    		throw new IllegalStateException("결제가 완료된 주문만 환불할 수 있습니다.");
+    	}
+    	this.orderStatus = OrderStatus.REFUNDED;
+    }
+    
+    public boolean isBeforeShipping() {
+    	return this.deliveryStatus == DeliveryStatus.READY;
+    }
+    
 }

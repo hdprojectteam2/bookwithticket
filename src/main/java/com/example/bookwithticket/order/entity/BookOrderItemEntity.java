@@ -99,4 +99,6 @@ public class BookOrderItemEntity {
     public int getTotalPrice() {
         return priceSnapshot * quantity;
     }
+
+
 }

@@ -30,6 +30,14 @@ public interface BookOrderRepository
     
     
     @EntityGraph(attributePaths = {"orderItems", "orderItems.book"})
-    List<BookOrderEntity>
-    findByOrderStatusAndCreatedAtBefore(OrderStatus orderStatus, LocalDateTime createdAt);
+    List<BookOrderEntity> findByOrderStatusAndCreatedAtBefore(OrderStatus orderStatus, LocalDateTime createdAt);
+    
+
+    @EntityGraph(attributePaths = {"orderItems"})
+    List<BookOrderEntity> findByMemberIdAndOrderStatusOrderByCreatedAtDesc(Long memberId, OrderStatus orderStatus);
+
+    @EntityGraph(attributePaths = {"orderItems", "orderItems.book"})
+    List<BookOrderEntity> findByMemberIdAndOrderStatusAndDeletedFalseOrderByCreatedAtDesc(Long memberId, OrderStatus orderStatus);
+
+    List<BookOrderEntity> findByMemberIdAndOrderStatusInAndDeletedFalseOrderByCreatedAtDesc(Long memberId, List<OrderStatus> orderStatuses);
 }
