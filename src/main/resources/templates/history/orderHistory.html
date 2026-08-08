@@ -108,10 +108,7 @@
 				</p>
 				<p>
 				    좌석:
-				    <span th:each="seatNumber, status : ${performanceHistoryItems.seatNumbers}">
-				        <span th:text="${seatNumber}"></span>
-				        <span th:if="${!status.last}">, </span>
-				    </span>
+					<span th:text="${performanceHistoryItem.seatNumber}"></span>
 				</p>
 				<button th:if="${performanceHistoryItems.reservationStatusCode == 'CONFIRMED' and performanceHistoryItems.refundStatusCode == null}" th:data-order-number="${performanceHistoryItems.reservationNumber}"
    				 onclick="requestRefund(this.dataset.orderNumber)">

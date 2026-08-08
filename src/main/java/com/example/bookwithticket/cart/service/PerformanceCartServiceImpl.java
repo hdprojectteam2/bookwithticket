@@ -50,7 +50,7 @@ public class PerformanceCartServiceImpl
 
         /* 예매 가능 공연 장바구니 예외 처리*/
         if (!LocalDateTime.now().isBefore(
-                schedule.getReservationEndAt()
+                schedule.getPerformanceTime()
         )) {
             throw new IllegalArgumentException("예매 기간이 만료된 공연입니다.");
         }

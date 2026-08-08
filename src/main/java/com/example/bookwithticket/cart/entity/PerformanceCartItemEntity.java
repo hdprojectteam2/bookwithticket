@@ -2,7 +2,7 @@ package com.example.bookwithticket.cart.entity;
 
 import java.time.LocalDateTime;
 
-import com.example.bookwithticket.performance.entity.PerformanceScheduleEntity;
+import com.example.bookwithticket.domain.performance.PerformanceSchedule;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,7 +48,7 @@ public class PerformanceCartItemEntity {
         name = "performance_schedule_id",
         nullable = false
     )
-    private PerformanceScheduleEntity performanceSchedule;
+    private PerformanceSchedule performanceSchedule;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -59,7 +59,7 @@ public class PerformanceCartItemEntity {
     protected PerformanceCartItemEntity() {
     }
 
-    public PerformanceCartItemEntity(CartEntity cart, PerformanceScheduleEntity performanceSchedule) {
+    public PerformanceCartItemEntity(CartEntity cart, PerformanceSchedule performanceSchedule) {
         this.cart = cart;
         this.performanceSchedule = performanceSchedule;
         this.createdAt = LocalDateTime.now();
@@ -74,7 +74,7 @@ public class PerformanceCartItemEntity {
         return cart;
     }
 
-    public PerformanceScheduleEntity getPerformanceSchedule() {
+    public PerformanceSchedule getPerformanceSchedule() {
         return performanceSchedule;
     }
 

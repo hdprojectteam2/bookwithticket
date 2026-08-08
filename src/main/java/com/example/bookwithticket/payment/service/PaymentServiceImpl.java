@@ -19,6 +19,10 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.bookwithticket.cart.repository.CartItemRepository;
+import com.example.bookwithticket.domain.reservation.Reservation;
+import com.example.bookwithticket.domain.reservation.ReservationRepository;
+import com.example.bookwithticket.domain.reservation.ReservationService;
+import com.example.bookwithticket.domain.reservation.ReservationStatus;
 import com.example.bookwithticket.order.entity.BookOrderEntity;
 import com.example.bookwithticket.order.entity.OrderStatus;
 import com.example.bookwithticket.order.repository.BookOrderRepository;
@@ -30,9 +34,6 @@ import com.example.bookwithticket.payment.entity.PaymentMethod;
 import com.example.bookwithticket.payment.entity.PaymentStatus;
 import com.example.bookwithticket.payment.exception.TossPaymentException;
 import com.example.bookwithticket.payment.repository.PaymentRepository;
-import com.example.bookwithticket.reservation.entity.ReservationEntity;
-import com.example.bookwithticket.reservation.entity.ReservationStatus;
-import com.example.bookwithticket.reservation.repository.ReservationRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -54,6 +55,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentFailureService paymentFailureService;
     
     private final ReservationRepository reservationRepository;
+    private final ReservationService reservationService;
     
     public PaymentServiceImpl(
             PaymentRepository paymentRepository,
@@ -63,7 +65,8 @@ public class PaymentServiceImpl implements PaymentService {
             String secretKey,
             CartItemRepository cartItemRepository,
             PaymentFailureService paymentFailureService,
-            ReservationRepository reservationRepository
+            ReservationRepository reservationRepository,
+            ReservationService reservationService
     ) {
         this.paymentRepository = paymentRepository;
         this.bookOrderRepository = bookOrderRepository;
@@ -73,6 +76,7 @@ public class PaymentServiceImpl implements PaymentService {
         this.cartItemRepository = cartItemRepository;
         this.paymentFailureService = paymentFailureService;
         this.reservationRepository = reservationRepository;
+        this.reservationService = reservationService;
     }
 
     @Transactional
@@ -204,43 +208,42 @@ public class PaymentServiceImpl implements PaymentService {
     }
     
     private PaymentConfirmResponse confirmPerformancePayment(Long memberId, PaymentConfirmRequest request) {
-        ReservationEntity reservation =
+    	Long reservationId = parseReservationId(request.getOrderId());
+    	
+    	Reservation reservation =
                 reservationRepository
-                        .findByReservationNumberAndMemberIdAndStatus(
-                                request.getOrderId(),
-                                memberId,
-                                ReservationStatus.PAYMENT_PENDING
+                        .findByIdAndMemberId(
+                        		reservationId,
+                                memberId
                         )
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "결제할 수 없는 공연 예매입니다."
-                                )
+                                new IllegalArgumentException("결제할 수 없는 공연 예매입니다.")
                         );
 
-        /*
-         * 프론트에서 전달한 금액과
-         * DB 예매 금액 비교
-         */
+   
         if (reservation.getTotalPrice()!= request.getAmount()) {
-
             throw new IllegalArgumentException("결제 금액이 일치하지 않습니다.");
         }
 
-        /* 같은 paymentKey가 이미 처리됐는지 확인 */
+        if (reservation.getStatus() != ReservationStatus.HELD) {
+            throw new IllegalArgumentException("결제 대기 상태의 공연 예매가 아닙니다.");
+        }
+        
+        if (reservation.isExpired()) {
+            throw new IllegalArgumentException("좌석 선점 시간이 만료되었습니다.");
+        }
+        
         if (paymentRepository.existsByPaymentKey(request.getPaymentKey())) {
             throw new IllegalArgumentException("이미 처리된 결제입니다.");
         }
 
-        /* 해당 예매에 완료 결제가 이미 있는지 확인 */
         if (paymentRepository.existsByReservationIdAndStatus( reservation.getId(), PaymentStatus.DONE)) {
             throw new IllegalArgumentException("이미 결제가 완료된 예매입니다.");
         }
 
-        String idempotencyKey =
-                createIdempotencyKey(
-                        reservation.getReservationNumber(),
-                        request.getPaymentKey()
-                );
+        String paymentOrderId = "R" + reservation.getId();
+        
+        String idempotencyKey = createIdempotencyKey(paymentOrderId, request.getPaymentKey());
 
 
         JsonNode tossResponse;
@@ -274,18 +277,15 @@ public class PaymentServiceImpl implements PaymentService {
         String confirmedPaymentKey = tossResponse.path("paymentKey").asText();
 
 
-        if (!reservation.getReservationNumber().equals(confirmedOrderId)) {
-
+        if (!paymentOrderId.equals(confirmedOrderId)) {
             throw new IllegalStateException("예매번호가 일치하지 않습니다.");
         }
 
         if (reservation.getTotalPrice() != confirmedAmount) {
-
             throw new IllegalStateException("결제 금액이 일치하지 않습니다.");
         }
 
         if (!request.getPaymentKey().equals(confirmedPaymentKey)) {
-
             throw new IllegalStateException("결제 키가 일치하지 않습니다.");
         }
 
@@ -297,10 +297,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         String approvedAtValue = tossResponse.path("approvedAt").asText();
 
-        OffsetDateTime approvedAt =
-                OffsetDateTime.parse(
-                        approvedAtValue
-                );
+        OffsetDateTime approvedAt =OffsetDateTime.parse(approvedAtValue);
 
         PaymentEntity payment =
                 PaymentEntity.performancePayment(
@@ -315,11 +312,15 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentEntity savedPayment = paymentRepository.save(payment);
 
 
-        reservation.completePayment();
+        reservationService
+		        .confirmReservation(
+		                memberId,
+		                reservation.getId()
+		        );
 
         return new PaymentConfirmResponse(
                 savedPayment.getId(),
-                reservation.getReservationNumber(),
+                paymentOrderId,
                 savedPayment.getAmount(),
                 savedPayment.getMethod().name(),
                 savedPayment.getStatus().name()
@@ -522,12 +523,13 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void savePerformancePaymentFailure(Long memberId, PaymentFailureRequest request) {
-        ReservationEntity reservation =
+    	Long reservationId = parseReservationId(request.getOrderId());
+    	
+    	Reservation reservation =
                 reservationRepository
-                        .findByReservationNumberAndMemberIdAndStatus(
-                                request.getOrderId(),
-                                memberId,
-                                ReservationStatus.PAYMENT_PENDING
+                        .findByIdAndMemberId(
+                        		reservationId,
+                                memberId
                         )
                         .orElseThrow(() ->
                                 new IllegalArgumentException("실패 처리할 공연 예매가 없습니다.")
@@ -543,6 +545,19 @@ public class PaymentServiceImpl implements PaymentService {
                 request.getCode(),
                 request.getMessage()
         );
+    }
+    
+    private Long parseReservationId(String orderId) {
+        if (orderId == null || !orderId.startsWith("R")) {
+
+            throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
+        }
+        try {
+            return Long.parseLong(orderId.substring(1));
+
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
+        }
     }
     
     private String extractTossErrorCode(String responseBody) {

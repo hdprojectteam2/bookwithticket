@@ -6,12 +6,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.example.bookwithticket.domain.reservation.Reservation;
+import com.example.bookwithticket.domain.reservation.ReservationRepository;
+import com.example.bookwithticket.domain.reservation.ReservationStatus;
 import com.example.bookwithticket.order.dto.OrderPageDto;
 import com.example.bookwithticket.order.dto.OrderPageItemDto;
 import com.example.bookwithticket.order.service.OrderService;
-import com.example.bookwithticket.reservation.entity.ReservationEntity;
-import com.example.bookwithticket.reservation.entity.ReservationStatus;
-import com.example.bookwithticket.reservation.repository.ReservationRepository;
 
 @Controller
 public class PaymentController {
@@ -77,29 +77,58 @@ public class PaymentController {
         return "payments/checkout";
     }
     
-    private String performanceCheckoutPage(Long memberId, String reservationNumber, Model model) {
-        ReservationEntity reservation =
+    private String performanceCheckoutPage(Long memberId, String orderNumber, Model model) {
+    	
+    	Long reservationId = parseReservationId(orderNumber);
+
+    	
+    	Reservation reservation =
                 reservationRepository
-                        .findByReservationNumberAndMemberIdAndStatus(
-                                reservationNumber,
-                                memberId,
-                                ReservationStatus.PAYMENT_PENDING
+                        .findByIdAndMemberId(
+                        		reservationId,
+                                memberId
                         )
                         .orElseThrow(() ->
                                 new IllegalArgumentException("결제할 수 없는 공연 예매입니다.")
                         );
 
+    	 if (reservation.getStatus() != ReservationStatus.HELD) {
+    	        throw new IllegalArgumentException("결제 대기 상태의 공연 예매가 아닙니다.");
+    	    }
+
+    	    if (reservation.isExpired()) {
+    	        throw new IllegalArgumentException("좌석 선점 시간이 만료되었습니다.");
+    	    }
+    	
         if (reservation.getTotalPrice() <= 0) {
             throw new IllegalArgumentException("결제 금액이 올바르지 않습니다.");
         }
 
-        String orderName = reservation.getPerformanceSchedule().getPerformance().getTitle();
+        String orderName = reservation.getSchedule().getPerformance().getTitle();
 
         model.addAttribute("reservation", reservation);
+        model.addAttribute("paymentOrderId", orderNumber);
         model.addAttribute("orderName", orderName);
         model.addAttribute("tossClientKey", clientKey);
 
         return "payments/performanceCheckout";
+    }
+    
+    private Long parseReservationId(String orderNumber) {
+
+        if (orderNumber == null || !orderNumber.startsWith("R")) {
+
+            throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
+        }
+
+        try {
+
+            return Long.parseLong(orderNumber.substring(1));
+
+        } catch (NumberFormatException e) {
+
+            throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
+        }
     }
 
     private String createOrderName(OrderPageDto order) {

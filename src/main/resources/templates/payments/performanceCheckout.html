@@ -8,7 +8,7 @@
   </head>
   <body>
   	<h1>결제하기</h1>
-  	<div id="payment-data"  th:data-order-number="${reservation.reservationNumber}" th:data-order-name="${orderName}" th:data-total-price="${reservation.totalPrice}" th:data-client-key="${tossClientKey}"> </div>
+  	<div id="payment-data"  th:data-order-number="${paymentOrderId}" th:data-order-name="${orderName}" th:data-total-price="${reservation.totalPrice}" th:data-client-key="${tossClientKey}"> </div>
   	
   	
   	<div>
@@ -20,6 +20,11 @@
         주문상품:
         <span th:text="${orderName}"></span>
     </div>
+    
+    <div>
+	    좌석:
+	    <span th:text="${reservation.seat.seatNumber}"></span>
+	</div>
 
     <div>
         결제금액:

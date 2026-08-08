@@ -6,6 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.bookwithticket.book.repository.BookStockRepository;
+import com.example.bookwithticket.domain.reservation.Reservation;
+import com.example.bookwithticket.domain.reservation.ReservationRepository;
+import com.example.bookwithticket.domain.reservation.ReservationService;
 import com.example.bookwithticket.order.entity.BookOrderEntity;
 import com.example.bookwithticket.order.entity.BookOrderItemEntity;
 import com.example.bookwithticket.order.entity.OrderStatus;
@@ -18,9 +21,7 @@ import com.example.bookwithticket.refund.dto.RefundResponse;
 import com.example.bookwithticket.refund.entity.RefundEntity;
 import com.example.bookwithticket.refund.entity.RefundStatus;
 import com.example.bookwithticket.refund.repository.RefundRepository;
-import com.example.bookwithticket.reservation.entity.ReservationEntity;
-import com.example.bookwithticket.reservation.entity.ReservationStatus;
-import com.example.bookwithticket.reservation.repository.ReservationRepository;
+import com.example.bookwithticket.domain.reservation.ReservationStatus;
 
 @Service
 @Transactional
@@ -32,15 +33,17 @@ public class RefundServiceImpl implements RefundService {
 	private final BookStockRepository bookRepository;
 	private final TossPaymentClient tossPaymentClient;
 	private final ReservationRepository reservationRepository;
+	private final ReservationService reservationService;
 	
 	public RefundServiceImpl(BookOrderRepository bookOrderRepository, PaymentRepository paymentRepository,
-			RefundRepository refundRepository, BookStockRepository bookRepository, TossPaymentClient tossPaymentClient, ReservationRepository reservationRepository) {
+			RefundRepository refundRepository, BookStockRepository bookRepository, TossPaymentClient tossPaymentClient, ReservationRepository reservationRepository, ReservationService reservationService) {
 		this.bookOrderRepository = bookOrderRepository;
 		this.paymentRepository = paymentRepository;
 		this.refundRepository = refundRepository;
 		this.bookRepository = bookRepository;
 		this.tossPaymentClient = tossPaymentClient;
 		this.reservationRepository = reservationRepository;
+		this.reservationService = reservationService;
 	}
 
 	@Override
@@ -129,34 +132,38 @@ public class RefundServiceImpl implements RefundService {
 	}
 
 	@Override
-	public RefundResponse requestPerformanceRefund(Long memberId, String reservationNumber, String reason) {
-		validateReason(reason);
+	public RefundResponse requestPerformanceRefund(
+	        Long memberId,
+	        String reservationNumber,
+	        String reason
+	) {
 
-	    // 1. 결제 완료된 예매인지 확인
-	    ReservationEntity reservation =
+	    validateReason(reason);
+
+	    Long reservationId =
+	            parseReservationId(
+	                    reservationNumber
+	            );
+
+	    Reservation reservation =
 	            reservationRepository
-	                    .findByReservationNumberAndMemberIdAndStatus(
-	                            reservationNumber,
-	                            memberId,
-	                            ReservationStatus.CONFIRMED
+	                    .findByIdAndMemberId(
+	                            reservationId,
+	                            memberId
 	                    )
 	                    .orElseThrow(() ->
 	                            new IllegalArgumentException(
-	                                    "환불할 수 있는 공연 예매가 없습니다."
+	                                    "환불할 수 있는 예매가 없습니다."
 	                            )
 	                    );
 
-	    // 2. 예매 종료 시간이 지났는지 확인
-	    LocalDateTime reservationEndAt =
-	            reservation
-	                    .getPerformanceSchedule()
-	                    .getReservationEndAt();
+	    if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
 
-	    if (!LocalDateTime.now().isBefore(reservationEndAt)) {
-	        throw new IllegalArgumentException("예매 종료 시간이 지난 공연은 환불할 수 없습니다.");
+	        throw new IllegalArgumentException(
+	                "예매 완료 상태만 환불할 수 있습니다."
+	        );
 	    }
 
-	    // 3. 완료된 결제 조회
 	    PaymentEntity payment =
 	            paymentRepository
 	                    .findFirstByReservationIdAndStatusOrderByCreatedAtDesc(
@@ -164,31 +171,53 @@ public class RefundServiceImpl implements RefundService {
 	                            PaymentStatus.DONE
 	                    )
 	                    .orElseThrow(() ->
-	                            new IllegalArgumentException("환불 가능한 결제 정보가 없습니다.")
+	                            new IllegalArgumentException("환불 가능한 결제 내역이 없습니다.")
 	                    );
 
-	    // 4. 이미 환불 요청된 예매인지 확인
-	    if (refundRepository.existsByPaymentId(payment.getId())) {
+	    if (refundRepository.existsByPaymentId(
+	            payment.getId()
+	    )) {
+
 	        throw new IllegalArgumentException("이미 환불 요청된 예매입니다.");
 	    }
 
-	    // 5. 환불 정보 생성
 	    RefundEntity refund =
-	            new RefundEntity(memberId, payment, payment.getAmount(),reason);
+	            new RefundEntity(
+	                    memberId,
+	                    payment,
+	                    payment.getAmount(),
+	                    reason
+	            );
 
 	    refundRepository.save(refund);
 
-	    // 6. 토스 결제 취소
-	    tossPaymentClient.cancelPayment(payment.getPaymentKey(), refund.getReason());
+	    tossPaymentClient.cancelPayment(payment.getPaymentKey(), reason);
 
-	    // 7. 내부 상태 변경
+	    
 	    payment.cancel();
-	    reservation.refund();
+	    
+	    reservationService.cancelReservation(memberId, reservation.getId());
+
 	    refund.complete();
 
-	    return new RefundResponse(refund.getId(), refund.getStatus().name(),"공연 환불이 완료되었습니다.");
+	    return new RefundResponse( refund.getId(), refund.getStatus().name(), "환불이 완료되었습니다.");
 	}
 	
-	
+	private Long parseReservationId(String reservationNumber) {
+
+	    if (reservationNumber == null || !reservationNumber.startsWith("R")) {
+
+	        throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
+	    }
+
+	    try {
+
+	        return Long.parseLong(reservationNumber.substring(1));
+
+	    } catch (NumberFormatException e) {
+
+	        throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
+	    }
+	}
 
 }
