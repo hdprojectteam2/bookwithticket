@@ -1,41 +1,10 @@
 server:
-  port: 8080
+port: 8080
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 2b355d0dcf6e30160bfe72f0783497efbcf5d7c1
->>>>>>> parent of cceb662 (Merge branch 'dev' of https://github.com/hdprojectteam2/bookwithticket into feature/cart)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
 spring:
-  application:
-    name: bookwithticket
-  datasource:
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-    url: jdbc:mysql://localhost:3306/bookwithticket?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: MULTI
-=======
->>>>>>> parent of cceb662 (Merge branch 'dev' of https://github.com/hdprojectteam2/bookwithticket into feature/cart)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
+application:
+name: bookwithticket
+datasource:
     url: jdbc:h2:mem:bookwithticket;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
@@ -49,23 +18,17 @@ spring:
     redis:
       host: localhost
       port: 6379
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 2b355d0dcf6e30160bfe72f0783497efbcf5d7c1
->>>>>>> parent of cceb662 (Merge branch 'dev' of https://github.com/hdprojectteam2/bookwithticket into feature/cart)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
-=======
->>>>>>> parent of 77b3246 (merge feature/member-book into dev)
-  jpa:
-    hibernate:
+    url: jdbc:mysql://localhost:3306/bookwithticket?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: multi
+jpa:
+hibernate:
       ddl-auto: create-drop
-    show-sql: true
-    properties:
-      hibernate:
+      ddl-auto: update
+show-sql: true
+properties:
+hibernate:
         format_sql: true
+        format_sql: true
+    database-platform: org.hibernate.dialect.MySQLDialect
