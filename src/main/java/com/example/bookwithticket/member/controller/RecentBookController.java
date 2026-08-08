@@ -43,6 +43,15 @@ public class RecentBookController {
     ){
 
 
+        if(authentication == null){
+
+            throw new RuntimeException(
+                    "로그인이 필요합니다."
+            );
+
+        }
+
+
         Member member =
                 memberService.findMyInfo(
                         authentication.getName()

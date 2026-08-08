@@ -204,4 +204,11 @@ public class ReviewService {
 
     }
 
+    public List<Review> findByMember(
+            Member member
+    ){
+
+        return reviewRepository.findByMember(member);
+
+    }
 }

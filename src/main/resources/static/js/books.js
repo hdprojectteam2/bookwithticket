@@ -149,35 +149,42 @@ function loadAllBooks(){
 
 function createCard(book){
 
+    const image =
+        book.thumbnail
+            ? book.thumbnail
+            : "/images/no-image.png";
+
 
     return `
 
-        <div class="book-card"
-             onclick="detail(${book.id})">
+    <div class="book-card"
+         onclick="detail(${book.id})">
 
 
-            <img src="${book.thumbnail}"
-                 width="120">
+        <img src="${image}"
+             width="120"
+             height="160">
 
 
-            <h3>
-                ${book.title}
-            </h3>
+        <h3>
+            ${book.title}
+        </h3>
 
 
-            <p>
-                ${book.author}
-            </p>
+        <p>
+            ${book.author}
+        </p>
 
 
-            <p>
-                ${book.price}원
-            </p>
+        <p>
+            ${book.price}원
+        </p>
 
 
-        </div>
+    </div>
 
     `;
+
 
 
 }

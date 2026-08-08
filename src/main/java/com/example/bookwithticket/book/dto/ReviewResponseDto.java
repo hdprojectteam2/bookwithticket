@@ -33,6 +33,7 @@ public class ReviewResponseDto {
 
     private String email;
 
+    private String bookTitle;
 
     public ReviewResponseDto(
             Review review
@@ -71,6 +72,9 @@ public class ReviewResponseDto {
         this.email =
                 review.getMember()
                         .getEmail();
+
+        this.bookTitle =
+                review.getBook().getTitle();
     }
 
 
@@ -127,6 +131,12 @@ public class ReviewResponseDto {
     public String getEmail(){
 
         return email;
+
+    }
+
+    public String getBookTitle(){
+
+        return bookTitle;
 
     }
 }

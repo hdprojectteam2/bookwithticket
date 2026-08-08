@@ -1,10 +1,17 @@
 window.onload = function(){
 
+
     getMyInfo();
+
 
     loadRecentBooks();
 
+
     loadFavoriteBooks();
+
+
+    loadMyReviews();
+
 
 };
 
@@ -43,15 +50,16 @@ function getMyInfo(){
     })
 
 
-
         .then(response=>{
 
 
             if(!response.ok){
 
+
                 throw new Error(
                     "로그인이 필요합니다."
                 );
+
 
             }
 
@@ -60,7 +68,6 @@ function getMyInfo(){
 
 
         })
-
 
 
         .then(member=>{
@@ -100,8 +107,8 @@ function getMyInfo(){
                 member.address ?? "-";
 
 
-        })
 
+        })
 
 
         .catch(error=>{
@@ -126,10 +133,9 @@ function getMyInfo(){
 
 
 
-// 최근 본 도서 조회
+// 최근 본 도서
 
 function loadRecentBooks(){
-
 
 
     const token =
@@ -137,45 +143,29 @@ function loadRecentBooks(){
 
 
 
-    fetch("/members/recent-books", {
+    fetch(
+        "/members/recent-books",
+        {
 
 
-        method:"GET",
+            headers:{
 
 
-        headers:{
-
-
-            "Authorization":
-                "Bearer " + token
-
-
-        }
-
-
-    })
-
-
-
-        .then(response=>{
-
-
-            if(!response.ok){
-
-
-                throw new Error(
-                    "최근 본 도서를 불러올 수 없습니다."
-                );
+                "Authorization":
+                    "Bearer " + token
 
 
             }
 
 
-            return response.json();
+        }
+
+    )
 
 
-        })
-
+        .then(response =>
+            response.json()
+        )
 
 
         .then(books=>{
@@ -187,8 +177,7 @@ function loadRecentBooks(){
                 );
 
 
-
-            box.innerHTML = "";
+            box.innerHTML="";
 
 
 
@@ -196,16 +185,12 @@ function loadRecentBooks(){
 
 
                 box.innerHTML =
-
                     "<p>최근 본 도서가 없습니다.</p>";
 
 
                 return;
 
-
             }
-
-
 
 
 
@@ -216,24 +201,26 @@ function loadRecentBooks(){
                 box.innerHTML += `
 
 
-                <div class="book-card">
+            <div class="book-card">
 
 
-                    <img src="${book.thumbnail ?? ''}"
-                         width="100">
+                <img src="${book.thumbnail ?? ''}"
+                     width="100">
 
 
-                    <h4>
-                        ${book.title}
-                    </h4>
+                <h4 onclick="goBook(${book.id})">
+
+                ${book.title}
+
+                </h4>
 
 
-                    <p>
-                        ${book.author}
-                    </p>
+                <p>
+                    ${book.author}
+                </p>
 
 
-                </div>
+            </div>
 
 
             `;
@@ -243,16 +230,6 @@ function loadRecentBooks(){
 
 
 
-        })
-
-
-
-        .catch(error=>{
-
-
-            alert(error.message);
-
-
         });
 
 
@@ -266,157 +243,7 @@ function loadRecentBooks(){
 
 
 
-// 로그아웃
-
-function logout(){
-
-
-
-    localStorage.removeItem(
-        "token"
-    );
-
-
-
-    alert(
-        "로그아웃 되었습니다."
-    );
-
-
-
-    location.href="/login.html";
-
-
-}
-
-
-
-
-
-
-
-
-
-// 회원 탈퇴
-
-function deleteMember(){
-
-
-
-    if(!confirm(
-        "정말 탈퇴하시겠습니까?"
-    )){
-
-
-        return;
-
-
-    }
-
-
-
-
-
-
-    const token =
-        localStorage.getItem("token");
-
-
-
-    fetch("/members/me", {
-
-
-
-        method:"DELETE",
-
-
-
-        headers:{
-
-
-            "Authorization":
-                "Bearer " + token
-
-
-        }
-
-
-    })
-
-
-
-        .then(response=>{
-
-
-            if(!response.ok){
-
-
-                throw new Error(
-                    "탈퇴 실패"
-                );
-
-
-            }
-
-
-            return response.json();
-
-
-        })
-
-
-
-        .then(()=>{
-
-
-            alert(
-                "회원 탈퇴 완료"
-            );
-
-
-
-            localStorage.removeItem(
-                "token"
-            );
-
-
-
-            location.href="/login.html";
-
-
-        })
-
-
-
-        .catch(error=>{
-
-
-            alert(error.message);
-
-
-        });
-
-
-}
-
-
-
-
-
-
-
-
-
-// 회원정보 수정 이동
-
-function goUpdate(){
-
-
-    location.href =
-        "/member-update.html";
-
-
-}
+// 관심 도서
 
 function loadFavoriteBooks(){
 
@@ -431,9 +258,6 @@ function loadFavoriteBooks(){
         {
 
 
-            method:"GET",
-
-
             headers:{
 
 
@@ -445,26 +269,13 @@ function loadFavoriteBooks(){
 
 
         }
+
     )
 
 
-        .then(response=>{
-
-
-            if(!response.ok){
-
-                throw new Error(
-                    "관심 도서를 불러올 수 없습니다."
-                );
-
-            }
-
-
-            return response.json();
-
-
-        })
-
+        .then(response =>
+            response.json()
+        )
 
 
         .then(books=>{
@@ -474,7 +285,6 @@ function loadFavoriteBooks(){
                 document.getElementById(
                     "favoriteBooks"
                 );
-
 
 
             box.innerHTML="";
@@ -502,25 +312,158 @@ function loadFavoriteBooks(){
                 box.innerHTML += `
 
 
-                <div class="book-card">
+            <div class="book-card">
 
 
-                    <img src="${book.thumbnail ?? ''}"
-                         width="100">
+                <img src="${book.thumbnail ?? ''}"
+                     width="100">
 
 
-                    <h4>
-                        ${book.title}
-                    </h4>
+                <h4>
+                    ${book.title}
+                </h4>
 
 
-                    <p>
-                        ${book.author}
-                    </p>
+                <p>
+                    ${book.author}
+                </p>
+
+
+            </div>
+
+
+            `;
+
+
+            });
 
 
 
-                </div>
+        });
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// 내가 작성한 리뷰
+
+function loadMyReviews(){
+
+
+    const token =
+        localStorage.getItem("token");
+
+
+
+    fetch(
+        "/members/me/reviews",
+        {
+
+
+            headers:{
+
+
+                "Authorization":
+                    "Bearer " + token
+
+
+            }
+
+
+        }
+
+    )
+
+
+        .then(response=>{
+
+
+            if(!response.ok){
+
+
+                throw new Error(
+                    "리뷰를 불러올 수 없습니다."
+                );
+
+
+            }
+
+
+            return response.json();
+
+
+        })
+
+
+        .then(reviews=>{
+
+
+            const box =
+                document.getElementById(
+                    "myReviews"
+                );
+
+
+            box.innerHTML="";
+
+
+
+            if(reviews.length === 0){
+
+
+                box.innerHTML =
+                    "<p>작성한 리뷰가 없습니다.</p>";
+
+
+                return;
+
+
+            }
+
+
+
+
+            reviews.forEach(review=>{
+
+
+                box.innerHTML += `
+
+
+            <div class="review-card">
+
+
+                <h4>
+                    📖 ${review.bookTitle}
+                </h4>
+
+
+                <p>
+                    ${"⭐".repeat(review.rating)}
+                </p>
+
+
+                <p>
+                    ${review.content}
+                </p>
+
+
+                <small>
+                    ${review.createdAt}
+                </small>
+
+
+            </div>
+
+
+            <hr>
 
 
             `;
@@ -533,14 +476,166 @@ function loadFavoriteBooks(){
         })
 
 
-
         .catch(error=>{
 
 
-            alert(error.message);
+            console.log(
+                error.message
+            );
 
 
         });
+
+
+
+}
+
+
+
+
+
+
+
+
+
+// 로그아웃
+
+function logout(){
+
+
+    localStorage.removeItem(
+        "token"
+    );
+
+
+    alert(
+        "로그아웃 되었습니다."
+    );
+
+
+    location.href="/login.html";
+
+
+}
+
+
+
+
+
+
+
+
+
+// 회원 탈퇴
+
+function deleteMember(){
+
+
+    if(!confirm(
+        "정말 탈퇴하시겠습니까?"
+    )){
+
+
+        return;
+
+
+    }
+
+
+
+    const token =
+        localStorage.getItem("token");
+
+
+
+    fetch(
+        "/members/me",
+        {
+
+
+            method:"DELETE",
+
+
+            headers:{
+
+
+                "Authorization":
+                    "Bearer " + token
+
+
+            }
+
+
+        }
+
+    )
+
+
+        .then(response=>{
+
+
+            if(!response.ok){
+
+
+                throw new Error(
+                    "탈퇴 실패"
+                );
+
+
+            }
+
+
+            return response.json();
+
+
+        })
+
+
+        .then(()=>{
+
+
+            alert(
+                "회원 탈퇴 완료"
+            );
+
+
+            localStorage.removeItem(
+                "token"
+            );
+
+
+            location.href="/login.html";
+
+
+        });
+
+
+}
+
+
+
+
+
+
+
+
+
+// 회원정보 수정
+
+function goUpdate(){
+
+
+    location.href =
+        "/member-update.html";
+
+
+}
+
+function goBook(id){
+
+
+    location.href =
+        "/book-detail.html?id=" + id;
 
 
 }

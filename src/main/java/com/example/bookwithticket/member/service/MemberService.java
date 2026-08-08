@@ -4,11 +4,15 @@ package com.example.bookwithticket.member.service;
 import com.example.bookwithticket.member.dto.LoginRequestDto;
 import com.example.bookwithticket.member.dto.MemberRequestDto;
 import com.example.bookwithticket.member.dto.MemberUpdateRequestDto;
+
 import com.example.bookwithticket.member.entity.Member;
+
 import com.example.bookwithticket.member.exception.DuplicateEmailException;
 import com.example.bookwithticket.member.exception.LoginFailedException;
+
 import com.example.bookwithticket.member.jwt.JwtUtil;
 import com.example.bookwithticket.member.repository.MemberRepository;
+
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,11 +26,16 @@ import java.time.LocalDateTime;
 public class MemberService {
 
 
+
     private final MemberRepository memberRepository;
+
 
     private final PasswordEncoder passwordEncoder;
 
+
     private final JwtUtil jwtUtil;
+
+
 
 
 
@@ -34,10 +43,12 @@ public class MemberService {
             MemberRepository memberRepository,
             PasswordEncoder passwordEncoder,
             JwtUtil jwtUtil
-    ) {
+    ){
 
         this.memberRepository = memberRepository;
+
         this.passwordEncoder = passwordEncoder;
+
         this.jwtUtil = jwtUtil;
 
     }
@@ -45,12 +56,23 @@ public class MemberService {
 
 
 
+
+
+
+
     // 회원가입
-    public Member save(MemberRequestDto requestDto) {
+
+    public Member save(
+            MemberRequestDto requestDto
+    ){
 
 
 
-        if(memberRepository.findByEmail(requestDto.getEmail()).isPresent()){
+        if(
+                memberRepository.findByEmail(
+                        requestDto.getEmail()
+                ).isPresent()
+        ){
 
             throw new DuplicateEmailException(
                     "이미 가입된 이메일입니다."
@@ -60,12 +82,20 @@ public class MemberService {
 
 
 
-        Member member = new Member();
+
+
+
+        Member member =
+                new Member();
+
+
+
 
 
         member.setEmail(
                 requestDto.getEmail()
         );
+
 
 
         member.setPassword(
@@ -75,17 +105,25 @@ public class MemberService {
         );
 
 
+
         member.setName(
                 requestDto.getName()
         );
 
 
 
-        // 추가 회원 정보
+        // 기본 권한
+
+        member.setRole(
+                "USER"
+        );
+
+
 
         member.setPhone(
                 requestDto.getPhone()
         );
+
 
 
         member.setZipcode(
@@ -93,14 +131,17 @@ public class MemberService {
         );
 
 
+
         member.setAddress(
                 requestDto.getAddress()
         );
 
 
+
         member.setDetailAddress(
                 requestDto.getDetailAddress()
         );
+
 
 
         member.setMarketingAgree(
@@ -109,15 +150,15 @@ public class MemberService {
 
 
 
-        // 기본 설정
+        member.setActive(
+                true
+        );
 
-        member.setRole("USER");
-
-        member.setActive(true);
 
 
 
         return memberRepository.save(member);
+
 
     }
 
@@ -126,9 +167,14 @@ public class MemberService {
 
 
 
+
+
+
     // 회원 조회
 
-    public Member findById(Long id){
+    public Member findById(
+            Long id
+    ){
 
 
         return memberRepository.findById(id)
@@ -139,7 +185,11 @@ public class MemberService {
                         )
                 );
 
+
     }
+
+
+
 
 
 
@@ -148,13 +198,18 @@ public class MemberService {
 
     // 로그인
 
-    public String login(LoginRequestDto requestDto){
+    public String login(
+            LoginRequestDto requestDto
+    ){
+
 
 
         Member member =
+
                 memberRepository.findByEmail(
                                 requestDto.getEmail()
                         )
+
 
                         .orElseThrow(() ->
                                 new LoginFailedException(
@@ -164,20 +219,32 @@ public class MemberService {
 
 
 
+
+
+
         if(!member.isActive()){
+
 
             throw new LoginFailedException(
                     "탈퇴한 회원입니다."
             );
+
 
         }
 
 
 
 
+
+
+
+
         if(!passwordEncoder.matches(
+
                 requestDto.getPassword(),
+
                 member.getPassword()
+
         )){
 
 
@@ -191,11 +258,14 @@ public class MemberService {
 
 
 
-        // 마지막 로그인 시간 저장
+
+
+
 
         member.setLastLoginAt(
                 LocalDateTime.now()
         );
+
 
 
         memberRepository.save(member);
@@ -203,12 +273,22 @@ public class MemberService {
 
 
 
+
+
+
+
         return jwtUtil.createToken(
-                member.getEmail()
+
+                member.getEmail(),
+
+                member.getRole()
+
         );
 
 
     }
+
+
 
 
 
@@ -218,16 +298,22 @@ public class MemberService {
 
     // 내 정보 조회
 
-    public Member findMyInfo(String email){
+    public Member findMyInfo(
+            String email
+    ){
 
 
         return memberRepository.findByEmail(email)
 
+
                 .orElseThrow(() ->
+
                         new LoginFailedException(
                                 "회원을 찾을 수 없습니다."
                         )
+
                 );
+
 
     }
 
@@ -236,84 +322,132 @@ public class MemberService {
 
 
 
-    // 회원 정보 수정
+
+
+
+    // 회원정보 수정
 
     public Member update(
+
             String email,
+
             MemberUpdateRequestDto requestDto
+
     ){
 
 
+
         Member member =
+
                 memberRepository.findByEmail(email)
 
                         .orElseThrow(() ->
+
                                 new LoginFailedException(
                                         "회원을 찾을 수 없습니다."
                                 )
+
                         );
+
+
+
+
 
 
 
         if(requestDto.getName()!=null){
 
+
             member.setName(
                     requestDto.getName()
             );
 
+
         }
+
+
+
 
 
 
         if(requestDto.getPassword()!=null){
 
+
             member.setPassword(
+
                     passwordEncoder.encode(
+
                             requestDto.getPassword()
+
                     )
+
             );
 
+
         }
+
+
+
 
 
 
         if(requestDto.getPhone()!=null){
 
+
             member.setPhone(
                     requestDto.getPhone()
             );
 
+
         }
+
+
+
 
 
 
         if(requestDto.getZipcode()!=null){
 
+
             member.setZipcode(
                     requestDto.getZipcode()
             );
 
+
         }
+
+
+
 
 
 
         if(requestDto.getAddress()!=null){
 
+
             member.setAddress(
                     requestDto.getAddress()
             );
 
+
         }
+
+
+
 
 
 
         if(requestDto.getDetailAddress()!=null){
 
+
             member.setDetailAddress(
                     requestDto.getDetailAddress()
             );
 
+
         }
+
+
+
 
 
 
@@ -327,19 +461,32 @@ public class MemberService {
 
 
 
+
+
+
     // 회원 탈퇴
 
-    public Member delete(String email){
+    public Member delete(
+            String email
+    ){
+
 
 
         Member member =
+
                 memberRepository.findByEmail(email)
 
                         .orElseThrow(() ->
+
                                 new LoginFailedException(
                                         "회원을 찾을 수 없습니다."
                                 )
+
                         );
+
+
+
+
 
 
 
@@ -351,6 +498,7 @@ public class MemberService {
 
 
     }
+
 
 
 }
