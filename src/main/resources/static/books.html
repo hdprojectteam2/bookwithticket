@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>도서 목록</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+
+<body>
+
+
+<h1>
+    📚 Book With Ticket
+</h1>
+
+
+
+
+<!-- 검색 -->
+
+<div class="search-box">
+
+
+    <input
+            id="searchInput"
+            type="text"
+            placeholder="도서를 검색하세요"
+            autocomplete="off"
+    >
+
+
+    <button onclick="searchBook()">
+        검색
+    </button>
+
+
+
+    <div id="suggestions"></div>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- 카테고리 -->
+
+<div class="category-box">
+
+
+    <button onclick="loadCategory('IT')">
+        IT
+    </button>
+
+
+    <button onclick="loadCategory('소설')">
+        소설
+    </button>
+
+
+    <button onclick="loadCategory('경제')">
+        경제
+    </button>
+
+
+    <button onclick="loadCategory('자기계발')">
+        자기계발
+    </button>
+
+
+</div>
+
+
+
+
+
+
+
+<h2>
+    🔥 인기 도서
+</h2>
+
+
+<div id="popularBooks"
+     class="book-list">
+
+</div>
+
+
+
+
+
+
+
+<h2>
+    🆕 신간 도서
+</h2>
+
+
+<div id="newBooks"
+     class="book-list">
+
+</div>
+
+
+
+
+
+
+
+<h2>
+    📚 전체 도서
+</h2>
+
+
+<div id="allBooks"
+     class="book-list">
+
+</div>
+
+
+
+
+
+<script src="/js/books.js"></script>
+
+
+</body>
+
+</html>
