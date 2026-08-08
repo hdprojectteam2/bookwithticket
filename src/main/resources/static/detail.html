@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공연 상세 정보</title>
+    <style>
+        * { box-sizing: border-box; font-family: sans-serif; text-decoration: none !important; }
+        body { background-color: grey; margin: 0; padding: 20px; color: black; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 25px; }
+        h1 { margin-top: 0; color: black; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        .section { margin-bottom: 30px; }
+        h2 { color: #34495e; font-size: 1.2rem; margin-bottom: 12px; }
+        button { background: #3498db; color: #fff; border: none; padding: 10px 18px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #2980b9; }
+        .card { border: 1px solid #e0e0e0; padding: 20px; background: #fafafa; }
+        .card h3 { margin: 0 0 8px 0; color: grey; font-size: 1.4rem; }
+        .badge { display: inline-block; background: #e8f4fd; color: #3498db; padding: 3px 8px; font-size: 0.8rem; font-weight: bold; }
+        .log-box { background: #1e1e1e; color: white; padding: 15px; font-family: monospace; height: 180px; overflow-y: auto; font-size: 0.9rem; }
+        .btn-back { background: #95a5a6; }
+        .btn-back:hover { background: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>공연 상세 정보</h1>
+
+    <div class="section">
+        <div id="detailContent">로딩 중...</div>
+    </div>
+
+    <!-- 결과확인용 로그 -->
+    <div class="section">
+        <h2>로그</h2>
+        <div id="logBox" class="log-box">로드 완료</div>
+    </div>
+</div>
+
+<script>
+    function log(msg) {
+        const logBox = document.getElementById('logBox');
+        logBox.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + logBox.innerHTML;
+    }
+
+    async function loadDetail() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+
+        if (!id) {
+            document.getElementById('detailContent').innerHTML = '<p style="color:red;">잘못된 접근입니다. 공연 ID가 없습니다.</p>';
+            log('[실패] 공연 ID가 전달되지 않음');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/performances/${id}`);
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                const p = data.data;
+                log(`GET /api/performances/${id} -> HTTP ${res.status} : ${p.title}`);
+
+                // 회차 목록 가져오기
+                let scheduleHtml = '<p style="color:#999;">등록된 회차가 없습니다.</p>';
+                try {
+                    const schRes = await fetch(`/api/performances/${id}/schedules`);
+                    const schData = await schRes.json();
+                    if (schRes.ok && schData.success && Array.isArray(schData.data) && schData.data.length > 0) {
+                        scheduleHtml = schData.data.map(s => {
+                            const timeStr = new Date(s.performanceTime).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                            return `<div style="display:inline-block; margin-right:10px; margin-bottom:10px; padding:10px 14px; background:#fff; border:1px solid #ccc;">
+                                <b>${timeStr}</b>
+                                <button onclick="location.href='/index.html?perfId=${id}&scheduleId=${s.id}'" style="margin-left:10px; background:#3498db; padding:5px 10px; font-size:0.8rem;">예매하기</button>
+                            </div>`;
+                        }).join('');
+                    }
+                } catch (err) {
+                    log(`회차 로드 실패: ${err.message}`);
+                }
+
+                document.getElementById('detailContent').innerHTML = `
+                    <div class="card">
+                        <span class="badge">${p.category || '공연'}</span>
+                        <h3>${p.title}</h3>
+                        <p style="margin:8px 0; font-size:1rem; color:#444;"><b>공연장:</b> ${p.venue} (${p.runtimeMinutes}분)</p>
+                        ${p.originalBookId ? `<p style="margin:8px 0; color:#e67e22; font-size:0.95rem; font-weight:bold;">원작 도서 ID: ${p.originalBookId}</p>` : ''}
+                        <div style="margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
+                            <h4 style="margin:0 0 8px 0; color:#34495e;">상세 설명</h4>
+                            <p style="margin:0; font-size:0.95rem; color:#666; line-height:1.6;">${p.description || '등록된 상세 설명이 없습니다.'}</p>
+                        </div>
+                        <div style="margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
+                            <h4 style="margin:0 0 10px 0; color:#34495e;">공연 회차 일정</h4>
+                            <div>${scheduleHtml}</div>
+                        </div>
+                        <div style="margin-top:20px;">
+                            <button class="btn-back" onclick="location.href='/index.html'">← 메인 목록으로 돌아가기</button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                log(`[실패] GET /api/performances/${id} -> HTTP ${res.status} : ${data.message}`);
+                document.getElementById('detailContent').innerHTML = `<p style="color:red;">오류: ${data.message}</p><button class="btn-back" onclick="location.href='/index.html'">← 메인 목록으로 돌아가기</button>`;
+            }
+        } catch (e) {
+            log(`에러 발생: ${e.message}`);
+            document.getElementById('detailContent').innerHTML = `<p style="color:red;">통신 에러: ${e.message}</p><button class="btn-back" onclick="location.href='/index.html'">← 메인 목록으로 돌아가기</button>`;
+        }
+    }
+
+    loadDetail();
+</script>
+</body>
+</html>
