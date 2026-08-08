@@ -1,0 +1,314 @@
+package com.example.bookwithticket.order.service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.example.bookwithticket.book.entity.Book;
+import com.example.bookwithticket.book.repository.BookStockRepository;
+import com.example.bookwithticket.cart.entity.CartItemEntity;
+import com.example.bookwithticket.cart.repository.CartItemRepository;
+import com.example.bookwithticket.order.dto.DeliveryRequest;
+import com.example.bookwithticket.order.dto.OrderPageDto;
+import com.example.bookwithticket.order.dto.OrderPreparedRequest;
+import com.example.bookwithticket.order.dto.OrderPreparedResponse;
+import com.example.bookwithticket.order.entity.AddressEntity;
+import com.example.bookwithticket.order.entity.BookOrderEntity;
+import com.example.bookwithticket.order.entity.BookOrderItemEntity;
+import com.example.bookwithticket.order.entity.OrderStatus;
+import com.example.bookwithticket.order.repository.AddressRepository;
+import com.example.bookwithticket.order.repository.BookOrderRepository;
+
+@Service
+@Transactional
+public class OrderServiceImpl implements OrderService {
+
+    private final AddressRepository addressRepository;
+	private final CartItemRepository cartItemRepository;
+    private final BookOrderRepository bookOrderRepository;
+    private final BookStockRepository bookRepository;
+    
+    public OrderServiceImpl(
+            CartItemRepository cartItemRepository,
+            BookOrderRepository bookOrderRepository,
+            AddressRepository addressRepository,
+            BookStockRepository bookRepository
+    ) {
+        this.cartItemRepository = cartItemRepository;
+        this.bookOrderRepository = bookOrderRepository;
+        this.addressRepository = addressRepository;
+        this.bookRepository = bookRepository;
+    }
+
+    
+    @Override
+    public OrderPreparedResponse prepareOrder(Long memberId, OrderPreparedRequest request) {
+        validateRequest(request);
+
+        List<Long> cartItemIds = request.getCartItemIds();
+
+
+        Set<Long> uniqueCartItemIds = new HashSet<>(cartItemIds);
+
+        if (uniqueCartItemIds.size() != cartItemIds.size()) {
+            throw new IllegalArgumentException("중복된 장바구니 상품이 포함되어 있습니다.");
+        }
+
+        List<CartItemEntity> cartItems =
+                cartItemRepository
+                        .findByIdInAndCartMemberId(cartItemIds, memberId);
+
+        
+        if (cartItems.size() != cartItemIds.size()) {
+            throw new IllegalArgumentException("주문할 수 없는 장바구니 상품이 포함되어 있습니다.");
+        }
+
+        
+        int calculatedTotalPrice = 0;
+
+        for (CartItemEntity cartItem : cartItems) {
+            Book book = cartItem.getBook();
+            int quantity = cartItem.getQuantity();
+
+            validateBook(book, quantity);
+
+            calculatedTotalPrice += book.getPrice() * quantity;
+        }
+        
+        for (CartItemEntity cartItem : cartItems) {
+            Book book = cartItem.getBook();
+            int quantity = cartItem.getQuantity();
+
+            int updatedCount = bookRepository.decreaseStock(book.getId(), quantity);
+
+            if (updatedCount == 0) {
+                throw new IllegalStateException(book.getTitle() + " 도서의 재고가 부족합니다.");
+            }
+        }
+
+        final int totalPrice = calculatedTotalPrice;
+
+        BookOrderEntity order = new BookOrderEntity(memberId, createOrderNumber(), totalPrice);
+
+		/*
+		 * BookOrderEntity order = bookOrderRepository
+		 * .findFirstByMemberIdAndOrderStatusOrderByCreatedAtDesc( memberId,
+		 * OrderStatus.PAYMENT_PENDING ) .orElseGet(() -> new BookOrderEntity( memberId,
+		 * createOrderNumber(), totalPrice ) );
+		 */
+        
+        /* 기존 주문 정보 초기화 */
+        order.clearOrderItems();
+        order.updateTotalPrice(totalPrice);
+        order.resetAddress();
+
+
+        for (CartItemEntity cartItem : cartItems) {
+            BookOrderItemEntity orderItem =
+                    new BookOrderItemEntity(
+                            order,
+                            cartItem.getBook(),
+                            cartItem.getQuantity()
+                    );
+
+            order.addOrderItem(orderItem);
+        }
+
+        /* 주문 상품 생성 */
+        BookOrderEntity savedOrder =
+                bookOrderRepository.save(order);
+
+        return new OrderPreparedResponse(
+                savedOrder.getId(),
+                savedOrder.getOrderNumber(),
+                savedOrder.getTotalPrice(),
+                savedOrder.getOrderStatus().name()
+        );
+    }
+
+    /* 회원의 PAYMENT_PENDING 상태의 주문 조회 */
+    @Override
+    @Transactional(readOnly = true)
+    public OrderPageDto findPendingOrder(
+            Long memberId,
+            String orderNumber
+    ) {
+        if (orderNumber == null || orderNumber.isBlank()) {
+            throw new IllegalArgumentException("주문번호가 없습니다.");
+        }
+
+        BookOrderEntity order =
+                bookOrderRepository
+                        .findByOrderNumberAndMemberIdAndOrderStatus(
+                                orderNumber,
+                                memberId,
+                                OrderStatus.PAYMENT_PENDING
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException("조회할 수 없는 주문입니다.")
+                        );
+
+        return new OrderPageDto(order);
+    }
+
+    /* 주문 요청값 검사 */
+    private void validateRequest(OrderPreparedRequest request) {
+        if (request == null || request.getCartItemIds() == null || request.getCartItemIds().isEmpty()) {
+            throw new IllegalArgumentException("주문할 상품을 선택해주세요.");
+        }
+
+        if (request.getCartItemIds().contains(null)) {
+            throw new IllegalArgumentException("잘못된 장바구니 상품 정보가 포함되어 있습니다.");
+        }
+    }
+
+    /* 도서 주문 가능 여부 검사 */
+    private void validateBook(Book book, int quantity) {
+        if (book.getStock() <= 0) {
+            throw new IllegalArgumentException(book.getTitle() + " 도서는 품절되었습니다.");
+        }
+
+        if (quantity < 1) {
+            throw new IllegalArgumentException(book.getTitle() + " 도서의 주문 수량이 올바르지 않습니다.");
+        }
+
+        if (quantity > book.getStock()) {
+            throw new IllegalArgumentException(book.getTitle() + " 도서의 재고가 부족합니다. 현재 재고는 " + book.getStock() + "개입니다.");
+        }
+
+
+    }
+
+    /* 주문번호 생성 */
+    private String createOrderNumber() {
+        String date =
+                LocalDate.now().format(
+                        DateTimeFormatter.ofPattern(
+                                "yyyyMMdd"
+                        )
+                );
+
+        String randomValue =
+                UUID.randomUUID()
+                        .toString()
+                        .replace("-", "")
+                        .substring(0, 6)
+                        .toUpperCase();
+
+        return "B" + date + randomValue;
+    }
+
+
+	@Override
+	public void saveDelivery(Long memberId, String orderNumber, DeliveryRequest request) {
+		validateDeliveryRequest(request);
+		
+		BookOrderEntity order =
+	            bookOrderRepository
+	                    .findByOrderNumberAndMemberIdAndOrderStatus(
+	                            orderNumber,
+	                            memberId,
+	                            OrderStatus.PAYMENT_PENDING
+	                    )
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("배송지를 저장할 수 없는 주문입니다.")
+	                    );
+		
+		String deliveryRequest = request.getDeliveryRequest();
+
+		if (deliveryRequest == null || deliveryRequest.trim().isEmpty()) {
+			deliveryRequest = null;
+		} else {
+			deliveryRequest = deliveryRequest.trim();
+		}
+		
+		AddressEntity address = new AddressEntity(
+				memberId,
+				request.getRecipient(),
+				request.getPhone(),
+				request.getZipcode(),
+				request.getAddress(),
+				request.getDetailAddress(),
+				deliveryRequest
+		); 
+		
+		AddressEntity saveAddress = addressRepository.save(address);
+		
+		order.updateAddress(saveAddress);
+	}
+
+
+	private void validateDeliveryRequest(DeliveryRequest request) {
+		if(request == null) {
+			throw new IllegalArgumentException("배송지 주소를 입력하세요.");
+		}
+		
+		if(request.getRecipient() == null || request.getRecipient().isEmpty()) {
+			throw new IllegalArgumentException("받는 사람 이름을 입력하세요.");
+		}
+		
+		if(request.getPhone() == null || request.getPhone().isEmpty()) {
+			throw new IllegalArgumentException("전화 번호를 입력하세요.");
+		}
+		
+		if(request.getZipcode() == null || request.getZipcode().isEmpty()) {
+			throw new IllegalArgumentException("우편 번호를 입력하세요.");
+		}
+		
+		if(request.getAddress() == null || request.getAddress().isEmpty()) {
+			throw new IllegalArgumentException("주소를 입력하세요.");
+		}
+		
+		if(request.getDetailAddress() == null || request.getDetailAddress().isEmpty()) {
+			throw new IllegalArgumentException("상세 주소를 입력하세요.");
+		}
+		
+	}
+	
+	@Transactional
+	@Override
+	public void cancelExpiredOrders() {
+
+	    /* 주문 생성 후 15분 이상 지난 기준 */
+	    LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(15);
+
+	    List<BookOrderEntity> expiredOrders =
+	            bookOrderRepository
+	                    .findByOrderStatusAndCreatedAtBefore(OrderStatus.PAYMENT_PENDING, expirationTime);
+
+	    for (BookOrderEntity order : expiredOrders) {
+
+	        /* 주문했던 수량만큼 재고 복구 */
+	        for (BookOrderItemEntity orderItem : order.getOrderItems()) {
+
+	            bookRepository.increaseStock(orderItem.getBook().getId(), orderItem.getQuantity());
+	        }
+
+	        /* 주문 상태를 CANCELLED로 변경 */
+	        order.cancel();
+	    }
+	}
+	
+	@Transactional
+	@Override
+	public void cancelOrder(Long memberId, String orderNumber) {
+	    BookOrderEntity order = bookOrderRepository .findByOrderNumberAndMemberIdAndOrderStatus(orderNumber, memberId, OrderStatus.PAYMENT_PENDING)
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("취소할 수 있는 주문이 없습니다.")
+	                    );
+
+	    for (BookOrderItemEntity orderItem : order.getOrderItems()) {
+
+	        bookRepository.increaseStock(orderItem.getBook().getId(), orderItem.getQuantity());
+	    }
+
+	    order.cancel();
+	}
+}
