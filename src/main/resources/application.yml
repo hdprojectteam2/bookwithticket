@@ -2,13 +2,17 @@ server:
   port: 8080
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 2b355d0dcf6e30160bfe72f0783497efbcf5d7c1
 >>>>>>> parent of cceb662 (Merge branch 'dev' of https://github.com/hdprojectteam2/bookwithticket into feature/cart)
+=======
+>>>>>>> parent of 77b3246 (merge feature/member-book into dev)
 spring:
   application:
     name: bookwithticket
   datasource:
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
@@ -18,6 +22,8 @@ spring:
     password: MULTI
 =======
 >>>>>>> parent of cceb662 (Merge branch 'dev' of https://github.com/hdprojectteam2/bookwithticket into feature/cart)
+=======
+>>>>>>> parent of 77b3246 (merge feature/member-book into dev)
     url: jdbc:h2:mem:bookwithticket;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
@@ -32,9 +38,12 @@ spring:
       host: localhost
       port: 6379
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 >>>>>>> 2b355d0dcf6e30160bfe72f0783497efbcf5d7c1
 >>>>>>> parent of cceb662 (Merge branch 'dev' of https://github.com/hdprojectteam2/bookwithticket into feature/cart)
+=======
+>>>>>>> parent of 77b3246 (merge feature/member-book into dev)
   jpa:
     hibernate:
       ddl-auto: create-drop
