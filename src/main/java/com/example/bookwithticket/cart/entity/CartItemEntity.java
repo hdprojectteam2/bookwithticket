@@ -2,7 +2,7 @@ package com.example.bookwithticket.cart.entity;
 
 import java.time.LocalDateTime;
 
-import com.example.bookwithticket.book.entity.BookEntity;
+import com.example.bookwithticket.book.entity.Book;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,7 +40,7 @@ public class CartItemEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
-    private BookEntity book;
+    private Book book;
 
     @Column(name = "quantity", nullable = false)
     private int quantity;
@@ -56,7 +56,7 @@ public class CartItemEntity {
 
     public CartItemEntity(
             CartEntity cart,
-            BookEntity book,
+            Book book,
             int quantity
     ) {
         this.cart = cart;
@@ -92,7 +92,7 @@ public class CartItemEntity {
         return cart;
     }
 
-    public BookEntity getBook() {
+    public Book getBook() {
         return book;
     }
 

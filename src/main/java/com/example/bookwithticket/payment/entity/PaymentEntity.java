@@ -208,7 +208,7 @@ public class PaymentEntity {
         return payment;
     }
     
-    public void cancle() {
+    public void cancel() {
     	if(this.status != PaymentStatus.DONE) {
     		throw new IllegalStateException("완료된 주문만 취소할 수 있습니다.");
     	}

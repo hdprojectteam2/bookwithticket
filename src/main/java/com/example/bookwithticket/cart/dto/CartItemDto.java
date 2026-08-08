@@ -1,6 +1,6 @@
 package com.example.bookwithticket.cart.dto;
 
-import com.example.bookwithticket.book.entity.BookEntity;
+import com.example.bookwithticket.book.entity.Book;
 import com.example.bookwithticket.cart.entity.CartItemEntity;
 
 public class CartItemDto {
@@ -11,19 +11,18 @@ public class CartItemDto {
     private final String bookTitle;
     private final String author;
     private final String publisher;
-    private final String thumbnailUrl;
+    private final String thumbnail;
 
     private final int price;
     private final int quantity;
     private final int stock;
-    private final int maxPurchaseQty;
     private final int totalPrice;
 
     private final boolean purchasable;
     private final String unavailableReason;
 
     public CartItemDto(CartItemEntity cartItem) {
-        BookEntity book = cartItem.getBook();
+        Book book = cartItem.getBook();
 
         this.cartItemId = cartItem.getId();
         this.bookId = book.getId();
@@ -31,28 +30,16 @@ public class CartItemDto {
         this.bookTitle = book.getTitle();
         this.author = book.getAuthor();
         this.publisher = book.getPublisher();
-        this.thumbnailUrl = book.getThumbnailUrl();
+        this.thumbnail = book.getThumbnail();
 
-        this.price = book.getSalePrice();
+        this.price = book.getPrice();
         this.quantity = cartItem.getQuantity();
         this.stock = book.getStock();
-        this.maxPurchaseQty = book.getMaxPurchaseQty();
         this.totalPrice = price * quantity;
 
-        if (book.isDeleted()) {
+        if (book.getStock() <= 0) {
             this.purchasable = false;
-            this.unavailableReason =
-                    "삭제된 상품입니다.";
-
-        } else if (!book.isActive()) {
-            this.purchasable = false;
-            this.unavailableReason =
-                    "판매가 중지된 상품입니다.";
-
-        } else if (!"ON_SALE".equals(book.getSaleStatus()) || book.getStock() <= 0) {
-            this.purchasable = false;
-            this.unavailableReason =
-                    "품절된 상품입니다.";
+            this.unavailableReason = "품절된 상품입니다.";
 
         } else if (quantity > book.getStock()) {
             this.purchasable = false;
@@ -85,8 +72,8 @@ public class CartItemDto {
         return publisher;
     }
 
-    public String getThumbnailUrl() {
-        return thumbnailUrl;
+    public String getThumbnail() {
+        return thumbnail;
     }
 
     public int getPrice() {
@@ -99,10 +86,6 @@ public class CartItemDto {
 
     public int getStock() {
         return stock;
-    }
-
-    public int getMaxPurchaseQty() {
-        return maxPurchaseQty;
     }
 
     public int getTotalPrice() {

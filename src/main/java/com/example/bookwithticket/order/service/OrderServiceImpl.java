@@ -11,8 +11,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.bookwithticket.book.entity.BookEntity;
-import com.example.bookwithticket.book.repository.BookRepository;
+import com.example.bookwithticket.book.entity.Book;
+import com.example.bookwithticket.book.repository.BookStockRepository;
 import com.example.bookwithticket.cart.entity.CartItemEntity;
 import com.example.bookwithticket.cart.repository.CartItemRepository;
 import com.example.bookwithticket.order.dto.DeliveryRequest;
@@ -33,13 +33,13 @@ public class OrderServiceImpl implements OrderService {
     private final AddressRepository addressRepository;
 	private final CartItemRepository cartItemRepository;
     private final BookOrderRepository bookOrderRepository;
-    private final BookRepository bookRepository;
+    private final BookStockRepository bookRepository;
     
     public OrderServiceImpl(
             CartItemRepository cartItemRepository,
             BookOrderRepository bookOrderRepository,
             AddressRepository addressRepository,
-            BookRepository bookRepository
+            BookStockRepository bookRepository
     ) {
         this.cartItemRepository = cartItemRepository;
         this.bookOrderRepository = bookOrderRepository;
@@ -74,21 +74,19 @@ public class OrderServiceImpl implements OrderService {
         int calculatedTotalPrice = 0;
 
         for (CartItemEntity cartItem : cartItems) {
-            BookEntity book = cartItem.getBook();
+            Book book = cartItem.getBook();
             int quantity = cartItem.getQuantity();
 
             validateBook(book, quantity);
 
-            calculatedTotalPrice +=
-                    book.getSalePrice() * quantity;
+            calculatedTotalPrice += book.getPrice() * quantity;
         }
         
         for (CartItemEntity cartItem : cartItems) {
-            BookEntity book = cartItem.getBook();
+            Book book = cartItem.getBook();
             int quantity = cartItem.getQuantity();
 
-            int updatedCount =
-                    bookRepository.decreaseStock(book.getId(), quantity);
+            int updatedCount = bookRepository.decreaseStock(book.getId(), quantity);
 
             if (updatedCount == 0) {
                 throw new IllegalStateException(book.getTitle() + " 도서의 재고가 부족합니다.");
@@ -154,9 +152,7 @@ public class OrderServiceImpl implements OrderService {
                                 OrderStatus.PAYMENT_PENDING
                         )
                         .orElseThrow(() ->
-                                new IllegalArgumentException(
-                                        "조회할 수 없는 주문입니다."
-                                )
+                                new IllegalArgumentException("조회할 수 없는 주문입니다.")
                         );
 
         return new OrderPageDto(order);
@@ -174,19 +170,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /* 도서 주문 가능 여부 검사 */
-    private void validateBook(BookEntity book, int quantity) {
-        if (book.isDeleted()) {
-            throw new IllegalArgumentException(book.getTitle() + " 도서는 삭제된 상품입니다.");
-        }
-
-        if (!book.isActive()) {
-            throw new IllegalArgumentException(book.getTitle() + " 도서는 판매가 중지되었습니다.");
-        }
-
-        if (!"ON_SALE".equals(book.getSaleStatus())) {
-            throw new IllegalArgumentException(book.getTitle() + " 도서는 현재 판매 중이 아닙니다.");
-        }
-
+    private void validateBook(Book book, int quantity) {
         if (book.getStock() <= 0) {
             throw new IllegalArgumentException(book.getTitle() + " 도서는 품절되었습니다.");
         }
@@ -199,9 +183,7 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalArgumentException(book.getTitle() + " 도서의 재고가 부족합니다. 현재 재고는 " + book.getStock() + "개입니다.");
         }
 
-        if (quantity > book.getMaxPurchaseQty()) {
-            throw new IllegalArgumentException(book.getTitle() + " 도서는 최대 " + book.getMaxPurchaseQty() + "권까지 구매할 수 있습니다.");
-        }
+
     }
 
     /* 주문번호 생성 */

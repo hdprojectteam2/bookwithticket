@@ -22,17 +22,31 @@ public class RefundController {
         return 1L;
     }
 	
-	@PostMapping("api/payments/{orderNumber}/refund")
-	public ResponseEntity<RefundResponse>requestRefund(
-			@PathVariable(name = "orderNumber")
-			String orderNumber,
-			@RequestBody
-			RefundRequest request
-	){
-		Long memberId = getCurrentMemberId();
-		
-		RefundResponse response = refundService.requestBookRefund(memberId, orderNumber, request.getReason());
-		
-		return ResponseEntity.ok(response);
+	@PostMapping("/api/payments/{orderNumber}/refund")
+	public ResponseEntity<RefundResponse> requestRefund(
+	        @PathVariable(name = "orderNumber")
+	        String orderNumber,
+	        @RequestBody
+	        RefundRequest request
+	) {
+
+	    Long memberId = getCurrentMemberId();
+
+	    RefundResponse response;
+
+	    if (orderNumber.startsWith("B")) {
+
+	        response = refundService.requestBookRefund( memberId, orderNumber, request.getReason());
+
+	    } else if (orderNumber.startsWith("R")) {
+
+	        response = refundService.requestPerformanceRefund(memberId, orderNumber, request.getReason());
+
+	    } else {
+
+	        throw new IllegalArgumentException("올바르지 않은 주문번호입니다.");
+	    }
+
+	    return ResponseEntity.ok(response);
 	}
 }

@@ -8,7 +8,7 @@ public class OrderPageItemDto {
     private final Long bookId;
 
     private final String bookTitle;
-    private final String thumbnailUrl;
+    private final String thumbnail;
 
     private final int price;
     private final int quantity;
@@ -19,7 +19,7 @@ public class OrderPageItemDto {
         this.bookId = orderItem.getBook().getId();
 
         this.bookTitle = orderItem.getBookTitleSnapshot();
-        this.thumbnailUrl = orderItem.getBook().getThumbnailUrl();
+        this.thumbnail = orderItem.getBook().getThumbnail();
 
         this.price = orderItem.getPriceSnapshot();
         this.quantity = orderItem.getQuantity();
@@ -38,8 +38,8 @@ public class OrderPageItemDto {
         return bookTitle;
     }
 
-    public String getThumbnailUrl() {
-        return thumbnailUrl;
+    public String getThumbnail() {
+        return thumbnail;
     }
 
     public int getPrice() {

@@ -77,7 +77,49 @@
 	</div>
 	
 	<div id="ticketHistory" hidden>
-		티켓 구매 내역
+		<!-- 도서 구매 내역 없음 -->
+		<div th:if="${#lists.isEmpty(performanceHistoryItems)}">
+			티켓 구매 내역
+		</div>
+		<div th:unless="${#lists.isEmpty(performanceHistoryItems)}">
+		<!-- 도서 구매 내역 있음 -->
+			<div th:each="performanceHistoryItems : ${performanceHistoryItems}">
+				<p>
+					주문번호: 
+					<span th:text="${performanceHistoryItems.reservationNumber}"></span>
+				</p>
+				 <p>
+	                예매 상태:
+	                <span th:text="${performanceHistoryItems.reservationStatus}"></span>
+	            </p>
+	            <p th:if="${performanceHistoryItems.refundStatusCode != null}">
+	                환불 상태:
+	                <span th:text="${performanceHistoryItems.refundStatus}"></span>
+	            </p>
+				<img th:src="${performanceHistoryItems.posterUrl}" width="120" height="160">
+				<p>
+					<span th:text="${performanceHistoryItems.performanceTitle}"></span>
+				</p>
+				<p>
+					<span th:text="${performanceHistoryItems.venue}"></span>
+				</p>
+				<p>
+					<span th:text="${performanceHistoryItems.performanceStartAt}"></span>
+				</p>
+				<p>
+				    좌석:
+				    <span th:each="seatNumber, status : ${performanceHistoryItems.seatNumbers}">
+				        <span th:text="${seatNumber}"></span>
+				        <span th:if="${!status.last}">, </span>
+				    </span>
+				</p>
+				<button th:if="${performanceHistoryItems.reservationStatusCode == 'CONFIRMED' and performanceHistoryItems.refundStatusCode == null}" th:data-order-number="${performanceHistoryItems.reservationNumber}"
+   				 onclick="requestRefund(this.dataset.orderNumber)">
+				    환불 신청
+				</button>
+				<hr>
+			</div>
+		</div>
 	</div>
 </body>
 <script>

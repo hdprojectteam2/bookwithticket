@@ -35,7 +35,7 @@
 		           th:checked="${item.purchasable}"
 		           th:disabled="${!item.purchasable}"
 		           onchange="updateSelectedSummary()">		
-		    <img th:src="${item.thumbnailUrl}" width="120" height="160">
+		    <img th:src="${item.thumbnail}" width="120" height="160">
 		    <p>
 		        도서명:
 		        <span th:text="${item.bookTitle}"></span>
@@ -66,12 +66,10 @@
 		        </span>
 		        <input type="number"
 		               min="1"
-		               th:max="${item.stock < item.maxPurchaseQty
-		                        ? item.stock
-		                        : item.maxPurchaseQty}"
 		               th:value="${item.quantity}"
 		               th:data-cart-item-id="${item.cartItemId}"
 		               th:disabled="${!item.purchasable}"
+		               th:data-stock="${item.stock}"
 		               onchange="updateQuantity(this)">
 		        <span>
 		            <button type="button" th:disabled="${!item.purchasable}" onclick="changeQuantity(this, 1)">
@@ -187,11 +185,17 @@
 	    const input = quantityBox.querySelector("input");
 	
 	    const currentQuantity = Number(input.value);
-	    const maxQuantity = Number(input.max);
+	    const stockQuantity = Number(input.dataset.stock);
+	    const maxQuantity = Number(99);
 	    const newQuantity = currentQuantity + amount;
 	
 	    if (newQuantity < 1) {
 	        alert("수량은 1개 이상이어야 합니다.");
+	        return;
+	    }
+	    
+	    if (newQuantity > stockQuantity) {
+	        alert("현재 재고는 " + stockQuantity + "개입니다.");
 	        return;
 	    }
 	
@@ -199,6 +203,8 @@
 	        alert("최대 " + maxQuantity + "개까지 구매할 수 있습니다.");
 	        return;
 	    }
+	    
+	    
 	
 	    input.value = newQuantity;
 	    updateQuantity(input);
@@ -208,11 +214,17 @@
 	function updateQuantity(input) {
 	    const cartItemId = input.dataset.cartItemId;
 	    const quantity = Number(input.value);
-	    const maxQuantity = Number(input.max);
+	    const stockQuantity = Number(input.dataset.stock);
+	    const maxQuantity = Number(99);
 	
 	    if (!Number.isInteger(quantity) || quantity < 1) {
 	        alert("수량은 1 이상의 정수만 입력할 수 있습니다.");
 	        location.reload();
+	        return;
+	    }
+	    
+	    if (quantity > stockQuantity) {
+	        alert("현재 재고는 " + stockQuantity + "개입니다.");
 	        return;
 	    }
 	

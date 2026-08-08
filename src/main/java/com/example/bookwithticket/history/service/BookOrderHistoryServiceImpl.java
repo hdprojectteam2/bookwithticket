@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.bookwithticket.book.entity.BookEntity;
+import com.example.bookwithticket.book.entity.Book;
 import com.example.bookwithticket.history.dto.BookOrderHistoryDto;
 import com.example.bookwithticket.history.dto.BookOrderHistoryItemDto;
 import com.example.bookwithticket.order.entity.BookOrderEntity;
@@ -88,13 +88,13 @@ public class BookOrderHistoryServiceImpl implements BookOrderHistoryService {
 	}
 	
 	private BookOrderHistoryItemDto toItemDto(BookOrderItemEntity orderItem) {
-        BookEntity book = orderItem.getBook();
+        Book book = orderItem.getBook();
 
         return new BookOrderHistoryItemDto(
                 orderItem.getBookTitleSnapshot(),
                 book.getAuthor(),
                 book.getPublisher(),
-                book.getThumbnailUrl(),
+                book.getThumbnail(),
                 orderItem.getPriceSnapshot(),
                 orderItem.getQuantity(),
                 orderItem.getTotalPrice()

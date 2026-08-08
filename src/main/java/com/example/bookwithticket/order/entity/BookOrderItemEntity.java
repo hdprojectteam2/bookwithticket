@@ -2,7 +2,7 @@ package com.example.bookwithticket.order.entity;
 
 import java.time.LocalDateTime;
 
-import com.example.bookwithticket.book.entity.BookEntity;
+import com.example.bookwithticket.book.entity.Book;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,7 +30,7 @@ public class BookOrderItemEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
-    private BookEntity book;
+    private Book book;
 
     @Column(
             name = "book_title_snapshot",
@@ -53,13 +53,13 @@ public class BookOrderItemEntity {
 
     public BookOrderItemEntity(
             BookOrderEntity bookOrder,
-            BookEntity book,
+            Book book,
             int quantity
     ) {
         this.bookOrder = bookOrder;
         this.book = book;
         this.bookTitleSnapshot = book.getTitle();
-        this.priceSnapshot = book.getSalePrice();
+        this.priceSnapshot = book.getPrice();
         this.quantity = quantity;
     }
 
@@ -76,7 +76,7 @@ public class BookOrderItemEntity {
         return bookOrder;
     }
 
-    public BookEntity getBook() {
+    public Book getBook() {
         return book;
     }
 

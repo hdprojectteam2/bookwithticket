@@ -25,7 +25,7 @@ public class TossPaymentClient {
 		this.secretKey = secretKey;
 	}
 	
-	public void cacelPayment(String paymentKey, String cancelReason) {
+	public void cancelPayment(String paymentKey, String cancelReason) {
 		String url = TOSS_CANCEL_URL + paymentKey + "/cancel";
 		
 		HttpHeaders headers = createHeaders();

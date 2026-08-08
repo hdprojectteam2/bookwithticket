@@ -8,4 +8,6 @@ public interface RefundService {
 	RefundResponse approveBookRefund(Long adminId, Long refundId);
 	
 	RefundResponse rejectBookRefund(Long adminId, Long refundId);
+	
+	RefundResponse requestPerformanceRefund(Long memberId, String reservationNumber, String reason);
 }

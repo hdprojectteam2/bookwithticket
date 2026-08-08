@@ -1,9 +1,11 @@
 package com.example.bookwithticket.refund.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.bookwithticket.book.repository.BookRepository;
+import com.example.bookwithticket.book.repository.BookStockRepository;
 import com.example.bookwithticket.order.entity.BookOrderEntity;
 import com.example.bookwithticket.order.entity.BookOrderItemEntity;
 import com.example.bookwithticket.order.entity.OrderStatus;
@@ -16,6 +18,9 @@ import com.example.bookwithticket.refund.dto.RefundResponse;
 import com.example.bookwithticket.refund.entity.RefundEntity;
 import com.example.bookwithticket.refund.entity.RefundStatus;
 import com.example.bookwithticket.refund.repository.RefundRepository;
+import com.example.bookwithticket.reservation.entity.ReservationEntity;
+import com.example.bookwithticket.reservation.entity.ReservationStatus;
+import com.example.bookwithticket.reservation.repository.ReservationRepository;
 
 @Service
 @Transactional
@@ -24,17 +29,18 @@ public class RefundServiceImpl implements RefundService {
 	private final BookOrderRepository bookOrderRepository;
 	private final PaymentRepository paymentRepository;
 	private final RefundRepository refundRepository;
-	private final BookRepository bookRepository;
+	private final BookStockRepository bookRepository;
 	private final TossPaymentClient tossPaymentClient;
-	
+	private final ReservationRepository reservationRepository;
 	
 	public RefundServiceImpl(BookOrderRepository bookOrderRepository, PaymentRepository paymentRepository,
-			RefundRepository refundRepository, BookRepository bookRepository, TossPaymentClient tossPaymentClient) {
+			RefundRepository refundRepository, BookStockRepository bookRepository, TossPaymentClient tossPaymentClient, ReservationRepository reservationRepository) {
 		this.bookOrderRepository = bookOrderRepository;
 		this.paymentRepository = paymentRepository;
 		this.refundRepository = refundRepository;
 		this.bookRepository = bookRepository;
 		this.tossPaymentClient = tossPaymentClient;
+		this.reservationRepository = reservationRepository;
 	}
 
 	@Override
@@ -108,9 +114,9 @@ public class RefundServiceImpl implements RefundService {
 	}
 	
 	private void CompleteRefund(BookOrderEntity order, PaymentEntity payment, RefundEntity refund) {
-		tossPaymentClient.cacelPayment(payment.getPaymentKey(), refund.getReason());
+		tossPaymentClient.cancelPayment(payment.getPaymentKey(), refund.getReason());
 		
-		payment.cancle();
+		payment.cancel();
 		order.refund();
 		restoreStock(order);
 		refund.complete();
@@ -121,5 +127,68 @@ public class RefundServiceImpl implements RefundService {
 			bookRepository.increaseStock(orderItem.getBook().getId(), orderItem.getQuantity());
 		}
 	}
+
+	@Override
+	public RefundResponse requestPerformanceRefund(Long memberId, String reservationNumber, String reason) {
+		validateReason(reason);
+
+	    // 1. 결제 완료된 예매인지 확인
+	    ReservationEntity reservation =
+	            reservationRepository
+	                    .findByReservationNumberAndMemberIdAndStatus(
+	                            reservationNumber,
+	                            memberId,
+	                            ReservationStatus.CONFIRMED
+	                    )
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException(
+	                                    "환불할 수 있는 공연 예매가 없습니다."
+	                            )
+	                    );
+
+	    // 2. 예매 종료 시간이 지났는지 확인
+	    LocalDateTime reservationEndAt =
+	            reservation
+	                    .getPerformanceSchedule()
+	                    .getReservationEndAt();
+
+	    if (!LocalDateTime.now().isBefore(reservationEndAt)) {
+	        throw new IllegalArgumentException("예매 종료 시간이 지난 공연은 환불할 수 없습니다.");
+	    }
+
+	    // 3. 완료된 결제 조회
+	    PaymentEntity payment =
+	            paymentRepository
+	                    .findFirstByReservationIdAndStatusOrderByCreatedAtDesc(
+	                            reservation.getId(),
+	                            PaymentStatus.DONE
+	                    )
+	                    .orElseThrow(() ->
+	                            new IllegalArgumentException("환불 가능한 결제 정보가 없습니다.")
+	                    );
+
+	    // 4. 이미 환불 요청된 예매인지 확인
+	    if (refundRepository.existsByPaymentId(payment.getId())) {
+	        throw new IllegalArgumentException("이미 환불 요청된 예매입니다.");
+	    }
+
+	    // 5. 환불 정보 생성
+	    RefundEntity refund =
+	            new RefundEntity(memberId, payment, payment.getAmount(),reason);
+
+	    refundRepository.save(refund);
+
+	    // 6. 토스 결제 취소
+	    tossPaymentClient.cancelPayment(payment.getPaymentKey(), refund.getReason());
+
+	    // 7. 내부 상태 변경
+	    payment.cancel();
+	    reservation.refund();
+	    refund.complete();
+
+	    return new RefundResponse(refund.getId(), refund.getStatus().name(),"공연 환불이 완료되었습니다.");
+	}
+	
+	
 
 }
