@@ -3,12 +3,16 @@ server:
   port: 8787
 =======
   port: 8080
+<<<<<<< HEAD
 
 >>>>>>> 2b355d0dcf6e30160bfe72f0783497efbcf5d7c1
+=======
+>>>>>>> 77b32469bddbccd16f90c83072208e94d82798af
 spring:
   application:
     name: bookwithticket
   datasource:
+<<<<<<< HEAD
 <<<<<<< HEAD
     url: jdbc:mysql://localhost:3306/bookwithticket?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -29,10 +33,17 @@ spring:
       host: localhost
       port: 6379
 >>>>>>> 2b355d0dcf6e30160bfe72f0783497efbcf5d7c1
+=======
+    url: jdbc:mysql://localhost:3306/bookwithticket?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: multi
+>>>>>>> 77b32469bddbccd16f90c83072208e94d82798af
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+    database-platform: org.hibernate.dialect.MySQLDialect
