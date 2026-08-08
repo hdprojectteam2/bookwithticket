@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>관리자 페이지</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+
+<body>
+
+
+<h1>
+    관리자 도서 관리
+</h1>
+
+
+
+<section>
+
+
+    <h2>
+        도서 등록
+    </h2>
+
+
+    <input id="isbn" placeholder="ISBN">
+
+    <input id="title" placeholder="제목">
+
+    <input id="author" placeholder="저자">
+
+    <input id="publisher" placeholder="출판사">
+
+    <input id="price" placeholder="가격">
+
+    <input id="thumbnail" placeholder="이미지 URL">
+
+    <input id="category" placeholder="카테고리">
+
+    <input id="stock" placeholder="재고">
+
+
+    <textarea id="description"
+              placeholder="책 소개">
+</textarea>
+
+
+
+    <button onclick="saveBook()">
+
+        등록
+
+    </button>
+
+
+</section>
+
+
+
+
+
+<hr>
+
+
+
+
+
+<section>
+
+
+    <h2>
+        도서 목록
+    </h2>
+
+
+    <div id="bookList">
+
+    </div>
+
+
+</section>
+
+
+
+<script src="/js/admin.js"></script>
+
+
+</body>
+
+</html>
