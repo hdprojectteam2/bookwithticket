@@ -1,13 +1,15 @@
 package com.example.bookwithticket.global.common;
 
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@EnableScheduling
+@Controller
 public class TestController {
 
     @GetMapping("/")
-    public String healthCheck() {
-        return "Running Successfully";
+    public String root() {
+        return "cartTest";
     }
 }
