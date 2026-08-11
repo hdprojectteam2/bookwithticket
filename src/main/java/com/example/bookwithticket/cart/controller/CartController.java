@@ -184,4 +184,11 @@ public class CartController {
 
         return ResponseEntity.ok("공연 장바구니를 모두 삭제했습니다.");
     }
+    
+    /*장바구니 테스트 페이지 이동 */
+    @GetMapping("/cartTest")
+    public String cartTestPage() {
+
+        return "cartTest";
+    }
 }
