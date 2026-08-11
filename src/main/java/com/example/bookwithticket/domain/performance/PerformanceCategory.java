@@ -4,5 +4,6 @@ public enum PerformanceCategory {
     MUSICAL,
     CONCERT,
     CLASSIC,
-    EXHIBITION
+    EXHIBITION,
+    THEATER
 }

@@ -25,9 +25,9 @@ public class PerformanceDataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (performanceRepository.count() > 0) {
-            return;
-        }
+    //    if (performanceRepository.count() > 0) {
+      //      return;
+     //   }
 
         // 샘플 2개
         Performance p1 = new Performance(

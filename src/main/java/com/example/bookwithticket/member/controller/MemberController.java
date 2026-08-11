@@ -129,15 +129,15 @@ public class MemberController {
 
     @GetMapping("/check-email")
     public ResponseEntity<?> checkEmail(
-            @RequestParam String email
+            @RequestParam(name = "email", required = false) String email
     ){
-
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.ok(Map.of("available", false, "message", "이메일을 입력해 주세요."));
+        }
 
         boolean exists =
-                memberRepository.findByEmail(email)
+                memberRepository.findByEmail(email.trim())
                         .isPresent();
-
-
 
         return ResponseEntity.ok(
                 Map.of(
@@ -145,7 +145,6 @@ public class MemberController {
                         !exists
                 )
         );
-
     }
 
 
