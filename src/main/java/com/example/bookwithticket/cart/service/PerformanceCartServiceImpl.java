@@ -11,8 +11,8 @@ import com.example.bookwithticket.cart.entity.CartEntity;
 import com.example.bookwithticket.cart.entity.PerformanceCartItemEntity;
 import com.example.bookwithticket.cart.repository.CartRepository;
 import com.example.bookwithticket.cart.repository.PerformanceCartItemRepository;
-import com.example.bookwithticket.performance.entity.PerformanceScheduleEntity;
-import com.example.bookwithticket.performance.repository.PerformanceScheduleRepository;
+import com.example.bookwithticket.domain.performance.PerformanceSchedule;
+import com.example.bookwithticket.domain.performance.PerformanceScheduleRepository;
 
 @Service
 @Transactional
@@ -41,16 +41,15 @@ public class PerformanceCartServiceImpl
             throw new IllegalArgumentException("공연 회차 정보가 없습니다.");
         }
 
-        PerformanceScheduleEntity schedule =
+        PerformanceSchedule schedule =
                 performanceScheduleRepository
                         .findById(performanceScheduleId)
                         .orElseThrow(() ->
                                 new IllegalArgumentException("존재하지 않는 공연 회차입니다.")
                         );
 
-        /* 예매 가능 공연 장바구니 예외 처리*/
         if (!LocalDateTime.now().isBefore(
-                schedule.getReservationEndAt()
+                schedule.getPerformanceTime()
         )) {
             throw new IllegalArgumentException("예매 기간이 만료된 공연입니다.");
         }
