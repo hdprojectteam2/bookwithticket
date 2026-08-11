@@ -1,321 +1,172 @@
 package com.example.bookwithticket.book.controller;
 
-
-import com.example.bookwithticket.book.dto.BookImportRequestDto;
+import com.example.bookwithticket.book.dto.BookCategoryResponseDto;
 import com.example.bookwithticket.book.dto.BookRequestDto;
 import com.example.bookwithticket.book.dto.BookResponseDto;
 import com.example.bookwithticket.book.dto.StockRequestDto;
-
-import com.example.bookwithticket.book.entity.Book;
+import com.example.bookwithticket.book.service.AladinBookImportService;
 import com.example.bookwithticket.book.service.BookService;
-
 import com.example.bookwithticket.member.entity.Member;
 import com.example.bookwithticket.member.service.MemberService;
-
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.List;
-
-
 
 @RestController
 @RequestMapping("/books")
 public class BookController {
 
-
-
     private final BookService bookService;
-
+    private final AladinBookImportService aladinBookImportService;
     private final MemberService memberService;
-
-
-
 
     public BookController(
             BookService bookService,
+            AladinBookImportService aladinBookImportService,
             MemberService memberService
-    ){
-
+    ) {
         this.bookService = bookService;
-
+        this.aladinBookImportService = aladinBookImportService;
         this.memberService = memberService;
-
     }
 
-
-
-
-
-
-
-
-    // 등록
-
-    @PostMapping
-    public BookResponseDto save(
-            @RequestBody BookRequestDto requestDto
-    ){
-
-
-        return new BookResponseDto(
-                bookService.save(requestDto)
-        );
-
-    }
-
-
-
-
-
-
-
-    // 전체 조회
-
+    /**
+     * 서점형 통합 목록 API.
+     *
+     * 예:
+     * GET /books?page=0&size=20
+     * GET /books?keyword=스프링
+     * GET /books?category=IT
+     * GET /books?category=소설&sort=bestseller
+     * GET /books?sort=priceAsc
+     */
     @GetMapping
-    public List<BookResponseDto> findAll(){
-
-
-        return bookService.findAll()
-
-                .stream()
-
-                .map(BookResponseDto::new)
-
-                .toList();
-
+    public Page<BookResponseDto> findBooks(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return bookService.findBooks(
+                keyword,
+                category,
+                sort,
+                page,
+                size
+        );
     }
-
-
-
-
-
-
-
-    // 상세 조회 + 최근 본 도서
 
     @GetMapping("/{id}")
-    public BookResponseDto findById(
+    public BookResponseDto findDetail(
             @PathVariable Long id,
             Authentication authentication
-    ){
-
-
+    ) {
         Member member = null;
 
-
-
-        if(authentication != null){
-
-            member =
-                    memberService.findMyInfo(
-                            authentication.getName()
-                    );
-
+        if (authentication != null && authentication.isAuthenticated()) {
+            member = memberService.findMyInfo(authentication.getName());
         }
 
-
-
-        Book book =
-                bookService.findById(
-                        id,
-                        member
-                );
-
-
-
-        return new BookResponseDto(book);
-
+        return bookService.findDetail(id, member);
     }
 
-
-
-
-
-
-
-    // 수정
-
-    @PutMapping("/{id}")
-    public BookResponseDto update(
-            @PathVariable Long id,
-            @RequestBody BookRequestDto requestDto
-    ){
-
-
-        return new BookResponseDto(
-                bookService.update(id, requestDto)
-        );
-
-    }
-
-
-
-
-
-
-
-    // 삭제
-
-    @DeleteMapping("/{id}")
-    public String delete(
-            @PathVariable Long id
-    ){
-
-        bookService.delete(id);
-
-        return "도서 삭제 완료";
-
-    }
-
-
-
-
-
-
-
-    // import
-
-    @PostMapping("/import")
-    public BookResponseDto importBook(
-            @RequestBody BookImportRequestDto dto
-    ){
-
-
-        return new BookResponseDto(
-                bookService.saveImport(dto)
-        );
-
-    }
-
-
-
-
-
-
-
-    // 검색
-
-    @GetMapping("/search")
-    public List<BookResponseDto> search(
-            @RequestParam String keyword
-    ){
-
-        return bookService.search(keyword)
-
+    @GetMapping("/categories")
+    public List<BookCategoryResponseDto> categories() {
+        return bookService.findCategories()
                 .stream()
-
-                .map(BookResponseDto::new)
-
+                .map(BookCategoryResponseDto::new)
                 .toList();
-
     }
 
+    @GetMapping("/popular")
+    public List<BookResponseDto> popular() {
+        return bookService.findPopularBooks();
+    }
 
+    @GetMapping("/bestsellers")
+    public List<BookResponseDto> bestSellers() {
+        return bookService.findBestSellers();
+    }
 
-
-
-
-
-    // 자동완성
+    @GetMapping("/new")
+    public List<BookResponseDto> newBooks() {
+        return bookService.findNewBooks();
+    }
 
     @GetMapping("/autocomplete")
     public List<String> autocomplete(
             @RequestParam String keyword
-    ){
-
+    ) {
         return bookService.autocomplete(keyword);
-
     }
 
-
-
-
-
-
-
-    // 카테고리
-
-    @GetMapping("/category/{category}")
-    public List<BookResponseDto> category(
-            @PathVariable String category
-    ){
-
-        return bookService.findByCategory(category)
-
-                .stream()
-
-                .map(BookResponseDto::new)
-
-                .toList();
-
+    /**
+     * 이전 프론트/테스트 호환용.
+     * 실제 신규 프론트에서는 GET /books?keyword=... 를 사용한다.
+     */
+    @GetMapping("/search")
+    public Page<BookResponseDto> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return bookService.findBooks(keyword, null, sort, page, size);
     }
 
-
-
-
-
-
-
-    // 인기 도서
-
-    @GetMapping("/popular")
-    public List<BookResponseDto> popular(){
-
-
-        return bookService.findPopularBooks()
-
-                .stream()
-
-                .map(BookResponseDto::new)
-
-                .toList();
-
+    @PostMapping
+    public ResponseEntity<BookResponseDto> save(
+            @Valid @RequestBody BookRequestDto requestDto
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(bookService.save(requestDto));
     }
 
-
-
-
-
-
-
-    // 신간
-
-    @GetMapping("/new")
-    public List<BookResponseDto> newBooks(){
-
-
-        return bookService.findNewBooks()
-
-                .stream()
-
-                .map(BookResponseDto::new)
-
-                .toList();
-
+    @PutMapping("/{id}")
+    public BookResponseDto update(
+            @PathVariable Long id,
+            @Valid @RequestBody BookRequestDto requestDto
+    ) {
+        return bookService.update(id, requestDto);
     }
 
-
-
-
-
-
-
-    // 재고 수정
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id
+    ) {
+        bookService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 
     @PutMapping("/{id}/stock")
     public BookResponseDto updateStock(
             @PathVariable Long id,
-            @RequestBody StockRequestDto dto
-    ){
-
-
-        return new BookResponseDto(
-                bookService.updateStock(id, dto)
-        );
-
+            @Valid @RequestBody StockRequestDto dto
+    ) {
+        return bookService.updateStock(id, dto);
     }
 
+    /**
+     * 관리자용 알라딘 검색 → 우리 DB 적재.
+     * 중복 ISBN은 자동으로 건너뛴다.
+     */
+    @PostMapping("/admin/import/aladin")
+    public List<BookResponseDto> importFromAladin(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "20") int maxResults,
+            @RequestParam(defaultValue = "10") int stock
+    ) {
+        return aladinBookImportService.importByKeyword(
+                keyword,
+                maxResults,
+                stock
+        );
+    }
 }
