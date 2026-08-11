@@ -59,13 +59,23 @@ public class Performance extends BaseTimeEntity {
     public int getRuntimeMinutes() { return runtimeMinutes; }
     public String getDescription() { return description; }
     public Long getOriginalBookId() { return originalBookId; }
+    public boolean isActive() { return active; }
+    public void deactivate() { this.active = false; }
+    public void activate() { this.active = true; }
    
 
     
     
-    //업데이트용 지금사용 안함
-    public void updateOriginalBookId(Long originalBookId) {
-        this.originalBookId = originalBookId;
+    public void update(String title, PerformanceCategory category, String venue, String posterUrl, int runtimeMinutes, String description, Long originalBookId) {
+        if (title != null && !title.isBlank()) this.title = title;
+        if (category != null) this.category = category;
+        if (venue != null && !venue.isBlank()) this.venue = venue;
+        if (posterUrl != null) this.posterUrl = posterUrl;
+        if (runtimeMinutes > 0) this.runtimeMinutes = runtimeMinutes;
+        if (description != null) this.description = description;
+        if (originalBookId != null) this.originalBookId = originalBookId;
     }
+
+   
     
 }

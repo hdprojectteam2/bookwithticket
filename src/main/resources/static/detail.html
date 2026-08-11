@@ -84,7 +84,10 @@
                         <span class="badge">${p.category || '공연'}</span>
                         <h3>${p.title}</h3>
                         <p style="margin:8px 0; font-size:1rem; color:#444;"><b>공연장:</b> ${p.venue} (${p.runtimeMinutes}분)</p>
-                        ${p.originalBookId ? `<p style="margin:8px 0; color:#e67e22; font-size:0.95rem; font-weight:bold;">원작 도서 ID: ${p.originalBookId}</p>` : ''}
+                        ${p.originalBookId ? `<div style="margin:10px 0; padding:10px; background:#fff3e0; border-left:4px solid #e67e22;">
+                            <span style="color:#d35400; font-weight:bold;">원작 도서 연동: </span>
+                            <button onclick="location.href='/book-detail.html?id=${p.originalBookId}'" style="background:#e67e22; padding:5px 12px; font-size:0.85rem; margin-left:6px;">원작 도서 상세 보기 (ID: ${p.originalBookId})</button>
+                        </div>` : ''}
                         <div style="margin-top:15px; padding-top:15px; border-top:1px solid #eee;">
                             <h4 style="margin:0 0 8px 0; color:#34495e;">상세 설명</h4>
                             <p style="margin:0; font-size:0.95rem; color:#666; line-height:1.6;">${p.description || '등록된 상세 설명이 없습니다.'}</p>
