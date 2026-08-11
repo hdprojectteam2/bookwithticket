@@ -6,3 +6,23 @@ Content-Type: application/json
   "password": "1234",
   "name": "홍길동"
 }
+
+### 회원가입 테스트
+POST http://localhost:8080/members/signup
+Content-Type: application/json
+
+{
+  "email": "membertest01@test.com",
+  "password": "password123!",
+  "name": "테스트회원",
+  "marketingAgree": false
+}
+
+### 로그인 테스트
+POST http://localhost:8080/members/login
+Content-Type: application/json
+
+{
+  "email": "membertest01@test.com",
+  "password": "password123!"
+}
