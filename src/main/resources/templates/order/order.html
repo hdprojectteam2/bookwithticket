@@ -1,121 +1,44 @@
 <!DOCTYPE html>
+<html lang="ko">
 <html>
 <head>
 <meta charset="UTF-8">
 <title>주문자 정보 입력</title>
+<script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="/js/kakao/kakao-address.js" defer></script>
+<script src="/js/order/order.js" defer></script>
 </head>
 <body>
 	<h1>배송지 입력@@</h1>
-	
+
 	<span>배송지 정보</span>
-	
+
 	<div>주문자 정보</div>
 	<input type="text" id="recipient" placeholder="이름을 입력해주세요.">
 	<input type="text" id="phone" placeholder="휴대전화번호를 -없이 입력해 주세요.">
 	<hr>
 	<div>배송지 정보</div>
 	<input type="text" id="zipcode" readonly placeholder="우편번호">
-	<input type="button" onclick="execDaumPostcode()" value="우편번호 찾기"><br>
-	<input type="text" id="address" readonly placeholder="주소"><br>
+	<input type="button" onclick="execDaumPostcode()" value="우편번호 찾기">
+	<br>
+	<input type="text" id="address" readonly placeholder="주소">
+	<br>
 	<input type="text" id="detailAddress" placeholder="상세주소">
 	<input type="text" id="deliveryRequest" placeholder="배송 요청사항">
 	<hr>
 	<div>주문내역</div>
 	<div th:unless="${#lists.isEmpty(order.orderItems)}">
 		<div th:each="item : ${order.orderItems}">
-			<span th:text="${item.bookTitle}"></span>
-			<span> x</span>
-			<span th:text="${item.quantity}"></span>
-			<span th:text="${item.totalPrice}+'원'"></span>
+			<span th:text="${item.bookTitle}"></span> <span> x</span> <span
+				th:text="${item.quantity}"></span> <span
+				th:text="${item.totalPrice}+'원'"></span>
 		</div>
 	</div>
 
-	
-	<div>최종 결제 금액 : <span th:text="${order.totalPrice}"></span>원</div>
+
+	<div>
+		최종 결제 금액 : <span th:text="${order.totalPrice}"></span>원
+	</div>
 	<button onclick="submitOrder()">결제하기</button>
 </body>
-<script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-<script>
-	/*카카오 도로명 검색 API */
-    function execDaumPostcode() {
-        new kakao.Postcode({
-            oncomplete: function(data) {
-                var addr = ''; // 주소 변수
-                var extraAddr = ''; // 참고항목 변수
-
-                //사용자가 선택한 주소 타입에 따라 해당 주소 값을 가져온다.
-                if (data.userSelectedType === 'R') { // 사용자가 도로명 주소를 선택했을 경우
-                    addr = data.roadAddress;
-                } else { // 사용자가 지번 주소를 선택했을 경우(J)
-                    addr = data.jibunAddress;
-                }
-
-                // 사용자가 선택한 주소가 도로명 타입일때 참고항목을 조합한다.
-                if(data.userSelectedType === 'R'){
-                    // 법정동명이 있을 경우 추가한다. (법정리는 제외)
-                    // 법정동의 경우 마지막 문자가 "동/로/가"로 끝난다.
-                    if(data.bname !== '' && /[동로가]$/.test(data.bname)){
-                        extraAddr += data.bname;
-                    }
-                    // 건물명이 있고, 공동주택일 경우 추가한다.
-                    if(data.buildingName !== '' && data.apartment === 'Y'){
-                        extraAddr += (extraAddr !== '' ? ', ' + data.buildingName : data.buildingName);
-                    }
-                    // 표시할 참고항목이 있을 경우, 괄호까지 추가한 최종 문자열을 만든다.
-                    if(extraAddr !== ''){
-                        extraAddr = ' (' + extraAddr + ')';
-                    }
-                    // 주소와 참고 항목을 합친다
-                	addr = addr + ' ' + extraAddr;
-                    
-                } else {
-                    //document.getElementById("extraAddress").value = '';
-                }
-
-                // 우편번호와 주소 정보를 해당 필드에 넣는다.
-                document.getElementById('zipcode').value = data.zonecode;
-                document.getElementById("address").value = addr;
-                // 커서를 상세주소 필드로 이동한다.
-                document.getElementById("detailAddress").focus();
-            }
-        }).open();
-    }
-    
-    async function submitOrder(){
-    	const orderNumber = new URLSearchParams(window.location.search).get("orderNumber");
-
-    	if(!orderNumber){
-    		alert("주문 번호를 찾을 수 없습니다.");
-    		return;
-    	}
-    	
-        const requestData = {
-            recipient: document.getElementById("recipient").value,
-            phone: document.getElementById("phone").value,
-            zipcode: document.getElementById("zipcode").value,
-            address: document.getElementById("address").value,
-            detailAddress: document.getElementById("detailAddress").value,
-            deliveryRequest: document.getElementById("deliveryRequest").value            
-        };
-
-        const response = await fetch(
-            `/api/orders/${orderNumber}/delivery`,
-            {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(requestData)
-            }
-        );
-
-        if (!response.ok) {
-            const message = await response.text();
-            alert(message || "배송지 저장에 실패했습니다.");
-            return;
-        }
-
-        location.href = `/payments/checkout?orderNumber=${orderNumber}`;
-    }
-</script>
 </html>

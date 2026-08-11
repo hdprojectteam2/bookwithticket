@@ -1,36 +1,46 @@
 async function savePaymentFailure() {
-  const params =
-    new URLSearchParams(window.location.search);
+	params = new URLSearchParams(window.location.search);
 
-  const orderId =
-    params.get("orderId");
+	const orderId = params.get("orderId");
 
-  const code = params.get("code") || "PAYMENT_FAILED";
+	const code = params.get("code") || "PAYMENT_FAILED";
 
-  const message = params.get("message") || "결제에 실패했습니다.";
+	const message = params.get("message") || "결제에 실패했습니다.";
+  
+	const errorCodeElement = document.getElementById("error-code");
 
-  if (!orderId) {
-    return;
-  }
+	const errorMessageElement = document.getElementById("error-message");
 
-  try {
-    await fetch("/api/payments/fail", {
-      method: "POST",
+      if (errorCodeElement) {
+          errorCodeElement.textContent = code;
+      }
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+      if (errorMessageElement) {
+          errorMessageElement.textContent = message;
+      }
 
-      body: JSON.stringify({
-        orderId: orderId,
-        code: code,
-        message: message,
-      }),
-    });
+	if (!orderId) {
+		return;
+	}
 
-  } catch (error) {
-    console.error( "결제 실패 기록 저장 실패:", error);
-  }
+	try {
+		await fetch("/api/payments/fail", {
+			method: "POST",
+
+			headers: {
+				"Content-Type": "application/json",
+			},
+
+			body: JSON.stringify({
+				orderId: orderId,
+				code: code,
+				message: message,
+		}),
+	});
+
+	} catch (error) {
+		console.error( "결제 실패 기록 저장 실패:", error);
+	}
 }
 
 savePaymentFailure();

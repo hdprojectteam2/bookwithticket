@@ -82,25 +82,27 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     @Override
     public PaymentConfirmResponse confirmPayment(Long memberId, PaymentConfirmRequest request) {
-        /* 값 검사 */
     	validateRequest(request);
     	
     	String orderId = request.getOrderId();
     	
-    	/* 도서, 공연 주문 번호 판별 */
     	if(orderId.startsWith("B")) {
     		return confirmBookPayment(memberId, request);
     	}
     	
-    	if(orderId.startsWith("R")) {
-    		return confirmPerformancePayment(memberId,request);
-    	}
-    	
-    	throw new IllegalArgumentException("올바르지 않은 주문번호입니다.");
+    	if (orderId.startsWith("PERF_")) {
+            return confirmPerformancePayment(
+                    memberId,
+                    request
+            );
+        }
+
+        throw new IllegalArgumentException(
+                "올바르지 않은 주문번호 또는 공연 결제번호입니다."
+        );
     }
     
     private PaymentConfirmResponse confirmBookPayment(Long memberId, PaymentConfirmRequest request) {
-    	/* 주문번호, 회원번호, 결제 대기 상태 검사 */
         BookOrderEntity order =
                 bookOrderRepository
                         .findByOrderNumberAndMemberIdAndOrderStatus(
@@ -193,7 +195,6 @@ public class PaymentServiceImpl implements PaymentService {
 
         PaymentEntity savedPayment = paymentRepository.save(payment);
 
-        /* 결제 성공 PAYMENT_PENDING - PAID */
         order.completePayment();
         
         cartItemRepository.deleteByCartMemberId(memberId);
@@ -208,7 +209,11 @@ public class PaymentServiceImpl implements PaymentService {
     }
     
     private PaymentConfirmResponse confirmPerformancePayment(Long memberId, PaymentConfirmRequest request) {
+<<<<<<< HEAD
     	Long reservationId = parseReservationId(request.getOrderId());
+=======
+    	Long reservationId = parsePerformanceOrderId(request.getOrderId());
+>>>>>>> feature/cart
     	
     	Reservation reservation =
                 reservationRepository
@@ -241,7 +246,11 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalArgumentException("이미 결제가 완료된 예매입니다.");
         }
 
+<<<<<<< HEAD
         String paymentOrderId = "R" + reservation.getId();
+=======
+        String paymentOrderId = "PERF_" + reservation.getId();
+>>>>>>> feature/cart
         
         String idempotencyKey = createIdempotencyKey(paymentOrderId, request.getPaymentKey());
 
@@ -490,12 +499,12 @@ public class PaymentServiceImpl implements PaymentService {
             return;
         }
 
-        if (orderId.startsWith("R")) {
+        if (orderId.startsWith("PERF_")) {
             savePerformancePaymentFailure(memberId, request);
             return;
         }
 
-        throw new IllegalArgumentException("올바르지 않은 주문번호입니다");
+        throw new IllegalArgumentException("올바르지 않은 주문번호 또는 공연 결제번호입니다.");
     }
     
     private void saveBookPaymentFailure(Long memberId, PaymentFailureRequest request) {
@@ -523,6 +532,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void savePerformancePaymentFailure(Long memberId, PaymentFailureRequest request) {
+<<<<<<< HEAD
     	Long reservationId = parseReservationId(request.getOrderId());
     	
     	Reservation reservation =
@@ -531,6 +541,13 @@ public class PaymentServiceImpl implements PaymentService {
                         		reservationId,
                                 memberId
                         )
+=======
+    	Long reservationId = parsePerformanceOrderId(request.getOrderId());
+    	
+    	Reservation reservation =
+                reservationRepository
+                        .findByIdAndMemberId(reservationId,memberId)
+>>>>>>> feature/cart
                         .orElseThrow(() ->
                                 new IllegalArgumentException("실패 처리할 공연 예매가 없습니다.")
                         );
@@ -547,6 +564,7 @@ public class PaymentServiceImpl implements PaymentService {
         );
     }
     
+<<<<<<< HEAD
     private Long parseReservationId(String orderId) {
         if (orderId == null || !orderId.startsWith("R")) {
 
@@ -560,6 +578,9 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
     
+=======
+
+>>>>>>> feature/cart
     private String extractTossErrorCode(String responseBody) {
         try {
             JsonNode error =
@@ -578,5 +599,24 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         return "UNKNOWN_PAYMENT_ERROR";
+    }
+    
+    private Long parsePerformanceOrderId(String orderId) {
+
+        if (orderId == null || !orderId.startsWith("PERF_")) {
+            throw new IllegalArgumentException(
+                    "올바르지 않은 공연 결제번호입니다."
+            );
+        }
+
+        try {
+            return Long.parseLong(
+                    orderId.substring(5)
+            );
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "올바르지 않은 공연 결제번호입니다."
+            );
+        }
     }
 }

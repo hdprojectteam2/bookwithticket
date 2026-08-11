@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="ko">
 <html>
 <head>
 <meta charset="UTF-8">
@@ -7,16 +8,14 @@
 <body>
 	<h1>구매내역</h1>
 
-	<!-- 도서, 티켓 구매내역 탭 -->	
+	<!-- 도서, 티켓 구매내역 탭 -->
 	<div>
 		<div>구매내역 카테고리 변경 버튼</div>
-	    <button type="button" onclick="historyTab('bookHistory')">
-	     	도서
-	    </button>
-	
-	    <button type="button" onclick="historyTab('ticketHistory')">
-	        티켓
-	    </button>
+		<button type="button" onclick="historyTab('bookHistory')">도서
+		</button>
+
+		<button type="button" onclick="historyTab('ticketHistory')">
+			티켓</button>
 	</div>
 	<hr>
 	<div id="bookHistory">
@@ -28,75 +27,67 @@
 		<div th:unless="${#lists.isEmpty(historyItems)}">
 			<div th:each="historyItems : ${historyItems}">
 				<p>
-			        주문번호:
-			        <span th:text="${historyItems.orderNumber}"></span>
-			    </p>
-			    <p th:if="${historyItems.refundStatusCode != 'COMPLETED'}">
-			    	배송 상태:
-			    	<span th:text="${historyItems.deliveryStatus}"></span>
-			    </p>
-			    
-			    <p th:if="${historyItems.refundStatusCode != null}">
-				    환불 상태:
-				    <span th:text="${historyItems.refundStatus}"></span>
+					주문번호: <span th:text="${historyItems.orderNumber}"></span>
 				</p>
-			    
-			    <div th:each="item : ${historyItems.orderItems}">
+				<p th:if="${historyItems.refundStatusCode != 'COMPLETED'}">
+					배송 상태: <span th:text="${historyItems.deliveryStatus}"></span>
+				</p>
+
+				<p th:if="${historyItems.refundStatusCode != null}">
+					환불 상태: <span th:text="${historyItems.refundStatus}"></span>
+				</p>
+
+				<div th:each="item : ${historyItems.orderItems}">
 					<img th:src="${item.imageUrl}" width="120" height="160">
 					<p>
-				        도서명:
-				        <span th:text="${item.bookTitle}"></span>
-				        <span th:if="${item.quantity > 1}">
-					        ×
-					        <span th:text="${item.quantity}"></span>
-					    </span>
-				    </p>
-				    <p>
-				    	저자:
-				    	<span th:text="${item.author}"></span>
-				    </p>
-				     <p>
-				    	출판사:
-				    	<span th:text="${item.publisher}"></span>
-				    </p>	    
-				    <p th:if="${item.quantity > 1}">
-                        <span th:text="${item.totalPrice}"></span>원
+						도서명: <span th:text="${item.bookTitle}"></span> <span
+							th:if="${item.quantity > 1}"> × <span
+							th:text="${item.quantity}"></span>
+						</span>
+					</p>
+					<p>
+						저자: <span th:text="${item.author}"></span>
+					</p>
+					<p>
+						출판사: <span th:text="${item.publisher}"></span>
+					</p>
+					<p th:if="${item.quantity > 1}">
+						<span th:text="${item.totalPrice}"></span>원
 
-                    </p>
+					</p>
 
-                    <!-- 수량이 한 개일 때 -->
-                    <p th:if="${item.quantity == 1}">
-                        <span th:text="${item.unitPrice}"
-                        ></span>원
-                    </p>		    
-			    </div>
-				<button th:if="${historyItems.orderStatusCode == 'PAID' and historyItems.refundStatusCode == null}" th:data-order-number="${historyItems.orderNumber}"  onclick="requestRefund(this.dataset.orderNumber)">환불 신청</button>
+					<!-- 수량이 한 개일 때 -->
+					<p th:if="${item.quantity == 1}">
+						<span th:text="${item.unitPrice}"></span>원
+					</p>
+				</div>
+				<button
+					th:if="${historyItems.orderStatusCode == 'PAID' and historyItems.refundStatusCode == null}"
+					th:data-order-number="${historyItems.orderNumber}"
+					onclick="requestRefund(this.dataset.orderNumber)">환불 신청</button>
 				<hr>
 			</div>
 		</div>
 	</div>
-	
+
 	<div id="ticketHistory" hidden>
 		<!-- 도서 구매 내역 없음 -->
-		<div th:if="${#lists.isEmpty(performanceHistoryItems)}">
-			티켓 구매 내역
+		<div th:if="${#lists.isEmpty(performanceHistoryItems)}">티켓 구매 내역
 		</div>
 		<div th:unless="${#lists.isEmpty(performanceHistoryItems)}">
-		<!-- 도서 구매 내역 있음 -->
+			<!-- 도서 구매 내역 있음 -->
 			<div th:each="performanceHistoryItems : ${performanceHistoryItems}">
 				<p>
-					주문번호: 
-					<span th:text="${performanceHistoryItems.reservationNumber}"></span>
+					주문번호: <span th:text="${performanceHistoryItems.reservationNumber}"></span>
 				</p>
-				 <p>
-	                예매 상태:
-	                <span th:text="${performanceHistoryItems.reservationStatus}"></span>
-	            </p>
-	            <p th:if="${performanceHistoryItems.refundStatusCode != null}">
-	                환불 상태:
-	                <span th:text="${performanceHistoryItems.refundStatus}"></span>
-	            </p>
-				<img th:src="${performanceHistoryItems.posterUrl}" width="120" height="160">
+				<p>
+					예매 상태: <span th:text="${performanceHistoryItems.reservationStatus}"></span>
+				</p>
+				<p th:if="${performanceHistoryItems.refundStatusCode != null}">
+					환불 상태: <span th:text="${performanceHistoryItems.refundStatus}"></span>
+				</p>
+				<img th:src="${performanceHistoryItems.posterUrl}" width="120"
+					height="160">
 				<p>
 					<span th:text="${performanceHistoryItems.performanceTitle}"></span>
 				</p>
@@ -107,77 +98,81 @@
 					<span th:text="${performanceHistoryItems.performanceStartAt}"></span>
 				</p>
 				<p>
+<<<<<<< HEAD
 				    좌석:
 					<span th:text="${performanceHistoryItem.seatNumber}"></span>
+=======
+					좌석: <span th:text="${performanceHistoryItems.seatNumber}"></span>
+>>>>>>> feature/cart
 				</p>
-				<button th:if="${performanceHistoryItems.reservationStatusCode == 'CONFIRMED' and performanceHistoryItems.refundStatusCode == null}" th:data-order-number="${performanceHistoryItems.reservationNumber}"
-   				 onclick="requestRefund(this.dataset.orderNumber)">
-				    환불 신청
-				</button>
+				<button
+					th:if="${performanceHistoryItems.reservationStatusCode == 'CONFIRMED' and performanceHistoryItems.refundStatusCode == null}"
+					th:data-order-number="${performanceHistoryItems.reservationNumber}"
+					onclick="requestRefund(this.dataset.orderNumber)">환불 신청</button>
 				<hr>
 			</div>
 		</div>
 	</div>
 </body>
 <script>
-//도서, 티켓 탭 관리
-function historyTab(tabId) {
-	const bookHistory = document.getElementById("bookHistory");
-	const ticketHistory = document.getElementById("ticketHistory");
+	//도서, 티켓 탭 관리
+	function historyTab(tabId) {
+		const bookHistory = document.getElementById("bookHistory");
+		const ticketHistory = document.getElementById("ticketHistory");
 
-	bookHistory.hidden = true;
-	ticketHistory.hidden = true;
+		bookHistory.hidden = true;
+		ticketHistory.hidden = true;
 
-	document.getElementById(tabId).hidden = false;
+		document.getElementById(tabId).hidden = false;
 
-}
+	}
 
-async function requestRefund(orderNumber) {
-	  const reason = prompt("환불 사유를 입력해 주세요.");
+	async
+	function requestRefund(orderNumber) {
+		const reason = prompt("환불 사유를 입력해 주세요.");
 
-	  if (reason === null) {
-	    return;
-	  }
+		if (reason === null) {
+			return;
+		}
 
-	  if (!reason.trim()) {
-	    alert("환불 사유를 입력해 주세요.");
-	    return;
-	  }
+		if (!reason.trim()) {
+			alert("환불 사유를 입력해 주세요.");
+			return;
+		}
 
-	  const confirmed = confirm("해당 주문을 환불하시겠습니까?");
+		const confirmed = confirm("해당 주문을 환불하시겠습니까?");
 
-	  if (!confirmed) {
-	    return;
-	  }
+		if (!confirmed) {
+			return;
+		}
 
-	  try {
-	    const response = await fetch(
-	      `/api/payments/${orderNumber}/refund`,
-	      {
-	        method: "POST",
-	        headers: {
-	          "Content-Type": "application/json",
-	        },
-	        body: JSON.stringify({
-	          reason: reason.trim(),
-	        }),
-	      }
-	    );
+		try {
+			const response = await
+			fetch(`/api/payments/${orderNumber}/refund`, {
+				method : "POST",
+				headers : {
+					"Content-Type" : "application/json",
+				},
+				body : JSON.stringify({
+					reason : reason.trim(),
+				}),
+			});
 
-	    const result = await response.json();
+			const result = await
+			response.json();
 
-	    if (!response.ok) {
-	      throw new Error(result.message || "환불 요청 처리에 실패했습니다.");
-	    }
+			if (!response.ok) {
+				throw new Error(result.message || "환불 요청 처리에 실패했습니다.");
+			}
 
-	    alert(result.message);
+			alert(result.message);
 
-	    window.location.reload();
+			window.location.reload();
 
-	  } catch (error) {
-	    console.error("환불 처리 오류:", error);
-	    alert(error.message);
-	  }
+		} catch (error) {
+			console.error("환불 처리 오류:", error);
+			alert(error.message);
+		}
 	}
 </script>
 </html>

@@ -43,18 +43,23 @@ public class PaymentController {
             Model model
     ) {
         Long memberId = getCurrentMemberId();
+        
+        if (orderNumber == null || orderNumber.isBlank()) {
+            throw new IllegalArgumentException("주문번호 또는 예매번호가 없습니다.");
+        }
 
         if (orderNumber.startsWith("B")) {
             return bookCheckoutPage(memberId, orderNumber, model);
         }
 
-        if (orderNumber.startsWith("R")) {
-            return performanceCheckoutPage(memberId, orderNumber, model);
+        try {
+            Long.parseLong(orderNumber);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("올바르지 않은 주문번호 또는 예매번호입니다.");
         }
 
-        throw new IllegalArgumentException(
-                "올바르지 않은 주문번호 또는 예매번호입니다."
-        );
+        return performanceCheckoutPage(memberId, orderNumber, model);
+
     }
     
     private String bookCheckoutPage(Long memberId, String orderNumber, Model model) {
@@ -79,7 +84,17 @@ public class PaymentController {
     
     private String performanceCheckoutPage(Long memberId, String orderNumber, Model model) {
     	
+<<<<<<< HEAD
     	Long reservationId = parseReservationId(orderNumber);
+=======
+    	Long reservationId;
+
+        try {
+            reservationId = Long.parseLong(orderNumber);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("올바르지 않은 예매 ID입니다.");
+        }
+>>>>>>> feature/cart
 
     	
     	Reservation reservation =
@@ -105,9 +120,16 @@ public class PaymentController {
         }
 
         String orderName = reservation.getSchedule().getPerformance().getTitle();
+<<<<<<< HEAD
 
         model.addAttribute("reservation", reservation);
         model.addAttribute("paymentOrderId", orderNumber);
+=======
+        
+        
+        model.addAttribute("reservation", reservation);
+        model.addAttribute("paymentOrderId", "PERF_" + reservation.getId());
+>>>>>>> feature/cart
         model.addAttribute("orderName", orderName);
         model.addAttribute("tossClientKey", clientKey);
 

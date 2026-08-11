@@ -13,40 +13,54 @@ import com.example.bookwithticket.refund.service.RefundService;
 @RestController
 public class RefundController {
 	private final RefundService refundService;
-	
+
 	public RefundController(RefundService refundService) {
 		this.refundService = refundService;
 	}
-	
+
 	private Long getCurrentMemberId() {
-        return 1L;
-    }
-	
+		return 1L;
+	}
+
 	@PostMapping("/api/payments/{orderNumber}/refund")
-	public ResponseEntity<RefundResponse> requestRefund(
-	        @PathVariable(name = "orderNumber")
-	        String orderNumber,
-	        @RequestBody
-	        RefundRequest request
-	) {
+	public ResponseEntity<RefundResponse> requestRefund(@PathVariable(name = "orderNumber") String orderNumber,
+			@RequestBody RefundRequest request) {
 
-	    Long memberId = getCurrentMemberId();
+		Long memberId = getCurrentMemberId();
 
-	    RefundResponse response;
+		RefundResponse response;
 
-	    if (orderNumber.startsWith("B")) {
+		if (orderNumber.startsWith("B")) {
 
-	        response = refundService.requestBookRefund( memberId, orderNumber, request.getReason());
+			response = refundService.requestBookRefund(memberId, orderNumber, request.getReason());
 
-	    } else if (orderNumber.startsWith("R")) {
+		} else {
 
-	        response = refundService.requestPerformanceRefund(memberId, orderNumber, request.getReason());
+			response = refundService.requestPerformanceRefund(memberId, orderNumber, request.getReason());
+		}
 
-	    } else {
+		return ResponseEntity.ok(response);
+	}
 
-	        throw new IllegalArgumentException("올바르지 않은 주문번호입니다.");
-	    }
+	/* 관리자 - 환불 승인 */
+	@PostMapping("/api/admin/refunds/{refundId}/approve")
+	public ResponseEntity<RefundResponse> approveRefund(@PathVariable(name = "refundId") Long refundId) {
+		
+		Long memberId = getCurrentMemberId();
+		
+		RefundResponse response = refundService.approveBookRefund(memberId, refundId);
 
-	    return ResponseEntity.ok(response);
+		return ResponseEntity.ok(response);
+	}
+
+	/* 관리자 - 환불 거절 */
+	@PostMapping("/api/admin/refunds/{refundId}/reject")
+	public ResponseEntity<RefundResponse> rejectRefund(@PathVariable(name = "refundId") Long refundId) {
+		
+		Long memberId = getCurrentMemberId();
+		
+		RefundResponse response = refundService.rejectBookRefund(memberId, refundId);
+
+		return ResponseEntity.ok(response);
 	}
 }
