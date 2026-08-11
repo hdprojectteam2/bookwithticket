@@ -1,504 +1,142 @@
 package com.example.bookwithticket.member.service;
 
-
 import com.example.bookwithticket.member.dto.LoginRequestDto;
 import com.example.bookwithticket.member.dto.MemberRequestDto;
 import com.example.bookwithticket.member.dto.MemberUpdateRequestDto;
-
 import com.example.bookwithticket.member.entity.Member;
-
 import com.example.bookwithticket.member.exception.DuplicateEmailException;
 import com.example.bookwithticket.member.exception.LoginFailedException;
-
+import com.example.bookwithticket.member.exception.MemberNotFoundException;
 import com.example.bookwithticket.member.jwt.JwtUtil;
 import com.example.bookwithticket.member.repository.MemberRepository;
-
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-
-import java.time.LocalDateTime;
-
-
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class MemberService {
 
-
-
     private final MemberRepository memberRepository;
-
-
     private final PasswordEncoder passwordEncoder;
-
-
     private final JwtUtil jwtUtil;
-
-
-
-
 
     public MemberService(
             MemberRepository memberRepository,
             PasswordEncoder passwordEncoder,
             JwtUtil jwtUtil
-    ){
-
+    ) {
         this.memberRepository = memberRepository;
-
         this.passwordEncoder = passwordEncoder;
-
         this.jwtUtil = jwtUtil;
-
     }
 
+    @Transactional
+    public Member signup(MemberRequestDto requestDto) {
+        String email = normalizeEmail(requestDto.getEmail());
 
-
-
-
-
-
-
-    // 회원가입
-
-    public Member save(
-            MemberRequestDto requestDto
-    ){
-
-
-
-        if(
-                memberRepository.findByEmail(
-                        requestDto.getEmail()
-                ).isPresent()
-        ){
-
-            throw new DuplicateEmailException(
-                    "이미 가입된 이메일입니다."
-            );
-
+        if (memberRepository.existsByEmail(email)) {
+            throw new DuplicateEmailException("이미 가입된 이메일입니다.");
         }
 
-
-
-
-
-
-        Member member =
-                new Member();
-
-
-
-
-
-        member.setEmail(
-                requestDto.getEmail()
-        );
-
-
-
-        member.setPassword(
-                passwordEncoder.encode(
-                        requestDto.getPassword()
-                )
-        );
-
-
-
-        member.setName(
-                requestDto.getName()
-        );
-
-
-
-        // 기본 권한
-
-        member.setRole(
-                "USER"
-        );
-
-
-
-        member.setPhone(
-                requestDto.getPhone()
-        );
-
-
-
-        member.setZipcode(
-                requestDto.getZipcode()
-        );
-
-
-
-        member.setAddress(
-                requestDto.getAddress()
-        );
-
-
-
-        member.setDetailAddress(
-                requestDto.getDetailAddress()
-        );
-
-
-
-        member.setMarketingAgree(
+        Member member = Member.createLocalMember(
+                email,
+                passwordEncoder.encode(requestDto.getPassword()),
+                requestDto.getName().trim(),
+                normalizeNullable(requestDto.getPhone()),
+                normalizeNullable(requestDto.getZipcode()),
+                normalizeNullable(requestDto.getAddress()),
+                normalizeNullable(requestDto.getDetailAddress()),
                 requestDto.isMarketingAgree()
         );
 
-
-
-        member.setActive(
-                true
-        );
-
-
-
-
         return memberRepository.save(member);
-
-
     }
 
+    @Transactional
+    public String login(LoginRequestDto requestDto) {
+        String email = normalizeEmail(requestDto.getEmail());
 
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new LoginFailedException("이메일 또는 비밀번호가 올바르지 않습니다."));
 
+        if (!member.isActive()) {
+            throw new LoginFailedException("탈퇴한 회원입니다.");
+        }
 
+        if (!passwordEncoder.matches(requestDto.getPassword(), member.getPassword())) {
+            throw new LoginFailedException("이메일 또는 비밀번호가 올바르지 않습니다.");
+        }
 
+        member.recordLogin();
 
+        return jwtUtil.createToken(member.getEmail(), member.getRole());
+    }
 
+    public boolean isEmailAvailable(String email) {
+        return !memberRepository.existsByEmail(normalizeEmail(email));
+    }
 
-
-    // 회원 조회
-
-    public Member findById(
-            Long id
-    ){
-
-
+    public Member findById(Long id) {
         return memberRepository.findById(id)
-
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "회원을 찾을 수 없습니다."
-                        )
-                );
-
-
+                .filter(Member::isActive)
+                .orElseThrow(() -> new MemberNotFoundException("회원을 찾을 수 없습니다."));
     }
 
+    public Member findMyInfo(String email) {
+        return getActiveMember(email);
+    }
 
+    @Transactional
+    public Member update(String email, MemberUpdateRequestDto requestDto) {
+        Member member = getActiveMember(email);
 
-
-
-
-
-
-
-    // 로그인
-
-    public String login(
-            LoginRequestDto requestDto
-    ){
-
-
-
-        Member member =
-
-                memberRepository.findByEmail(
-                                requestDto.getEmail()
-                        )
-
-
-                        .orElseThrow(() ->
-                                new LoginFailedException(
-                                        "이메일 또는 비밀번호가 틀렸습니다."
-                                )
-                        );
-
-
-
-
-
-
-        if(!member.isActive()){
-
-
-            throw new LoginFailedException(
-                    "탈퇴한 회원입니다."
-            );
-
-
+        String encodedPassword = null;
+        if (requestDto.getPassword() != null && !requestDto.getPassword().isBlank()) {
+            encodedPassword = passwordEncoder.encode(requestDto.getPassword());
         }
 
-
-
-
-
-
-
-
-        if(!passwordEncoder.matches(
-
-                requestDto.getPassword(),
-
-                member.getPassword()
-
-        )){
-
-
-            throw new LoginFailedException(
-                    "이메일 또는 비밀번호가 틀렸습니다."
-            );
-
-
-        }
-
-
-
-
-
-
-
-
-        member.setLastLoginAt(
-                LocalDateTime.now()
+        member.updateProfile(
+                trimNullable(requestDto.getName()),
+                encodedPassword,
+                normalizeNullable(requestDto.getPhone()),
+                normalizeNullable(requestDto.getZipcode()),
+                normalizeNullable(requestDto.getAddress()),
+                normalizeNullable(requestDto.getDetailAddress()),
+                requestDto.getMarketingAgree()
         );
 
-
-
-        memberRepository.save(member);
-
-
-
-
-
-
-
-
-        return jwtUtil.createToken(
-
-                member.getEmail(),
-
-                member.getRole()
-
-        );
-
-
+        return member;
     }
 
-
-
-
-
-
-
-
-
-    // 내 정보 조회
-
-    public Member findMyInfo(
-            String email
-    ){
-
-
-        return memberRepository.findByEmail(email)
-
-
-                .orElseThrow(() ->
-
-                        new LoginFailedException(
-                                "회원을 찾을 수 없습니다."
-                        )
-
-                );
-
-
+    @Transactional
+    public void withdraw(String email) {
+        Member member = getActiveMember(email);
+        member.withdraw();
     }
 
+    private Member getActiveMember(String email) {
+        Member member = memberRepository.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new MemberNotFoundException("회원을 찾을 수 없습니다."));
 
-
-
-
-
-
-
-
-    // 회원정보 수정
-
-    public Member update(
-
-            String email,
-
-            MemberUpdateRequestDto requestDto
-
-    ){
-
-
-
-        Member member =
-
-                memberRepository.findByEmail(email)
-
-                        .orElseThrow(() ->
-
-                                new LoginFailedException(
-                                        "회원을 찾을 수 없습니다."
-                                )
-
-                        );
-
-
-
-
-
-
-
-        if(requestDto.getName()!=null){
-
-
-            member.setName(
-                    requestDto.getName()
-            );
-
-
+        if (!member.isActive()) {
+            throw new MemberNotFoundException("회원을 찾을 수 없습니다.");
         }
 
-
-
-
-
-
-        if(requestDto.getPassword()!=null){
-
-
-            member.setPassword(
-
-                    passwordEncoder.encode(
-
-                            requestDto.getPassword()
-
-                    )
-
-            );
-
-
-        }
-
-
-
-
-
-
-        if(requestDto.getPhone()!=null){
-
-
-            member.setPhone(
-                    requestDto.getPhone()
-            );
-
-
-        }
-
-
-
-
-
-
-        if(requestDto.getZipcode()!=null){
-
-
-            member.setZipcode(
-                    requestDto.getZipcode()
-            );
-
-
-        }
-
-
-
-
-
-
-        if(requestDto.getAddress()!=null){
-
-
-            member.setAddress(
-                    requestDto.getAddress()
-            );
-
-
-        }
-
-
-
-
-
-
-        if(requestDto.getDetailAddress()!=null){
-
-
-            member.setDetailAddress(
-                    requestDto.getDetailAddress()
-            );
-
-
-        }
-
-
-
-
-
-
-        return memberRepository.save(member);
-
-
+        return member;
     }
 
-
-
-
-
-
-
-
-
-    // 회원 탈퇴
-
-    public Member delete(
-            String email
-    ){
-
-
-
-        Member member =
-
-                memberRepository.findByEmail(email)
-
-                        .orElseThrow(() ->
-
-                                new LoginFailedException(
-                                        "회원을 찾을 수 없습니다."
-                                )
-
-                        );
-
-
-
-
-
-
-
-        member.setActive(false);
-
-
-
-        return memberRepository.save(member);
-
-
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
     }
 
+    private String normalizeNullable(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? "" : trimmed;
+    }
 
-
+    private String trimNullable(String value) {
+        return value == null ? null : value.trim();
+    }
 }
