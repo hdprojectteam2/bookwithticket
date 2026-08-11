@@ -84,9 +84,6 @@ public class PaymentController {
     
     private String performanceCheckoutPage(Long memberId, String orderNumber, Model model) {
     	
-<<<<<<< HEAD
-    	Long reservationId = parseReservationId(orderNumber);
-=======
     	Long reservationId;
 
         try {
@@ -94,7 +91,6 @@ public class PaymentController {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("올바르지 않은 예매 ID입니다.");
         }
->>>>>>> feature/cart
 
     	
     	Reservation reservation =
@@ -120,16 +116,10 @@ public class PaymentController {
         }
 
         String orderName = reservation.getSchedule().getPerformance().getTitle();
-<<<<<<< HEAD
-
-        model.addAttribute("reservation", reservation);
-        model.addAttribute("paymentOrderId", orderNumber);
-=======
         
         
         model.addAttribute("reservation", reservation);
         model.addAttribute("paymentOrderId", "PERF_" + reservation.getId());
->>>>>>> feature/cart
         model.addAttribute("orderName", orderName);
         model.addAttribute("tossClientKey", clientKey);
 

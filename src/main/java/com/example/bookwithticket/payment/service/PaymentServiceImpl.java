@@ -209,11 +209,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
     
     private PaymentConfirmResponse confirmPerformancePayment(Long memberId, PaymentConfirmRequest request) {
-<<<<<<< HEAD
-    	Long reservationId = parseReservationId(request.getOrderId());
-=======
     	Long reservationId = parsePerformanceOrderId(request.getOrderId());
->>>>>>> feature/cart
     	
     	Reservation reservation =
                 reservationRepository
@@ -246,11 +242,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalArgumentException("이미 결제가 완료된 예매입니다.");
         }
 
-<<<<<<< HEAD
-        String paymentOrderId = "R" + reservation.getId();
-=======
         String paymentOrderId = "PERF_" + reservation.getId();
->>>>>>> feature/cart
         
         String idempotencyKey = createIdempotencyKey(paymentOrderId, request.getPaymentKey());
 
@@ -532,22 +524,11 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private void savePerformancePaymentFailure(Long memberId, PaymentFailureRequest request) {
-<<<<<<< HEAD
-    	Long reservationId = parseReservationId(request.getOrderId());
-    	
-    	Reservation reservation =
-                reservationRepository
-                        .findByIdAndMemberId(
-                        		reservationId,
-                                memberId
-                        )
-=======
     	Long reservationId = parsePerformanceOrderId(request.getOrderId());
     	
     	Reservation reservation =
                 reservationRepository
                         .findByIdAndMemberId(reservationId,memberId)
->>>>>>> feature/cart
                         .orElseThrow(() ->
                                 new IllegalArgumentException("실패 처리할 공연 예매가 없습니다.")
                         );
@@ -564,23 +545,7 @@ public class PaymentServiceImpl implements PaymentService {
         );
     }
     
-<<<<<<< HEAD
-    private Long parseReservationId(String orderId) {
-        if (orderId == null || !orderId.startsWith("R")) {
 
-            throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
-        }
-        try {
-            return Long.parseLong(orderId.substring(1));
-
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
-        }
-    }
-    
-=======
-
->>>>>>> feature/cart
     private String extractTossErrorCode(String responseBody) {
         try {
             JsonNode error =

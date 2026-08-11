@@ -34,16 +34,10 @@ public class RefundServiceImpl implements RefundService {
 	private final TossPaymentClient tossPaymentClient;
 	private final ReservationRepository reservationRepository;
 	private final ReservationService reservationService;
-<<<<<<< HEAD
-	
-	public RefundServiceImpl(BookOrderRepository bookOrderRepository, PaymentRepository paymentRepository,
-			RefundRepository refundRepository, BookStockRepository bookRepository, TossPaymentClient tossPaymentClient, ReservationRepository reservationRepository, ReservationService reservationService) {
-=======
 
 	public RefundServiceImpl(BookOrderRepository bookOrderRepository, PaymentRepository paymentRepository,
 			RefundRepository refundRepository, BookStockRepository bookRepository, TossPaymentClient tossPaymentClient,
 			ReservationRepository reservationRepository, ReservationService reservationService) {
->>>>>>> feature/cart
 		this.bookOrderRepository = bookOrderRepository;
 		this.paymentRepository = paymentRepository;
 		this.refundRepository = refundRepository;
@@ -138,64 +132,6 @@ public class RefundServiceImpl implements RefundService {
 	}
 
 	@Override
-<<<<<<< HEAD
-	public RefundResponse requestPerformanceRefund(
-	        Long memberId,
-	        String reservationNumber,
-	        String reason
-	) {
-
-	    validateReason(reason);
-
-	    Long reservationId =
-	            parseReservationId(
-	                    reservationNumber
-	            );
-
-	    Reservation reservation =
-	            reservationRepository
-	                    .findByIdAndMemberId(
-	                            reservationId,
-	                            memberId
-	                    )
-	                    .orElseThrow(() ->
-	                            new IllegalArgumentException(
-	                                    "환불할 수 있는 예매가 없습니다."
-	                            )
-	                    );
-
-	    if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
-
-	        throw new IllegalArgumentException(
-	                "예매 완료 상태만 환불할 수 있습니다."
-	        );
-	    }
-
-	    PaymentEntity payment =
-	            paymentRepository
-	                    .findFirstByReservationIdAndStatusOrderByCreatedAtDesc(
-	                            reservation.getId(),
-	                            PaymentStatus.DONE
-	                    )
-	                    .orElseThrow(() ->
-	                            new IllegalArgumentException("환불 가능한 결제 내역이 없습니다.")
-	                    );
-
-	    if (refundRepository.existsByPaymentId(
-	            payment.getId()
-	    )) {
-
-	        throw new IllegalArgumentException("이미 환불 요청된 예매입니다.");
-	    }
-
-	    RefundEntity refund =
-	            new RefundEntity(
-	                    memberId,
-	                    payment,
-	                    payment.getAmount(),
-	                    reason
-	            );
-=======
 	public RefundResponse requestPerformanceRefund(Long memberId, String reservationNumber, String reason) {
 
 		validateReason(reason);
@@ -213,40 +149,9 @@ public class RefundServiceImpl implements RefundService {
 
 		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
 				.orElseThrow(() -> new IllegalArgumentException("환불할 수 있는 예매가 없습니다."));
->>>>>>> feature/cart
 
 		if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
 
-<<<<<<< HEAD
-	    tossPaymentClient.cancelPayment(payment.getPaymentKey(), reason);
-
-	    
-	    payment.cancel();
-	    
-	    reservationService.cancelReservation(memberId, reservation.getId());
-
-	    refund.complete();
-
-	    return new RefundResponse( refund.getId(), refund.getStatus().name(), "환불이 완료되었습니다.");
-	}
-	
-	private Long parseReservationId(String reservationNumber) {
-
-	    if (reservationNumber == null || !reservationNumber.startsWith("R")) {
-
-	        throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
-	    }
-
-	    try {
-
-	        return Long.parseLong(reservationNumber.substring(1));
-
-	    } catch (NumberFormatException e) {
-
-	        throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
-	    }
-	}
-=======
 			throw new IllegalArgumentException("예매 완료 상태만 환불할 수 있습니다.");
 		}
 
@@ -290,6 +195,5 @@ public class RefundServiceImpl implements RefundService {
 			throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
 		}
 	}
->>>>>>> feature/cart
 
 }
