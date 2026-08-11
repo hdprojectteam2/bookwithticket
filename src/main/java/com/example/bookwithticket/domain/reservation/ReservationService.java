@@ -80,36 +80,43 @@ public class ReservationService {
             return SeatResponse.from(seat);
         }).toList();
     }
-    //46. 트랜잭션, 좌석선점 
+    //46. 트랜잭션, 좌석선점 (Redis 락 최우선 획득)
     @Transactional
     public ReservationResponse holdSeat(Long memberId, ReservationHoldRequest request) {
-        PerformanceSchedule schedule = scheduleRepository.findById(request.scheduleId())
-                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "공연 회차를 찾을 수 없습니다."));
-        	//47. performanceschedule에서 opentime가져옴
-        if (LocalDateTime.now().isBefore(schedule.getTicketOpenTime())) {
-            throw new BusinessException(HttpStatus.BAD_REQUEST, "티켓 오픈 시간 전입니다.");
-        }
-        //48. reservationholdingrequest에서 좌석 존재하는지 
-        Seat seat = seatRepository.findById(request.seatId())
-                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "좌석을 찾을 수 없습니다."));
-        	
-      
-        	
-        if (seat.getStatus() == SeatStatus.RESERVED){
-            throw new BusinessException(HttpStatus.CONFLICT, " 예매 완료된 좌석입니다.");
-        }
-        //49. hold중이면 만료됫는지 확인하고 맞으면 다시 접근가능하게 
-        //redis 10분 선점 락, 키가 없을떄만 , 원자성으로 한명만 선점가능 
-        String redisKey = "seat:hold:" + schedule.getId() + ":" + seat.getId();
+        // 1. 최우선 Redis 10분 선점 락 획득 (메모리 단에서 99.9% 동시성 차단)
+        String redisKey = "seat:hold:" + request.scheduleId() + ":" + request.seatId();
         Boolean isSet = redisTemplate.opsForValue().setIfAbsent(redisKey, memberId.toString(), Duration.ofMinutes(10));
         if (Boolean.FALSE.equals(isSet)) {
             throw new BusinessException(HttpStatus.CONFLICT, "이미 다른 사용자가 선점 중인 좌석입니다 (Redis).");
         }
 
-        //50. hold로 변경하고 새 예약으로 만듬 
-        seat.updateStatus(SeatStatus.HELD);
-        Reservation reservation = new Reservation(memberId, schedule, seat, seat.getPrice(), 10);
-        return ReservationResponse.from(reservationRepository.save(reservation));
+        try {
+            // 2. 락 획득 성공자만 DB 회차 조회
+            PerformanceSchedule schedule = scheduleRepository.findById(request.scheduleId())
+                    .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "공연 회차를 찾을 수 없습니다."));
+
+            // 3. 티켓 오픈 시간 검사
+            if (LocalDateTime.now().isBefore(schedule.getTicketOpenTime())) {
+                throw new BusinessException(HttpStatus.BAD_REQUEST, "티켓 오픈 시간 전입니다.");
+            }
+
+            // 4. DB 좌석 조회 및 상태 검사
+            Seat seat = seatRepository.findById(request.seatId())
+                    .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "좌석을 찾을 수 없습니다."));
+
+            if (seat.getStatus() == SeatStatus.RESERVED) {
+                throw new BusinessException(HttpStatus.CONFLICT, "예매 완료된 좌석입니다.");
+            }
+
+            // 5. DB 상태 변경 및 예약 생성
+            seat.updateStatus(SeatStatus.HELD);
+            Reservation reservation = new Reservation(memberId, schedule, seat, seat.getPrice(), 10);
+            return ReservationResponse.from(reservationRepository.save(reservation));
+        } catch (Exception e) {
+            // DB 예외 시 락 해제
+            redisTemplate.delete(redisKey);
+            throw e;
+        }
     }
     //59. 예약 확인 
     // 타인이 들어왔을때 막기 

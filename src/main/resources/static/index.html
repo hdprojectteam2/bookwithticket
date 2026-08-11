@@ -33,13 +33,35 @@
 <div class="container">
     <h1>테스트</h1>
 
+    <!-- 계정 스왑 및 관리자 툴바 -->
+    <div style="background:#f8f9fa; border:1px solid #ddd; padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+            <span style="font-weight:bold; margin-right:10px;">테스트 계정 스왑:</span>
+            <button onclick="switchAccount('USER')" style="background:#27ae60; padding:6px 12px; font-size:0.85rem;">일반 사용자 모드 (USER)</button>
+            <button onclick="switchAccount('ADMIN')" style="background:#8e44ad; padding:6px 12px; font-size:0.85rem;">관리자 모드 (ADMIN)</button>
+        </div>
+        <div>
+            <span id="userRoleBadge" style="padding:5px 12px; background:#2c3e50; color:#fff; font-weight:bold; font-size:0.85rem; border-radius:3px;">현재 권한: USER</span>
+        </div>
+    </div>
+
     <!--검색-->
     <div class="section">
-        <h2>공연 검색, 목록</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="margin:0;">공연 검색, 목록</h2>
+            <button id="adminCreateBtn" onclick="openAdminCreateModal()" style="background:#8e44ad; display:none;">+ 공연 신규 등록 (관리자)</button>
+        </div>
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="제목입력" onkeyup="if(event.key === 'Enter') loadPerformances();">
             <button onclick="loadPerformances()">검색</button>
-            <button onclick="document.getElementById('searchInput').value=''; loadPerformances();" style="background:#95a5a6;">전체보기</button>
+            <button onclick="document.getElementById('searchInput').value=''; currentCategory=null; setActiveCategory(null); loadPerformances();" style="background:#95a5a6;">전체보기</button>
+        </div>
+        <!-- 카테고리 필터 -->
+        <div style="display:flex; gap:8px; margin-bottom:15px; flex-wrap:wrap;">
+            <button id="cat-MUSICAL"  onclick="selectCategory('MUSICAL')"  style="background:#8e44ad;">뮤지컬</button>
+            <button id="cat-CONCERT"  onclick="selectCategory('CONCERT')"  style="background:#c0392b;">콘서트</button>
+            <button id="cat-CLASSIC"  onclick="selectCategory('CLASSIC')"  style="background:#16a085;">클래식</button>
+            <button id="cat-EXHIBITION" onclick="selectCategory('EXHIBITION')" style="background:#d35400;">전시</button>
         </div>
         <div id="performanceList" class="grid">로딩</div>
     </div>
@@ -61,16 +83,62 @@
     </div>
 </div>
 
-<!-- 선점 좌석   -->
+<!-- 선점 좌석 & 결제 모달 -->
 <div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#fff; padding:25px; width:360px; text-align:center; border:1px solid #ccc;">
-        <h3 id="modalTitle" style="margin-top:0; color:#2c3e50;">선점된 좌석 처리</h3>
-        <p id="modalDesc" style="color:#666; font-size:0.8rem; margin-bottom:10px;">선점 좌석 처리 여부</p>
-		<p id="modalTimer" style="margin:10px 0; line-height:1.4;"></p>
-        <div style="display:flex; gap:10px; justify-content:center; margin-top:15px;">
-            <button id="btnConfirm" onclick="handleModalAction('confirm')" style="background:#2ecc71; flex:1;">예매 확정</button>
-            <button id="btnCancel" onclick="handleModalAction('cancel')" style="background:#e74c3c; flex:1;">선점 취소</button>
-            <button onclick="closeCustomModal()" style="background:#95a5a6;">닫기</button>
+    <div style="background:#fff; padding:25px; width:400px; text-align:center; border:1px solid #ccc; border-radius:8px;">
+        <h3 id="modalTitle" style="margin-top:0; color:#2c3e50;">선점된 좌석 결제</h3>
+        <p id="modalDesc" style="color:#666; font-size:0.85rem; margin-bottom:10px;">10분간 선점된 좌석입니다. 결제 방식을 선택하세요.</p>
+		<p id="modalTimer" style="margin:10px 0; line-height:1.4; font-weight:bold; color:#e74c3c;"></p>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px;">
+            <button id="btnTossPay" onclick="goToTossCheckout()" style="background:#0064FF; color:#fff; padding:10px; font-weight:bold; border-radius:4px;">Toss Payments 결제창 이동</button>
+            <button id="btnConfirm" onclick="handleModalAction('confirm')" style="background:#2ecc71; color:#fff; padding:10px; font-weight:bold; border-radius:4px;">테스트 간편 결제 (즉시 승인)</button>
+            <button id="btnCancel" onclick="handleModalAction('cancel')" style="background:#e74c3c; color:#fff; padding:8px; border-radius:4px;">선점 취소</button>
+            <button onclick="closeCustomModal()" style="background:#95a5a6; color:#fff; padding:8px; border-radius:4px;">닫기</button>
+        </div>
+    </div>
+</div>
+
+<!-- 관리자 공연 신규 등록 모달 -->
+<div id="adminCreateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:25px; width:450px; border:1px solid #ccc; max-height:90vh; overflow-y:auto;">
+        <h3 style="margin-top:0; color:#8e44ad; border-bottom:1px solid #eee; padding-bottom:10px;">+ 공연 신규 등록 (관리자)</h3>
+        <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
+            <label><b>공연 제목:</b> <input type="text" id="newTitle" placeholder="예: 뮤지컬 웃는남자" style="width:100%; padding:8px;"></label>
+            <label><b>카테고리:</b> 
+                <select id="newCategory" style="width:100%; padding:8px;">
+                    <option value="MUSICAL">MUSICAL (뮤지컬)</option>
+                    <option value="CONCERT">CONCERT (콘서트)</option>
+                    <option value="CLASSIC">CLASSIC (클래식)</option>
+                    <option value="EXHIBITION">EXHIBITION (전시)</option>
+                </select>
+            </label>
+            <label><b>공연장:</b> <input type="text" id="newVenue" placeholder="예: 예술의전당 오페라극장" style="width:100%; padding:8px;"></label>
+            <label><b>포스터 URL:</b> <input type="text" id="newPosterUrl" placeholder="https://example.com/poster.jpg" style="width:100%; padding:8px;"></label>
+            <label><b>러닝타임 (분):</b> <input type="number" id="newRuntime" value="150" style="width:100%; padding:8px;"></label>
+            <label><b>원작 도서 ID (선택):</b> <input type="number" id="newOriginalBookId" placeholder="예: 1" style="width:100%; padding:8px;"></label>
+            <label><b>상세 설명:</b> <textarea id="newDescription" placeholder="공연 정보를 입력하세요" style="width:100%; height:80px; padding:8px;"></textarea></label>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+            <button onclick="submitAdminCreatePerformance()" style="background:#8e44ad;">등록하기</button>
+            <button onclick="closeAdminCreateModal()" style="background:#95a5a6;">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 관리자 회차 및 좌석 생성 모달 -->
+<div id="adminScheduleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:25px; width:450px; border:1px solid #ccc; max-height:90vh; overflow-y:auto;">
+        <h3 style="margin-top:0; color:#8e44ad; border-bottom:1px solid #eee; padding-bottom:10px;">+ 회차 및 좌석 배치 생성 (관리자)</h3>
+        <p style="color:#666; font-size:0.85rem;">공연: <b id="schModalPerfTitle" style="color:#3498db;"></b></p>
+        <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
+            <label><b>공연 일시:</b> <input type="datetime-local" id="newPerfTime" style="width:100%; padding:8px;"></label>
+            <label><b>티켓 오픈 일시:</b> <input type="datetime-local" id="newOpenTime" style="width:100%; padding:8px;"></label>
+            <label><b>생성할 총 좌석 수:</b> <input type="number" id="newTotalSeats" value="10" min="1" max="100" style="width:100%; padding:8px;"></label>
+            <label><b>좌석 단가 (원):</b> <input type="number" id="newSeatPrice" value="150000" step="10000" style="width:100%; padding:8px;"></label>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+            <button onclick="submitAdminScheduleAndSeats()" style="background:#8e44ad;">회차 및 좌석 생성</button>
+            <button onclick="closeAdminScheduleModal()" style="background:#95a5a6;">취소</button>
         </div>
     </div>
 </div>
@@ -80,61 +148,227 @@
     let lastReservationId = null;
     let lastHoldExpiresAt = null;
     let modalTimerInterval = null;
-	
+    let currentCategory = null;
+    let currentRole = 'USER';
+
+    let currentPerfId = null;
+    let currentPerfTitle = '';
+
+    function openAdminCreateModal() {
+        document.getElementById('adminCreateModal').style.display = 'flex';
+    }
+
+    function closeAdminCreateModal() {
+        document.getElementById('adminCreateModal').style.display = 'none';
+    }
+
+    function openAdminScheduleModal(perfId, perfTitle) {
+        currentPerfId = perfId;
+        currentPerfTitle = perfTitle;
+        document.getElementById('schModalPerfTitle').innerText = perfTitle || '';
+        document.getElementById('adminScheduleModal').style.display = 'flex';
+    }
+
+    function closeAdminScheduleModal() {
+        document.getElementById('adminScheduleModal').style.display = 'none';
+    }
+
+    async function submitAdminScheduleAndSeats() {
+        const perfTimeVal = document.getElementById('newPerfTime').value;
+        const openTimeVal = document.getElementById('newOpenTime').value;
+        const totalSeats = parseInt(document.getElementById('newTotalSeats').value) || 10;
+        const seatPrice = parseInt(document.getElementById('newSeatPrice').value) || 150000;
+
+        if (!perfTimeVal || !openTimeVal) {
+            alert('공연 일시와 티켓 오픈 일시는 필수 입력값입니다.');
+            return;
+        }
+
+        const payload = {
+            performanceTime: perfTimeVal + ':00',
+            ticketOpenTime: openTimeVal + ':00',
+            totalSeats,
+            seatPrice
+        };
+
+        try {
+            const res = await fetch(`/api/performances/${currentPerfId}/schedules`, {
+                method: 'POST',
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                log(`[관리자] 회차 및 ${totalSeats}개 좌석 생성 성공`);
+                closeAdminScheduleModal();
+                selectPerformance(currentPerfId, currentPerfTitle);
+            } else {
+                alert(`생성 실패: ${data.message}`);
+            }
+        } catch (e) {
+            alert(`통신 에러: ${e.message}`);
+        }
+    }
+
+    async function submitAdminCreatePerformance() {
+        const title = document.getElementById('newTitle').value.trim();
+        const category = document.getElementById('newCategory').value;
+        const venue = document.getElementById('newVenue').value.trim();
+        const posterUrl = document.getElementById('newPosterUrl').value.trim();
+        const runtimeMinutes = parseInt(document.getElementById('newRuntime').value) || 120;
+        const bookIdVal = document.getElementById('newOriginalBookId').value.trim();
+        const originalBookId = bookIdVal ? parseInt(bookIdVal) : null;
+        const description = document.getElementById('newDescription').value.trim();
+
+        if (!title || !venue) {
+            alert('공연 제목과 공연장은 필수 입력값입니다.');
+            return;
+        }
+
+        const payload = {
+            title,
+            category,
+            venue,
+            posterUrl,
+            runtimeMinutes,
+            description,
+            originalBookId
+        };
+
+        try {
+            const res = await fetch('/api/performances', {
+                method: 'POST',
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                log(`[관리자] 신규 공연 등록 성공: ${title}`);
+                closeAdminCreateModal();
+                loadPerformances();
+            } else {
+                alert(`등록 실패: ${data.message}`);
+            }
+        } catch (e) {
+            alert(`통신 에러: ${e.message}`);
+        }
+    }
+
+    async function switchAccount(roleType) {
+        try {
+            const res = await fetch(`/api/performances/test-token?type=${roleType}`);
+            const data = await res.json();
+            if (res.ok && data.success && data.data.token) {
+                localStorage.setItem('token', data.data.token);
+                currentRole = data.data.role || roleType;
+                updateRoleUI(currentRole, data.data.email);
+                log(`[계정 스왑 완료] 계정: ${data.data.email} (${currentRole})`);
+                await loadPerformances();
+            }
+        } catch (e) {
+            log(`[계정 스왑 실패] ${e.message}`);
+        }
+    }
+
+    function updateRoleUI(role, email) {
+        const badge = document.getElementById('userRoleBadge');
+        if (badge) {
+            badge.innerText = `현재 권한: ${role} (${email || ''})`;
+            badge.style.background = role === 'ADMIN' ? '#8e44ad' : '#2c3e50';
+        }
+        const createBtn = document.getElementById('adminCreateBtn');
+        if (createBtn) {
+            createBtn.style.display = (role === 'ADMIN') ? 'inline-block' : 'none';
+        }
+    }
+
+    function getAuthHeaders(extra) {
+        let token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') token = '';
+        return Object.assign({ 'Authorization': token ? 'Bearer ' + token : '' }, extra || {});
+    }
+
+    function selectCategory(category) {
+        currentCategory = (currentCategory === category) ? null : category;
+        setActiveCategory(currentCategory);
+        loadPerformances();
+    }
+
+    function setActiveCategory(active) {
+        ['MUSICAL','CONCERT','CLASSIC','EXHIBITION'].forEach(c => {
+            const btn = document.getElementById('cat-' + c);
+            if (!btn) return;
+            btn.style.opacity = (!active || active === c) ? '1' : '0.4';
+            btn.style.outline = active === c ? '3px solid #fff' : 'none';
+        });
+    }
+
     function log(msg) {
         const logBox = document.getElementById('logBox');
         logBox.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + logBox.innerHTML;
     }
 
     async function loadPerformances() {
-        const keyword = document.getElementById('searchInput').value.trim();
-		
-        const url = keyword ? `/api/performances?keyword=${encodeURIComponent(keyword)}` : '/api/performances';
-        
+        const searchInput = document.getElementById('searchInput').value;
+        const listEl = document.getElementById('performanceList');
+        listEl.innerHTML = '<p>로딩 중...</p>';
+
         try {
-			//1. 검색시 performancecontroller로 출발, 
+            let url = '/api/performances';
+            const params = new URLSearchParams();
+            if (searchInput) params.append('keyword', searchInput);
+            if (currentCategory) params.append('category', currentCategory);
+            if (currentRole === 'ADMIN') params.append('includeInactive', 'true');
+            if (params.toString()) url += '?' + params.toString();
+
             const res = await fetch(url);
-			//8. 받아온걸 조립함 
             const data = await res.json();
-            
-			//실패시 예외처리
-            if (!res.ok || (data && data.success === false)) {
-                log(`[실패] GET ${url} -> HTTP ${res.status} : ${data ? data.message : '요청 실패'}`);
-                document.getElementById('performanceList').innerHTML = `<p style="color:red;">오류: ${data ? data.message : '요청 실패'}</p>`;
-                return;
-            }
-			
-			//성공시 로그 
             log(`GET ${url} -> HTTP ${res.status}`);
-			
-			//이전 문자들 제거하기 
-            const listEl = document.getElementById('performanceList');
-            listEl.innerHTML = '';
-			
-			
-			//9. 받아온 데이터중에 필요한거를 변수에 
+            
             const performances = (data && Array.isArray(data.data)) ? data.data : [];
-			
-			
-			//조회했는데 없으면 , 처음 설정 
             if (performances.length === 0) {
                 listEl.innerHTML = '<p>조회된 공연이 없습니다.</p>';
                 return;
             }
-            //10. 받아온걸 그림 
+            listEl.innerHTML = '';
             performances.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'card';
+                if (!p.active) {
+                    card.style.opacity = '0.6';
+                    card.style.border = '1px dashed #e74c3c';
+                }
+                
+                let adminButtonsHtml = '';
+                if (currentRole === 'ADMIN') {
+                    if (p.active) {
+                        adminButtonsHtml = `<button onclick="event.stopPropagation(); deactivatePerformance(${p.id});" style="background:#e74c3c; font-size:0.75rem; padding:4px 8px;">비활성화</button>`;
+                    } else {
+                        adminButtonsHtml = `<button onclick="event.stopPropagation(); activatePerformance(${p.id});" style="background:#2ecc71; font-size:0.75rem; padding:4px 8px;">재활성화(복구)</button>`;
+                    }
+                }
+
+                const statusBadgeHtml = (!p.active) ? 
+                    `<span style="background:#e74c3c; color:#fff; padding:3px 8px; font-size:0.8rem; font-weight:bold; margin-left:5px;">비활성화 됨</span>` : '';
+
                 card.innerHTML = `
-                    <span class="badge">${p.category || '공연'}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <span class="badge">${p.category || '공연'}</span>
+                            ${statusBadgeHtml}
+                        </div>
+                        <div>${adminButtonsHtml}</div>
+                    </div>
                     <h3>${p.title}</h3>
                     <p style="margin:5px 0; font-size:0.9rem;">공연장: ${p.venue} (${p.runtimeMinutes}분)</p>
-                    <p style="margin:5px 0; font-size:0.85rem; color:#666;">${p.description || ''}</p>
                     ${p.originalBookId ? 
-						`<p style="margin:5px 0; color:#e67e22; font-size:0.85rem; font-weight:bold;">원작 도서 ID: ${p.originalBookId}</p>` : ''}
+						`<div style="margin:6px 0; font-size:0.85rem;">
+                            <span style="color:#d35400; font-weight:bold;">원작 도서: </span>
+                            <button onclick="event.stopPropagation(); location.href='/book-detail.html?id=${p.originalBookId}';" style="background:#e67e22; font-size:0.75rem; padding:3px 8px; margin-left:4px;">상세 보기 (ID: ${p.originalBookId})</button>
+                        </div>` : ''}
                     <div style="margin-top:10px; display:flex; gap:8px;">
                         <button onclick="event.stopPropagation(); viewPerformanceDetail(${p.id});" style="background:#7f8c8d; font-size:0.8rem; padding:6px 10px;"> 상세보기</button>
-                        <button onclick="event.stopPropagation(); selectPerformance(${p.id}, '${p.title}');" style="background:#3498db; font-size:0.8rem; padding:6px 10px;">예매하기</button>
+                        ${p.active ? `<button onclick="event.stopPropagation(); selectPerformance(${p.id}, '${p.title}');" style="background:#3498db; font-size:0.8rem; padding:6px 10px;">예매하기</button>` : ''}
                     </div>
                 `;
                 listEl.appendChild(card);
@@ -143,39 +377,83 @@
             log(`에러 발생: ${e.message}`);
         }
     }
+
+    async function deactivatePerformance(perfId) {
+        if (!confirm('정말 해당 공연을 비활성화하시겠습니까?')) return;
+        try {
+            const res = await fetch(`/api/performances/${perfId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                log(`[관리자] 공연 ${perfId} 비활성화 성공`);
+                loadPerformances();
+            } else {
+                alert(`비활성화 실패: ${data.message}`);
+            }
+        } catch (e) {
+            alert(`에러: ${e.message}`);
+        }
+    }
+
+    async function activatePerformance(perfId) {
+        if (!confirm('해당 공연을 다시 활성화(복구)하시겠습니까?')) return;
+        try {
+            const res = await fetch(`/api/performances/${perfId}/activate`, {
+                method: 'PATCH',
+                headers: getAuthHeaders()
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                log(`[관리자] 공연 ${perfId} 재활성화(복구) 성공`);
+                loadPerformances();
+            } else {
+                alert(`재활성화 실패: ${data.message}`);
+            }
+        } catch (e) {
+            alert(`에러: ${e.message}`);
+        }
+    }
+
 	// 세부정보 페이지 
     function viewPerformanceDetail(perfId) {
         location.href = `/detail.html?id=${perfId}`;
     }
 
     async function selectPerformance(perfId, perfTitle) {
-		// 12. 누른 항목 제목을 넣어주고 회차선택 보여줌
+        currentPerfId = perfId;
+        currentPerfTitle = perfTitle;
         document.getElementById('selectedPerfTitle').innerText = perfTitle;
         document.getElementById('seatSection').style.display = 'block';
         document.getElementById('seatArea').style.display = 'none';
 
         try {
-			//13. controller로 다시 이동
             const res = await fetch(`/api/performances/${perfId}/schedules`);
-			//20. 받아온걸 조립함 
             const data = await res.json();
-			//21. 데이터를 대입함 
             const schedules = (data && Array.isArray(data.data)) ? data.data : [];
-			//22. 데이터 개수 로그 
             log(`GET /api/performances/${perfId}/schedules -> ${schedules.length}개 회차 발견`);
-			
-			//23. scheduleList에 내용 넣음
+            
             const schEl = document.getElementById('scheduleList');
-            schEl.innerHTML = '<b>회차 선택: </b>';
-			
-			//24. 출력함 
+            schEl.innerHTML = '';
+            
+            const adminScheduleBtn = (currentRole === 'ADMIN') ? `
+                <button onclick="openAdminScheduleModal(${perfId}, '${perfTitle.replace(/'/g, "\\'")}')" style="background:#8e44ad; font-size:0.8rem; padding:6px 12px; margin-bottom:10px;">+ 회차 및 좌석 생성 (관리자)</button><br>
+            ` : '';
+
+            schEl.innerHTML = adminScheduleBtn + '<b>회차 선택: </b>';
+            if (schedules.length === 0) {
+                schEl.innerHTML += '<span style="color:#999; font-size:0.9rem;">등록된 회차가 없습니다.</span>';
+                return;
+            }
+            
             schedules.forEach(s => {
                 const btn = document.createElement('button');
                 btn.style.marginRight = '8px';
+                btn.style.marginBottom = '6px';
                 btn.dataset.scheduleId = s.id;
                 btn.innerText = new Date(s.performanceTime).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-                //25. 좌석 출력 실행
-				btn.onclick = () => loadSeats(s.id);
+                btn.onclick = () => loadSeats(s.id);
                 schEl.appendChild(btn);
             });
         } catch (e) {
@@ -230,32 +508,29 @@
     async function handleSeatClick(seat) {
 		//41. 좌석 접근 가능시
         if (seat.status === 'AVAILABLE') {
-			//42. 일반적인 선택 
-            if (!confirm(`${seat.seatNumber} 좌석을 10분간 선점하시겠습니까?`)) return;
-            
             try {
-				//43. reservationcontroller로 선점 사실을 보냄 
-                const res = await fetch('/api/reservations/hold', 	{
+				//43. reservationcontroller로 선점 사실을 보냄
+                const res = await fetch('/api/reservations/hold', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-Member-Id': '1' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ scheduleId: currentScheduleId, seatId: seat.id })
                 });
-				//52. 데이터 받음 
+				//52. 데이터 받음
                 const data = await res.json();
 				//53/ http 코드가 성공인지, data 가 success인지 
                 if (res.ok && data.success) {
                     lastReservationId = data.data.id;
                     lastHoldExpiresAt = data.data.holdExpiresAt;
                     log(`선점 성공 예매 ID: ${data.data.id}, 만료시각: ${data.data.holdExpiresAt}`);
-                    alert(` 10분간 선점 성공 (예매 ID: ${data.data.id})`);
                 } else {
                     log(`선점 실패: ${data.message}`);
-                    alert(`선점 실패 ${data.message}`);
+                    alert(`선점 실패: ${data.message || '좌석 선점 중 오류가 발생했습니다.'}`);
                 }
 				//54. 재호출해서 상황을 바꿈 
                 loadSeats(currentScheduleId);
             } catch (e) {
                 log(`선점 에러: ${e.message}`);
+                alert(`선점 실패: ${e.message}`);
             }
 			//55. 홀드중일경우 
         } else if (seat.status === 'HELD' || seat.status === 'RESERVED') {
@@ -263,22 +538,36 @@
         }
     }
 
+    function goToTossCheckout() {
+        if (!lastReservationId) {
+            alert('예매 내역을 찾을 수 없습니다.');
+            return;
+        }
+        location.href = `/payments/checkout?orderNumber=${lastReservationId}`;
+    }
+
     function openCustomModal(seat) {
         if (seat.reservationId) {
             lastReservationId = seat.reservationId;
         }
+        const tossBtn = document.getElementById('btnTossPay');
+        const confirmBtn = document.getElementById('btnConfirm');
+        const cancelBtn = document.getElementById('btnCancel');
+
         if (seat.status === 'RESERVED') {
             document.getElementById('modalTitle').innerText = `${seat.seatNumber} 예매 취소`;
             document.getElementById('modalDesc').innerText = '이미 예매 확정이 완료된 좌석입니다. 예매를 취소하시겠습니까?';
             document.getElementById('modalTimer').style.display = 'none';
-            document.getElementById('btnConfirm').style.display = 'none';
-            document.getElementById('btnCancel').innerText = '예매 취소';
+            if (tossBtn) tossBtn.style.display = 'none';
+            if (confirmBtn) confirmBtn.style.display = 'none';
+            cancelBtn.innerText = '예매 취소';
         } else {
-            document.getElementById('modalTitle').innerText = `${seat.seatNumber} 선점 처리`;
-            document.getElementById('modalDesc').innerText = '10분간 선점된 좌석입니다. 처리 항목을 선택하세요.';
+            document.getElementById('modalTitle').innerText = `${seat.seatNumber} 선점 및 결제`;
+            document.getElementById('modalDesc').innerText = '10분간 선점된 좌석입니다. 결제 방식을 선택하세요.';
             document.getElementById('modalTimer').style.display = 'block';
-            document.getElementById('btnConfirm').style.display = 'block';
-            document.getElementById('btnCancel').innerText = '선점 취소';
+            if (tossBtn) tossBtn.style.display = 'block';
+            if (confirmBtn) confirmBtn.style.display = 'block';
+            cancelBtn.innerText = '선점 취소';
             if (seat.holdExpiresAt) {
                 lastHoldExpiresAt = seat.holdExpiresAt;
             }
@@ -336,7 +625,7 @@
         try {
             const res = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'X-Member-Id': '1' }
+                headers: getAuthHeaders()
             });
             //63. 반환된 값 포장 
             const data = await res.json();
@@ -354,9 +643,36 @@
         }
     }
 
+    function parseJwtToken(token) {
+        try {
+            if (!token) return null;
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            return null;
+        }
+    }
+
     // 자동실행
     async function initPage() {
-        await loadPerformances();
+        let token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') {
+            await switchAccount('USER');
+        } else {
+            const decoded = parseJwtToken(token);
+            if (decoded) {
+                currentRole = decoded.role || 'USER';
+                const email = decoded.sub || '';
+                updateRoleUI(currentRole, email);
+            } else {
+                updateRoleUI(currentRole, 'test@example.com');
+            }
+            await loadPerformances();
+        }
         const urlParams = new URLSearchParams(window.location.search);
         const perfId = urlParams.get('perfId');
         const scheduleId = urlParams.get('scheduleId');

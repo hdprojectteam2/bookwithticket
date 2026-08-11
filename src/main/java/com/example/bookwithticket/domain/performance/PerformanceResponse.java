@@ -8,10 +8,9 @@ public record PerformanceResponse(
     String posterUrl,
     int runtimeMinutes,
     String description,
-    Long originalBookId
+    Long originalBookId,
+    boolean active
 ) {
-	
-	// 7. 필요한 정보들 담고 
     public static PerformanceResponse from(Performance p) {
         return new PerformanceResponse(
             p.getId(),
@@ -21,7 +20,8 @@ public record PerformanceResponse(
             p.getPosterUrl(),
             p.getRuntimeMinutes(),
             p.getDescription(),
-            p.getOriginalBookId()
+            p.getOriginalBookId(),
+            p.isActive()
         );
     }
 }
