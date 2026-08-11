@@ -1,10 +1,5 @@
 server:
-<<<<<<< HEAD
-  port: 8080
-
-=======
   port: 8787
->>>>>>> origin/dev
 spring:
   application:
     name: bookwithticket
@@ -17,7 +12,6 @@ spring:
     console:
       enabled: true
       path: /h2-console
-  #redis
   data:
     redis:
       host: localhost
