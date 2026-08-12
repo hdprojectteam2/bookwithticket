@@ -215,10 +215,12 @@
 </head>
 <body>
 
-<div class="top-utility-bar">
-    <a href="/login.html">로그인</a>
-    <span>|</span>
-    <a href="/signup.html">회원가입</a>
+<div class="top-utility-bar" id="topUtilityBar">
+    <span id="authLinks">
+        <a href="/login.html">로그인</a>
+        <span>|</span>
+        <a href="/signup.html">회원가입</a>
+    </span>
     <span>|</span>
     <a href="/mypage.html">마이페이지</a>
     <span>|</span>
@@ -353,15 +355,40 @@
         });
     }
 
-    function handleSearch() {
-        const keyword = document.getElementById('searchInput').value.trim();
-        if (!keyword) {
-            alert('검색어를 입력하세요.');
-            return;
+    function parseJwtEmail(token) {
+        try {
+            if (!token) return null;
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const payload = JSON.parse(atob(base64));
+            return payload.sub || payload.email || null;
+        } catch (e) {
+            return null;
         }
-        location.href = `/index.html?keyword=${encodeURIComponent(keyword)}`;
     }
 
+    function checkAuthStatus() {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        const authLinks = document.getElementById('authLinks');
+        if (!authLinks) return;
+
+        if (token && token !== 'undefined') {
+            const userEmail = parseJwtEmail(token);
+            const userDisplay = userEmail ? `<span style="font-weight:bold; color:#2c3e50; margin-right:8px;">${userEmail} 님</span>` : '';
+            authLinks.innerHTML = `${userDisplay}<a href="#" onclick="logout(); return false;">로그아웃</a>`;
+        } else {
+            authLinks.innerHTML = `<a href="/login.html">로그인</a> <span>|</span> <a href="/signup.html">회원가입</a>`;
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
+        alert('로그아웃 되었습니다.');
+        location.reload();
+    }
+
+    checkAuthStatus();
     loadStatsAndData();
 </script>
 

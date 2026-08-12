@@ -35,8 +35,9 @@
 
     <!-- 계정 스왑 및 관리자 툴바 -->
     <div style="background:#f8f9fa; border:1px solid #ddd; padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div>
-            <span style="font-weight:bold; margin-right:10px;">테스트 계정 스왑:</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button onclick="location.href='/mainpage.html'" style="background:#34495e; color:#fff; border:none; padding:6px 12px; font-size:0.85rem; cursor:pointer; font-weight:bold;">메인페이지로 이동</button>
+            <span style="font-weight:bold;">테스트 계정 스왑:</span>
             <button onclick="switchAccount('USER')" style="background:#27ae60; padding:6px 12px; font-size:0.85rem;">일반 사용자 모드 (USER)</button>
             <button onclick="switchAccount('ADMIN')" style="background:#8e44ad; padding:6px 12px; font-size:0.85rem;">관리자 모드 (ADMIN)</button>
         </div>
@@ -153,6 +154,25 @@
 
     let currentPerfId = null;
     let currentPerfTitle = '';
+    let myReservationIds = [];
+
+    async function fetchMyReservationIds() {
+        try {
+            const res = await fetch('/api/reservations/my', {
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data && Array.isArray(data.data)) {
+                    myReservationIds = data.data
+                        .filter(r => r.status === 'HELD' || r.status === 'CONFIRMED')
+                        .map(r => r.id);
+                }
+            }
+        } catch (e) {
+            console.error('내 예매 목록 로드 에러:', e);
+        }
+    }
 
     function openAdminCreateModal() {
         document.getElementById('adminCreateModal').style.display = 'flex';
@@ -448,12 +468,31 @@
             }
             
             schedules.forEach(s => {
+                const now = new Date();
+                const openTime = new Date(s.ticketOpenTime);
+                const perfTime = new Date(s.performanceTime);
+                const isOpen = now >= openTime;
+
+                const perfTimeStr = perfTime.toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                const openTimeStr = openTime.toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+
                 const btn = document.createElement('button');
                 btn.style.marginRight = '8px';
                 btn.style.marginBottom = '6px';
+                btn.style.textAlign = 'left';
+                btn.style.lineHeight = '1.5';
                 btn.dataset.scheduleId = s.id;
-                btn.innerText = new Date(s.performanceTime).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-                btn.onclick = () => loadSeats(s.id);
+
+                if (isOpen) {
+                    btn.innerHTML = `${perfTimeStr}<br><span style="font-size:0.78rem; color:#e74c3c;">티켓 오픈: ${openTimeStr}</span>`;
+                    btn.onclick = () => loadSeats(s.id);
+                } else {
+                    btn.innerHTML = `${perfTimeStr}<br><span style="font-size:0.78rem; color:#e74c3c;">티켓 오픈 예정: ${openTimeStr}</span>`;
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                }
+
                 schEl.appendChild(btn);
             });
         } catch (e) {
@@ -480,23 +519,18 @@
         document.getElementById('seatArea').style.display = 'block';
 
         try {
-			//28. reservationcontroller로 이동 
+            await fetchMyReservationIds();
             const res = await fetch(`/api/performances/schedules/${scheduleId}/seats`);
-			//38. 받아온걸 조립 
             const data = await res.json();
             const seats = (data && Array.isArray(data.data)) ? data.data : [];
-			//로그 
             log(`GET /api/performances/schedules/${scheduleId}/seats -> 좌석 상태 조회 (${seats.length}개)`);
-			//내용비움
             const grid = document.getElementById('seatsGrid');
             grid.innerHTML = '';
-			
-			//39. 출력,  각각 버튼 만들어주고 상태에따라 색 만듬 
+            
             seats.forEach(seat => {
                 const btn = document.createElement('button');
                 btn.className = `seat-btn seat-${(seat.status || 'AVAILABLE').toLowerCase()}`;
                 btn.innerText = `${seat.seatNumber}\n(${(seat.price || 0).toLocaleString()}원)`;
-				//40. 좌석 선택시 
                 btn.onclick = () => handleSeatClick(seat);
                 grid.appendChild(btn);
             });
@@ -506,34 +540,38 @@
     }
 
     async function handleSeatClick(seat) {
-		//41. 좌석 접근 가능시
         if (seat.status === 'AVAILABLE') {
             try {
-				//43. reservationcontroller로 선점 사실을 보냄
                 const res = await fetch('/api/reservations/hold', {
                     method: 'POST',
                     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ scheduleId: currentScheduleId, seatId: seat.id })
                 });
-				//52. 데이터 받음
                 const data = await res.json();
-				//53/ http 코드가 성공인지, data 가 success인지 
                 if (res.ok && data.success) {
                     lastReservationId = data.data.id;
                     lastHoldExpiresAt = data.data.holdExpiresAt;
                     log(`선점 성공 예매 ID: ${data.data.id}, 만료시각: ${data.data.holdExpiresAt}`);
+                    await loadSeats(currentScheduleId);
+                    openCustomModal({
+                        ...seat,
+                        status: 'HELD',
+                        reservationId: data.data.id,
+                        holdExpiresAt: data.data.holdExpiresAt
+                    });
                 } else {
                     log(`선점 실패: ${data.message}`);
                     alert(`선점 실패: ${data.message || '좌석 선점 중 오류가 발생했습니다.'}`);
                 }
-				//54. 재호출해서 상황을 바꿈 
-                loadSeats(currentScheduleId);
             } catch (e) {
                 log(`선점 에러: ${e.message}`);
                 alert(`선점 실패: ${e.message}`);
             }
-			//55. 홀드중일경우 
         } else if (seat.status === 'HELD' || seat.status === 'RESERVED') {
+            if (!seat.reservationId || !myReservationIds.includes(seat.reservationId)) {
+                alert('다른 사용자가 이미 선점 또는 예매 중인 좌석입니다.');
+                return;
+            }
             openCustomModal(seat);
         }
     }
@@ -547,9 +585,18 @@
     }
 
     function openCustomModal(seat) {
-        if (seat.reservationId) {
+        if (seat && seat.reservationId) {
             lastReservationId = seat.reservationId;
+        } else {
+            lastReservationId = null;
         }
+        
+        if (seat && seat.holdExpiresAt) {
+            lastHoldExpiresAt = seat.holdExpiresAt;
+        } else {
+            lastHoldExpiresAt = null;
+        }
+
         const tossBtn = document.getElementById('btnTossPay');
         const confirmBtn = document.getElementById('btnConfirm');
         const cancelBtn = document.getElementById('btnCancel');
@@ -568,9 +615,6 @@
             if (tossBtn) tossBtn.style.display = 'block';
             if (confirmBtn) confirmBtn.style.display = 'block';
             cancelBtn.innerText = '선점 취소';
-            if (seat.holdExpiresAt) {
-                lastHoldExpiresAt = seat.holdExpiresAt;
-            }
             startModalTimer();
         }
         document.getElementById('customModal').style.display = 'flex';
@@ -618,9 +662,11 @@
 
     async function handleModalAction(action) {
         closeCustomModal();
-        //56. 취소선택하거나 자기가 선점한게 아닌경우 
-        if (!action || !lastReservationId) return;
-        //57. reservationcontroller로 이동 
+        if (!action) return;
+        if (!lastReservationId) {
+            alert('해당 좌석의 예매 번호 정보를 찾을 수 없습니다.');
+            return;
+        }
         const endpoint = `/api/reservations/${lastReservationId}/${action}`;
         try {
             const res = await fetch(endpoint, {
