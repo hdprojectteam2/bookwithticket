@@ -21,125 +21,82 @@ import com.example.bookwithticket.refund.repository.RefundRepository;
 
 @Service
 @Transactional(readOnly = true)
-public class PerformanceHistoryServiceImpl
-        implements PerformanceHistoryService {
+public class PerformanceHistoryServiceImpl implements PerformanceHistoryService {
 
-    private final ReservationRepository reservationRepository;
-    private final PaymentRepository paymentRepository;
-    private final RefundRepository refundRepository;
+	private final ReservationRepository reservationRepository;
+	private final PaymentRepository paymentRepository;
+	private final RefundRepository refundRepository;
 
-    public PerformanceHistoryServiceImpl(
-            ReservationRepository reservationRepository,
-            PaymentRepository paymentRepository,
-            RefundRepository refundRepository
-    ) {
-        this.reservationRepository = reservationRepository;
-        this.paymentRepository = paymentRepository;
-        this.refundRepository = refundRepository;
-    }
+	public PerformanceHistoryServiceImpl(ReservationRepository reservationRepository,
+			PaymentRepository paymentRepository, RefundRepository refundRepository) {
+		this.reservationRepository = reservationRepository;
+		this.paymentRepository = paymentRepository;
+		this.refundRepository = refundRepository;
+	}
 
-    @Override
-    public List<PerformanceHistoryDto>
-    findPerformanceHistory(Long memberId) {
+	@Override
+	public List<PerformanceHistoryDto> findPerformanceHistory(Long memberId) {
 
-        return reservationRepository
-                .findByMemberIdOrderByIdDesc(memberId)
-                .stream()
-                .filter(reservation ->
-                        reservation.getStatus()
-                                == ReservationStatus.CONFIRMED
-                        ||
-                        reservation.getStatus()
-                                == ReservationStatus.CANCELLED
-                )
-                .map(this::toDto)
-                .toList();
-    }
+		return reservationRepository.findByMemberIdOrderByIdDesc(memberId).stream()
+				.filter(reservation -> reservation.getStatus() == ReservationStatus.CONFIRMED
+						|| reservation.getStatus() == ReservationStatus.CANCELLED)
+				.map(this::toDto).toList();
+	}
 
-    private PerformanceHistoryDto toDto(
-            Reservation reservation
-    ) {
+	private PerformanceHistoryDto toDto(Reservation reservation) {
 
-        PerformanceSchedule schedule =
-                reservation.getSchedule();
+		PerformanceSchedule schedule = reservation.getSchedule();
 
-        Performance performance =
-                schedule.getPerformance();
+		Performance performance = schedule.getPerformance();
 
-        String refundStatus = null;
-        String refundStatusCode = null;
+		String refundStatus = null;
+		String refundStatusCode = null;
 
-        Optional<PaymentEntity> paymentOptional =
-                paymentRepository
-                        .findFirstByReservationIdAndStatusInOrderByCreatedAtDesc(
-                                reservation.getId(),
-                                List.of(
-                                        PaymentStatus.DONE,
-                                        PaymentStatus.CANCELED
-                                )
-                        );
+		Optional<PaymentEntity> paymentOptional = paymentRepository
+				.findFirstByReservationIdAndStatusInOrderByCreatedAtDesc(reservation.getId(),
+						List.of(PaymentStatus.DONE, PaymentStatus.CANCELED));
 
-        if (paymentOptional.isPresent()) {
+		if (paymentOptional.isPresent()) {
 
-            PaymentEntity payment =
-                    paymentOptional.get();
+			PaymentEntity payment = paymentOptional.get();
 
-            Optional<RefundEntity> refundOptional =
-                    refundRepository
-                            .findByPaymentId(
-                                    payment.getId()
-                            );
+			Optional<RefundEntity> refundOptional = refundRepository.findByPaymentId(payment.getId());
 
-            if (refundOptional.isPresent()) {
+			if (refundOptional.isPresent()) {
 
-                RefundEntity refund =
-                        refundOptional.get();
+				RefundEntity refund = refundOptional.get();
 
-                refundStatus =
-                        convertRefundStatus(
-                                refund.getStatus()
-                        );
+				refundStatus = convertRefundStatus(refund.getStatus());
 
-                refundStatusCode =
-                        refund.getStatus().name();
-            }
-        }
+				refundStatusCode = refund.getStatus().name();
+			}
+		}
 
-        return new PerformanceHistoryDto(
-                "R" + reservation.getId(),
-                performance.getTitle(),
-                schedule.getPerformanceTime(),
-                performance.getPosterUrl(),
-                performance.getVenue(),
-                reservation.getSeat().getSeatNumber(),
-                reservation.getTotalPrice(),
-                convertReservationStatus(reservation.getStatus()),
-                reservation.getStatus().name(),
-                refundStatus,
-                refundStatusCode
-        );
-    }
+		return new PerformanceHistoryDto("PERF_" + reservation.getId(), performance.getTitle(),
+				schedule.getPerformanceTime(), performance.getPosterUrl(), performance.getVenue(),
+				reservation.getSeat().getSeatNumber(), reservation.getTotalPrice(),
+				convertReservationStatus(reservation.getStatus()), reservation.getStatus().name(), refundStatus,
+				refundStatusCode);
+	}
 
-    private String convertReservationStatus(
-            ReservationStatus status
-    ) {
+	private String convertReservationStatus(ReservationStatus status) {
 
-        return switch (status) {
-            case HELD -> "좌석 선점";
-            case CONFIRMED -> "예매 완료";
-            case CANCELLED -> "예매 취소";
-            case EXPIRED -> "선점 만료";
-        };
-    }
+		return switch (status) {
+		case HELD -> "좌석 선점";
+		case CONFIRMED -> "예매 완료";
+		case CANCELLED -> "예매 취소";
+		case EXPIRED -> "선점 만료";
+		};
+	}
 
-    private String convertRefundStatus(RefundStatus status) {
+	private String convertRefundStatus(RefundStatus status) {
 
-        return switch (status) {
-            case REQUESTED -> "환불 요청 중";
-            case APPROVED -> "환불 처리 중";
-            case REJECTED -> "환불 거절";
-            case COMPLETED -> "환불 완료";
-            case FAILED -> "환불 처리 실패";
-        };
-    }
+		return switch (status) {
+		case REQUESTED -> "환불 요청 중";
+		case APPROVED -> "환불 처리 중";
+		case REJECTED -> "환불 거절";
+		case COMPLETED -> "환불 완료";
+		case FAILED -> "환불 처리 실패";
+		};
+	}
 }
