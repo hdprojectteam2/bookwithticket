@@ -54,6 +54,12 @@ public class ReservationController {
         return ApiResponse.ok("예매가 취소되었습니다.", reservationService.cancelReservation(member.getId(), reservationId));
     }
 
+    @GetMapping("/reservations/my")
+    public ApiResponse<List<ReservationResponse>> getMyReservations(Authentication authentication) {
+        Member member = getMember(authentication);
+        return ApiResponse.ok(reservationService.getMyReservations(member.getId()));
+    }
+
     private Member getMember(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
             throw new IllegalArgumentException("로그인이 필요합니다.");

@@ -14,6 +14,9 @@
 
 <body>
 
+<div style="padding:15px 20px 0 20px; max-width:1000px; margin:0 auto;">
+    <button onclick="location.href='/mainpage.html'" style="background:#34495e; color:#fff; border:none; padding:8px 16px; cursor:pointer; font-weight:bold;">메인페이지로 이동</button>
+</div>
 
 <h1>마이페이지</h1>
 
@@ -111,15 +114,122 @@
     </section>
 
 
+    <!-- 공연 예매 내역 섹션 (최하단 추가) -->
+    <section class="member-box" style="margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0;">나의 공연 예매 내역</h3>
+            <label style="font-size:0.88rem; cursor:pointer; color:#555;">
+                <input type="checkbox" id="showAllHistoryToggle" onchange="loadMyPerformanceReservations()"> 취소 내역 포함해 보기
+            </label>
+        </div>
+        <div id="myPerformanceReservations">
+            <p style="color:#7f8c8d;">예매 내역을 불러오는 중입니다...</p>
+        </div>
+    </section>
 
 </div>
 
 
-
-
-
 <script src="/js/member.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    loadMyPerformanceReservations();
+});
 
+async function loadMyPerformanceReservations() {
+    const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+    const container = document.getElementById("myPerformanceReservations");
+    const showAll = document.getElementById("showAllHistoryToggle")?.checked || false;
+    if (!container) return;
+
+    if (!token || token === "undefined") {
+        container.innerHTML = "<p style='color:#e74c3c;'>로그인이 필요합니다.</p>";
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/reservations/my", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        const result = await response.json();
+        
+        if (!response.ok || !result.data) {
+            container.innerHTML = "<p style='color:#7f8c8d;'>예매 내역이 없습니다.</p>";
+            return;
+        }
+
+        let reservations = (result.data || []).filter(r => r.status !== 'EXPIRED');
+        if (!showAll) {
+            reservations = reservations.filter(r => r.status === 'HELD' || r.status === 'CONFIRMED');
+        }
+
+        if (reservations.length === 0) {
+            container.innerHTML = "<p style='color:#7f8c8d;'>예매 내역이 없습니다.</p>";
+            return;
+        }
+
+        let html = '<div style="line-height:1.8;">';
+        reservations.forEach((r) => {
+            const statusMap = {
+                'HELD': '<span style="color:#f39c12; font-weight:bold;">[선점 중 (결제 대기)]</span>',
+                'CONFIRMED': '<span style="color:#2ecc71; font-weight:bold;">[예매 완료]</span>',
+                'CANCELED': '<span style="color:#95a5a6;">[취소됨]</span>',
+                'EXPIRED': '<span style="color:#e74c3c;">[시간 만료]</span>'
+            };
+            const statusStr = statusMap[r.status] || r.status;
+            const perfTimeStr = r.performanceTime ? new Date(r.performanceTime).toLocaleString('ko-KR') : '';
+
+            html += `<p style="border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:12px;">`;
+            html += `<b>예매 번호:</b> #${r.id} ${statusStr}<br>`;
+            html += `<b>공연 제목:</b> ${r.performanceTitle || '공연'}<br>`;
+            html += `<b>공연 일시:</b> ${perfTimeStr}<br>`;
+            html += `<b>좌석 번호:</b> ${r.seatNumber || ''}<br>`;
+            html += `<b>예매 금액:</b> ${Number(r.price).toLocaleString()}원<br>`;
+            
+            if (r.status === 'HELD') {
+                html += `<button onclick="cancelMyReservation(${r.id}, 'HELD')" style="margin-top:6px; background:#e67e22; color:#fff; border:none; padding:4px 10px; cursor:pointer; font-weight:bold;">선점 취소</button><br>`;
+            } else if (r.status === 'CONFIRMED') {
+                html += `<button onclick="cancelMyReservation(${r.id}, 'CONFIRMED')" style="margin-top:6px; background:#e74c3c; color:#fff; border:none; padding:4px 10px; cursor:pointer; font-weight:bold;">예매 취소 (환불)</button><br>`;
+            }
+            html += `</p>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (e) {
+        container.innerHTML = "<p style='color:#e74c3c;'>예매 내역 로드 중 오류가 발생했습니다.</p>";
+    }
+}
+
+async function cancelMyReservation(reservationId, currentStatus) {
+    const confirmMsg = currentStatus === 'CONFIRMED' 
+        ? `예매 번호 #${reservationId} 건을 결제 취소 및 환불하시겠습니까?`
+        : `예매 번호 #${reservationId} 건의 좌석 선점을 취소하시겠습니까?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+    try {
+        const response = await fetch(`/api/reservations/${reservationId}/cancel`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        const result = await response.json();
+        if (response.ok) {
+            const successMsg = currentStatus === 'CONFIRMED' ? "예매 결제 환불 및 취소가 완료되었습니다." : "좌석 선점이 취소되었습니다.";
+            alert(successMsg);
+            loadMyPerformanceReservations();
+        } else {
+            alert(`취소 실패: ${result.message || '오류가 발생했습니다.'}`);
+        }
+    } catch (e) {
+        alert(`에러 발생: ${e.message}`);
+    }
+}
+</script>
 
 </body>
 

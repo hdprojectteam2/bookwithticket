@@ -72,10 +72,12 @@ public class ReservationService {
         //36.받아온 좌석을 리스트로 만들어서 반환 
         return seats.stream().map(seat -> {
             Reservation r = reservationMap.get(seat.getId());
-            if (seat.getStatus() == SeatStatus.HELD && r != null) {
-                return SeatResponse.from(seat, r.getHoldExpiresAt(), r.getId());
-            } else if (seat.getStatus() == SeatStatus.RESERVED && r != null) {
-                return SeatResponse.from(seat, null, r.getId());
+            if (r != null) {
+                if (seat.getStatus() == SeatStatus.HELD) {
+                    return SeatResponse.from(seat, r.getHoldExpiresAt(), r.getId());
+                } else if (seat.getStatus() == SeatStatus.RESERVED) {
+                    return SeatResponse.from(seat, null, r.getId());
+                }
             }
             return SeatResponse.from(seat);
         }).toList();
@@ -145,10 +147,26 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "예매 내역을 찾을 수 없습니다."));
 
-        reservation.cancel();
-        reservation.getSeat().updateStatus(SeatStatus.AVAILABLE);
-        //redis 키 삭제
-        redisTemplate.delete("seat:hold:" + reservation.getSchedule().getId() + ":" + reservation.getSeat().getId());
+        if (reservation.getStatus() == ReservationStatus.HELD) {
+            // 1. 선점 중 취소: 즉시 선점 해제 및 Redis 락 삭제
+            reservation.cancel();
+            reservation.getSeat().updateStatus(SeatStatus.AVAILABLE);
+            redisTemplate.delete("seat:hold:" + reservation.getSchedule().getId() + ":" + reservation.getSeat().getId());
+        } else if (reservation.getStatus() == ReservationStatus.CONFIRMED) {
+            // 2. 예매 확정 취소: 환불 처리 완료 시 예매 취소 및 좌석 복구
+            reservation.cancel();
+            reservation.getSeat().updateStatus(SeatStatus.AVAILABLE);
+        } else {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "취소할 수 없는 예매 상태입니다.");
+        }
+
         return ReservationResponse.from(reservation);
+    }
+
+    public List<ReservationResponse> getMyReservations(Long memberId) {
+        return reservationRepository.findByMemberIdOrderByIdDesc(memberId)
+                .stream()
+                .map(ReservationResponse::from)
+                .toList();
     }
 }

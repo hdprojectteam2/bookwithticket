@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 public record ReservationResponse(
     Long id,
     Long scheduleId,
+    String performanceTitle,
+    LocalDateTime performanceTime,
     Long seatId,
     String seatNumber,
     int price,
@@ -16,6 +18,8 @@ public record ReservationResponse(
         return new ReservationResponse(
             r.getId(),
             r.getSchedule().getId(),
+            r.getSchedule().getPerformance() != null ? r.getSchedule().getPerformance().getTitle() : "공연",
+            r.getSchedule().getPerformanceTime(),
             r.getSeat().getId(),
             r.getSeat().getSeatNumber(),
             r.getTotalPrice(),
