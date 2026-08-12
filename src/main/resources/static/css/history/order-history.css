@@ -1,0 +1,168 @@
+.history-card {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 25px;
+}
+
+#bookHistory img, #ticketHistory img {
+    width: 120px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+#book_sub_title, #ticket_sub_title{
+	font-size:20px;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+.history-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.orderNumber{
+	display: inline-block;
+	font-size:15px;
+	color: oklch(70.4% 0.04 256.788);
+}
+
+.history-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.delivery-status {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.delivery-status.preparing {
+    background-color: #fff4df;
+    color: #e89900;
+}
+
+.delivery-status.shipping {
+    background-color: #eef4ff;
+    color: #2463eb;
+}
+
+.delivery-status.completed {
+    background-color: #edf9f1;
+    color: #20a052;
+}
+
+.refund-status {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.refund-status.requested {
+    background-color: #fff4df;
+    color: #e89900;
+}
+
+.refund-status.completed {
+    background-color: #edf9f1;
+    color: #20a052;
+}
+
+.refund-status.rejected {
+    background-color: #fff0f0;
+    color: #e54848;
+}
+
+.history-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.book-item{
+	display: flex;
+	align-items: center;
+    gap: 25px;
+    margin-bottom: 15px;
+}
+
+.book-info {
+	display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.book-info h3, .book-info p {
+    margin: 0;
+}
+
+.book-detail-box {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 7px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.book-price{
+	font-weight: bold;
+}
+
+/* 티켓 */
+
+.performance-item {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.performance-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.performance-info h3,
+.performance-info p {
+    margin: 0;
+}
+
+.performance-detail-box {
+    gap: 5px;
+    color: oklch(70.4% 0.04 256.788);
+}
+
+.performance-seat {
+    font-weight: bold;
+}
+
+.reservation-status {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.reservation-status.confirmed {
+    background-color: #edf9f1;
+    color: #20a052;
+}
+
+.reservation-status.cancelled {
+    background-color: #fff0f0;
+    color: #e54848;
+}
