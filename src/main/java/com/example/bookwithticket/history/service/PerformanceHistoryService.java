@@ -6,4 +6,6 @@ import com.example.bookwithticket.history.dto.PerformanceHistoryDto;
 
 public interface PerformanceHistoryService {
 	List<PerformanceHistoryDto> findPerformanceHistory(Long memberId);
+
+	PerformanceHistoryDto findReservationHistoryDetail(Long memberId, Long reservationId);
 }
