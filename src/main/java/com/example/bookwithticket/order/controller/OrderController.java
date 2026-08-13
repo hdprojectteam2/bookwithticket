@@ -34,7 +34,8 @@ public class OrderController {
 	private final MemberService memberService;
 	private final AdminReservationService adminReservationService;
 
-	public OrderController(OrderService orderService, MemberService memberService, AdminReservationService adminReservationService) {
+	public OrderController(OrderService orderService, MemberService memberService,
+			AdminReservationService adminReservationService) {
 		this.orderService = orderService;
 		this.memberService = memberService;
 		this.adminReservationService = adminReservationService;
@@ -110,6 +111,19 @@ public class OrderController {
 		return ResponseEntity.ok().build();
 	}
 
+	@ResponseBody
+	@GetMapping("/api/orders/{orderNumber}/completed")
+	public ResponseEntity<OrderPageDto> getCompletedOrder(@PathVariable(name = "orderNumber") String orderNumber,
+
+			Authentication authentication) {
+
+		Long memberId = getCurrentMemberId(authentication);
+
+		OrderPageDto order = orderService.findCompletedOrder(memberId, orderNumber);
+
+		return ResponseEntity.ok(order);
+	}
+
 	@GetMapping("/admin/orders")
 	public String adminOrdersPage() {
 		return "order/adminOrder";
@@ -158,11 +172,8 @@ public class OrderController {
 
 	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/api/admin/reservations")
-	public ResponseEntity<List<AdminReservationResponse>>
-	        getAdminReservations() {
+	public ResponseEntity<List<AdminReservationResponse>> getAdminReservations() {
 
-	    return ResponseEntity.ok(
-	            adminReservationService.findReservations()
-	    );
+		return ResponseEntity.ok(adminReservationService.findReservations());
 	}
 }

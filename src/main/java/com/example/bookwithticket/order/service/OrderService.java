@@ -28,4 +28,5 @@ public interface OrderService {
 
 	void updateDeliveryStatus(String orderNumber, DeliveryStatusRequest request);
 
+	OrderPageDto findCompletedOrder(Long memberId, String orderNumber);
 }

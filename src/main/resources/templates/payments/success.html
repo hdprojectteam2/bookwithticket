@@ -1,31 +1,87 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>결제 처리</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>결제 완료</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/payments/success.css">
 <script src="/js/payments/success.js" defer></script>
 </head>
-
 <body>
-	<div class="box_section" style="width: 600px">
+	<main class="success-page">
 
-		<h2 id="payment-title">결제를 처리하고 있습니다.</h2>
+		<section class="success-card">
 
-		<div style="margin-top: 50px">
-			<strong>결제금액</strong> <span id="amount"></span>
-		</div>
+			<h1 class="success-title" id="payment-title">결제를 처리하고 있습니다.</h1>
 
-		<div style="margin-top: 10px">
-			<strong>주문번호</strong> <span id="orderId"></span>
-		</div>
+			<div class="number-line">
 
-		<div style="margin-top: 10px">
-			<strong>결제 정보</strong> <span id="paymentKey"
-				style="white-space: initial; word-break: break-all;"> </span>
-		</div>
+				<span id="number-label"> 주문 번호: </span> <strong id="orderId"> - </strong>
 
-		<p id="payment-message">잠시만 기다려주세요.</p>
-	</div>
+			</div>
+
+			<div class="payment-summary">
+
+				<div id="book-summary">
+
+					<div class="summary-row">
+
+						<span class="summary-label"> 구매 </span> <strong class="summary-value product-name"
+							id="product-name"
+						> - </strong>
+
+					</div>
+
+				</div>
+				<div id="performance-summary" style="display: none;">
+
+					<div class="summary-row">
+
+						<span class="summary-label"> 공연명 </span> <strong class="summary-value" id="performance-name">
+							- </strong>
+
+					</div>
+
+					<div class="summary-row">
+
+						<span class="summary-label"> 공연장 </span> <strong class="summary-value" id="performance-venue">
+							- </strong>
+
+					</div>
+
+					<div class="summary-row">
+
+						<span class="summary-label"> 좌석 </span> <strong class="summary-value" id="performance-seat">
+							- </strong>
+
+					</div>
+
+				</div>
+
+				<div class="summary-row total-row">
+
+					<span class="summary-label"> 결제 금액 </span> <strong class="summary-value amount" id="amount">
+						0원 </strong>
+
+				</div>
+
+			</div>
+
+			<p class="payment-message" id="payment-message">잠시만 기다려주세요.</p>
+
+			<div class="button-group">
+
+				<button type="button" class="history-button" id="history-button">구매
+					내역 확인</button>
+
+				<button type="button" class="home-button" onclick="location.href='/mainpage.html'">
+					홈으로 이동</button>
+
+			</div>
+
+		</section>
+
+	</main>
 </body>
 </html>

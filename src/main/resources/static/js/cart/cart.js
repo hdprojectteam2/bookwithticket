@@ -71,7 +71,7 @@ async function loadBookCart() {
         box.innerHTML = `
             <div class="cart-layout">
 
-                <section class="cart-box">
+                <section class="cart-left card">
 
                     <div class="cart-header">
 
@@ -854,7 +854,7 @@ async function loadPerformanceCart() {
 
 
         box.innerHTML = `
-            <section class="cart-box">
+            <section class="cart-left card">
 
                 <div class="cart-header">
 

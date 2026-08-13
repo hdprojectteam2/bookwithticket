@@ -1,0 +1,153 @@
+.success-page {
+	min-height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 40px 20px;
+}
+
+.success-card {
+	width: 100%;
+	max-width: 720px;
+	min-height: 500px;
+	padding: 70px 70px 60px;
+	background-color: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-radius: 24px;
+	text-align: center;
+}
+
+.success-title {
+	margin: 0 0 20px;
+	font-size: 36px;
+	font-weight: 800;
+	color: #111827;
+	letter-spacing: -1px;
+}
+
+.number-line {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 42px;
+	font-size: 20px;
+	color: #718096;
+}
+
+.number-line strong {
+	color: #172033;
+	font-size: 21px;
+	font-weight: 800;
+}
+
+.payment-summary {
+	width: 100%;
+	padding: 30px 32px;
+	background-color: #f7f9fc;
+	border-radius: 22px;
+	text-align: left;
+}
+
+.summary-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 30px;
+	margin-bottom: 22px;
+}
+
+.summary-row:last-child {
+	margin-bottom: 0;
+}
+
+.summary-label {
+	flex-shrink: 0;
+	color: #6b7d99;
+	font-size: 18px;
+	font-weight: 500;
+}
+
+.summary-value {
+	min-width: 0;
+	color: #111827;
+	font-size: 19px;
+	font-weight: 700;
+	text-align: right;
+}
+
+.product-name {
+	max-width: 70%;
+	line-height: 1.5;
+	word-break: keep-all;
+	overflow-wrap: break-word;
+}
+
+.total-row {
+	margin-top: 6px;
+}
+
+.total-row .summary-label {
+	color: #315efb;
+	font-weight: 700;
+}
+
+.summary-value.amount {
+	color: #315efb;
+	font-size: 24px;
+	font-weight: 800;
+}
+
+.payment-message {
+	min-height: 22px;
+	margin: 26px 0 0;
+	color: #94a3b8;
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.button-group {
+	display: flex;
+	gap: 18px;
+	margin-top: 38px;
+}
+
+.button-group button {
+	flex: 1;
+	height: 64px;
+	border-radius: 16px;
+	font-size: 18px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background-color 0.2s, border-color 0.2s;
+}
+
+.history-button {
+	background-color: #ffffff;
+	border: 1px solid #dbe2ea;
+	color: #44516a;
+}
+
+.history-button:hover {
+	background-color: #f8fafc;
+	border-color: #cbd5e1;
+}
+
+.home-button {
+	background-color: #315efb;
+	border: 1px solid #315efb;
+	color: #ffffff;
+}
+
+.home-button:hover {
+	background-color: #242fff;
+	border-color: #242fff;
+}
+
+.success-card.error .success-title {
+	color: #e54848;
+}
+
+.success-card.error .payment-message {
+	color: #e54848;
+}

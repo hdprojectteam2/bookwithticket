@@ -276,13 +276,65 @@ function favorite(){
 
 
 
-function cart(){
+async function cart(){
+	
+	const token =
+	        localStorage.getItem("token");
+
+	    if(!token){
 
 
-    alert(
-        "장바구니 기능 준비중"
-    );
+	        alert(
+	            "로그인이 필요합니다."
+	        );
 
+	        location.href = "/login.html";
+
+	        return;
+
+	    }
+		
+
+		    try {
+
+		        const response =
+		            await fetch(
+		                "/api/cart/items",
+		                {
+		                    method: "POST",
+
+		                    headers: {
+		                        "Content-Type":
+		                            "application/x-www-form-urlencoded",
+
+		                        "Authorization":
+		                            "Bearer " + token
+		                    },
+
+		                    body: 
+								"bookId=" + encodeURIComponent(id) + "&quantity=1"
+		                }
+		            );
+
+		        const message = await response.text();
+
+		        if (!response.ok) {
+
+		            console.error("서버 오류:", message);
+
+		            alert(message || "도서 장바구니 추가에 실패했습니다.");
+
+		            return;
+		        }
+				
+		        alert(message);
+				
+		    } catch (error) {
+		        
+				console.error(error);
+		        
+				alert("요청 중 오류가 발생했습니다.");
+		    }
 
 }
 
