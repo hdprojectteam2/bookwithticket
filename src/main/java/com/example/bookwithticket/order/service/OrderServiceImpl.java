@@ -261,245 +261,152 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional(readOnly = true)
 	public List<AdminOrderResponse> findAdminOrders() {
 
-	    List<BookOrderEntity> orders =
-	            bookOrderRepository
-	                    .findAllByOrderByCreatedAtDesc();
+		List<BookOrderEntity> orders = bookOrderRepository.findAllByOrderByCreatedAtDesc();
 
+		List<PaymentStatus> paymentStatuses = List.of(PaymentStatus.DONE, PaymentStatus.CANCELED);
 
-	    List<PaymentStatus> paymentStatuses =
-	            List.of(
-	                    PaymentStatus.DONE,
-	                    PaymentStatus.CANCELED
-	            );
+		return orders.stream()
 
+				.filter(order -> order.getOrderStatus() == OrderStatus.PAID
 
-	    return orders.stream()
+						|| order.getOrderStatus() == OrderStatus.REFUNDED)
 
-	            .filter(order ->
-	                    order.getOrderStatus()
-	                            == OrderStatus.PAID
+				.map(order -> {
 
-	                    || order.getOrderStatus()
-	                            == OrderStatus.REFUNDED
-	            )
+					Long refundId = null;
 
-	            .map(order -> {
+					String refundStatus = null;
 
-	                Long refundId = null;
+					String refundReason = null;
 
-	                String refundStatus = null;
+					PaymentEntity payment = paymentRepository
+							.findFirstByBookOrderIdAndStatusInOrderByCreatedAtDesc(order.getId(), paymentStatuses)
+							.orElse(null);
 
-	                String refundReason = null;
+					if (payment != null) {
 
+						RefundEntity refund = refundRepository.findByPaymentId(payment.getId()).orElse(null);
 
-	                PaymentEntity payment =
-	                        paymentRepository
-	                                .findFirstByBookOrderIdAndStatusInOrderByCreatedAtDesc(
-	                                        order.getId(),
-	                                        paymentStatuses
-	                                )
-	                                .orElse(null);
+						if (refund != null) {
 
-	                if (payment != null) {
+							refundId = refund.getId();
 
-	                    RefundEntity refund =
-	                            refundRepository
-	                                    .findByPaymentId(
-	                                            payment.getId()
-	                                    )
-	                                    .orElse(null);
+							refundStatus = refund.getStatus().name();
 
+							refundReason = refund.getReason();
+						}
+					}
 
-	                    if (refund != null) {
+					AddressEntity addressEntity = order.getAddress();
 
-	                        refundId =
-	                                refund.getId();
+					String receiverName = null;
 
-	                        refundStatus =
-	                                refund.getStatus()
-	                                        .name();
+					String phone = null;
 
-	                        refundReason =
-	                                refund.getReason();
-	                    }
-	                }
+					String zipCode = null;
 
+					String address = null;
 
-	                AddressEntity addressEntity =
-	                        order.getAddress();
+					String detailAddress = null;
 
+					String deliveryRequest = null;
 
-	                String receiverName = null;
+					if (addressEntity != null) {
 
-	                String phone = null;
+						receiverName = addressEntity.getRecipient();
 
-	                String zipCode = null;
+						phone = addressEntity.getPhone();
 
-	                String address = null;
+						zipCode = addressEntity.getZipCode();
 
-	                String detailAddress = null;
+						address = addressEntity.getAddress();
 
-	                String deliveryRequest = null;
+						detailAddress = addressEntity.getDetailAddress();
 
+						deliveryRequest = addressEntity.getDeliveryRequest();
+					}
 
-	                if (addressEntity != null) {
+					List<AdminOrderItemResponse> items = order.getOrderItems().stream()
 
-	                    receiverName =
-	                            addressEntity.getRecipient();
+							.map(orderItem -> new AdminOrderItemResponse(orderItem.getId(),
+									orderItem.getBookTitleSnapshot(), orderItem.getPriceSnapshot(),
+									orderItem.getQuantity(), orderItem.getTotalPrice()))
 
-	                    phone =
-	                            addressEntity.getPhone();
+							.toList();
 
-	                    zipCode =
-	                            addressEntity.getZipCode();
+					return new AdminOrderResponse(order.getId(), order.getMemberId(), order.getOrderNumber(),
+							order.getCreatedAt(), order.getTotalPrice(), order.getOrderStatus().name(),
+							order.getDeliveryStatus().name(),
 
-	                    address =
-	                            addressEntity.getAddress();
+							receiverName, phone, zipCode, address, detailAddress, deliveryRequest,
 
-	                    detailAddress =
-	                            addressEntity.getDetailAddress();
+							order.getCourier(), order.getTrackingNumber(),
 
-	                    deliveryRequest =
-	                            addressEntity.getDeliveryRequest();
-	                }
+							items,
 
-	                List<AdminOrderItemResponse> items =
-	                        order.getOrderItems()
-	                                .stream()
+							refundId, refundStatus, refundReason);
+				})
 
-	                                .map(orderItem ->
-	                                        new AdminOrderItemResponse(
-	                                                orderItem.getId(),
-	                                                orderItem.getBookTitleSnapshot(),
-	                                                orderItem.getPriceSnapshot(),
-	                                                orderItem.getQuantity(),
-	                                                orderItem.getTotalPrice()
-	                                        )
-	                                )
-
-	                                .toList();
-
-
-	                return new AdminOrderResponse(
-	                        order.getId(),
-	                        order.getMemberId(),
-	                        order.getOrderNumber(),
-	                        order.getCreatedAt(),
-	                        order.getTotalPrice(),
-	                        order.getOrderStatus()
-	                                .name(),
-	                        order.getDeliveryStatus()
-	                                .name(),
-
-	                        receiverName,
-	                        phone,
-	                        zipCode,
-	                        address,
-	                        detailAddress,
-	                        deliveryRequest,
-
-	                        order.getCourier(),
-	                        order.getTrackingNumber(),
-
-	                        items,
-
-	                        refundId,
-	                        refundStatus,
-	                        refundReason
-	                );
-	            })
-
-	            .toList();
+				.toList();
 	}
 
-
 	@Override
-	public void updateTrackingInfo(
-	        String orderNumber,
-	        ShippingRequest request
-	) {
+	public void updateTrackingInfo(String orderNumber, ShippingRequest request) {
 
-	    if (request == null) {
+		if (request == null) {
 
-	        throw new IllegalArgumentException(
-	                "배송 정보가 없습니다."
-	        );
-	    }
+			throw new IllegalArgumentException("배송 정보가 없습니다.");
+		}
 
+		BookOrderEntity order = bookOrderRepository.findByOrderNumber(orderNumber)
+				.orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
-	    BookOrderEntity order =
-	            bookOrderRepository
-	                    .findByOrderNumber(
-	                            orderNumber
-	                    )
-	                    .orElseThrow(
-	                            () ->
-	                                    new IllegalArgumentException(
-	                                            "주문을 찾을 수 없습니다."
-	                                    )
-	                    );
-
-
-	    order.updateTrackingInfo(
-	            request.getCourier(),
-	            request.getTrackingNumber()
-	    );
+		order.updateTrackingInfo(request.getCourier(), request.getTrackingNumber());
 	}
 
+	@Override
+	public void updateDeliveryStatus(String orderNumber, DeliveryStatusRequest request) {
+
+		if (request == null || request.getDeliveryStatus() == null || request.getDeliveryStatus().isBlank()) {
+
+			throw new IllegalArgumentException("배송 상태를 선택해주세요.");
+		}
+
+		BookOrderEntity order = bookOrderRepository.findByOrderNumber(orderNumber)
+				.orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+
+		DeliveryStatus deliveryStatus;
+
+		try {
+
+			deliveryStatus = DeliveryStatus.valueOf(request.getDeliveryStatus().trim().toUpperCase());
+
+		} catch (IllegalArgumentException e) {
+
+			throw new IllegalArgumentException("올바르지 않은 배송 상태입니다.");
+		}
+
+		order.updateDeliveryStatus(deliveryStatus);
+	}
 
 	@Override
-	public void updateDeliveryStatus(
-	        String orderNumber,
-	        DeliveryStatusRequest request
-	) {
+	@Transactional(readOnly = true)
+	public OrderPageDto findCompletedOrder(Long memberId, String orderNumber) {
 
-	    if (request == null
-	            || request.getDeliveryStatus() == null
-	            || request.getDeliveryStatus().isBlank()) {
+		if (orderNumber == null || orderNumber.isBlank()) {
 
-	        throw new IllegalArgumentException(
-	                "배송 상태를 선택해주세요."
-	        );
-	    }
+			throw new IllegalArgumentException("주문번호가 없습니다.");
+		}
 
+		BookOrderEntity order = bookOrderRepository.findByOrderNumberAndMemberId(orderNumber, memberId)
+				.orElseThrow(() -> new IllegalArgumentException("조회할 수 없는 주문입니다."));
 
-	    BookOrderEntity order =
-	            bookOrderRepository
-	                    .findByOrderNumber(
-	                            orderNumber
-	                    )
-	                    .orElseThrow(
-	                            () ->
-	                                    new IllegalArgumentException(
-	                                            "주문을 찾을 수 없습니다."
-	                                    )
-	                    );
+		if (order.getOrderStatus() != OrderStatus.PAID && order.getOrderStatus() != OrderStatus.REFUNDED) {
 
+			throw new IllegalArgumentException("결제가 완료된 주문이 아닙니다.");
+		}
 
-	    DeliveryStatus deliveryStatus;
-
-
-	    try {
-
-	        deliveryStatus =
-	                DeliveryStatus.valueOf(
-	                        request
-	                                .getDeliveryStatus()
-	                                .trim()
-	                                .toUpperCase()
-	                );
-
-	    } catch (IllegalArgumentException e) {
-
-	        throw new IllegalArgumentException(
-	                "올바르지 않은 배송 상태입니다."
-	        );
-	    }
-
-
-	    order.updateDeliveryStatus(
-	            deliveryStatus
-	    );
+		return new OrderPageDto(order);
 	}
 
 }

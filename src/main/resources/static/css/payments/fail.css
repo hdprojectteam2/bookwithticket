@@ -1,0 +1,106 @@
+.fail-page {
+	min-height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 40px 20px;
+}
+
+.fail-card {
+	width: 100%;
+	max-width: 720px;
+	min-width: 500px;
+	padding: 70px;
+	background-color: #ffffff;
+	border: 1px solid #e5e7eb;
+	border-radius: 24px;
+	text-align: center;
+}
+
+.fail-title {
+	margin: 0;
+	color: #e54848;
+	font-size: 36px;
+	font-weight: 800;
+	letter-spacing: -1px;
+}
+
+.fail-description {
+	margin: 18px 0 38px;
+	color: #94a3b8;
+	font-size: 15px;
+	line-height: 1.7;
+}
+
+.fail-summary {
+	padding: 30px 32px;
+	background-color: #f7f9fc;
+	border-radius: 22px;
+	text-align: left;
+}
+
+.summary-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 30px;
+	margin-bottom: 24px;
+}
+
+.summary-row:last-child {
+	margin-bottom: 0;
+}
+
+.summary-label {
+	flex-shrink: 0;
+	color: #6b7d99;
+	font-size: 18px;
+	font-weight: 500;
+}
+
+.summary-value {
+	color: #111827;
+	font-size: 17px;
+	font-weight: 700;
+	text-align: right;
+	word-break: break-word;
+}
+
+.error-code {
+	color: #e54848;
+}
+
+.button-group {
+	display: flex;
+	gap: 18px;
+	margin-top: 38px;
+}
+
+.button-group button {
+	flex: 1;
+	height: 64px;
+	border-radius: 16px;
+	font-size: 18px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.retry-button {
+	background-color: #315efb;
+	border: 1px solid #315efb;
+	color: #ffffff;
+}
+
+.retry-button:hover {
+	background-color: #244bd6;
+}
+
+.home-button {
+	background-color: #ffffff;
+	border: 1px solid #dbe2ea;
+	color: #44516a;
+}
+
+.home-button:hover {
+	background-color: #f8fafc;
+}

@@ -1,37 +1,27 @@
 async function main() {
 
-    const paymentData =
-        document.getElementById(
-            "payment-data"
-        );
+    const paymentData = document.getElementById("payment-data");
 
-    const paymentButton =
-        document.getElementById(
-            "payment-button"
-        );
+    const paymentButton = document.getElementById("payment-button");
 
     if (!paymentData || !paymentButton) {
-        console.error(
-            "결제 화면 정보를 찾을 수 없습니다."
-        );
+        console.error("결제 화면 정보를 찾을 수 없습니다.");
         return;
     }
 
 
-    const pageOrderNumber =
-        paymentData.dataset.orderNumber;
+    const pageOrderNumber = paymentData.dataset.orderNumber;
 
 
     if (!pageOrderNumber) {
-        alert(
-            "주문번호를 확인할 수 없습니다."
-        );
+        alert("주문번호를 확인할 수 없습니다.");
         return;
     }
 
 
     try {
-
+		const member = await getCurrentMember();
+		
         const response =
             await fetch(
                 "/api/payments/checkout?orderNumber="
@@ -47,74 +37,44 @@ async function main() {
 
         if (!response.ok) {
 
-            const error =
-                await response.json();
+            const error = await response.json();
 
-            throw new Error(
-                error.message
-                || "결제 정보를 불러오지 못했습니다."
-            );
+            throw new Error(error.message || "결제 정보를 불러오지 못했습니다.");
         }
 
 
-        const checkout =
-            await response.json();
+        const checkout = await response.json();
 
+        const orderNumber = checkout.orderNumber;
 
-        const orderNumber =
-            checkout.orderNumber;
+        const orderName = checkout.orderName;
+		
+		const seatNumber = checkout.seatNumber;
 
-        const orderName =
-            checkout.orderName;
+        const totalPrice = Number(checkout.totalPrice);
 
-        const totalPrice =
-            Number(
-                checkout.totalPrice
-            );
+        const clientKey = checkout.clientKey;
 
-        const clientKey =
-            checkout.clientKey;
+        document.getElementById("order-number").textContent = orderNumber;
 
+        document.getElementById("order-name").textContent = orderName;
 
-        document.getElementById(
-            "order-number"
-        ).textContent =
-            orderNumber;
+		document.getElementById("seat-number").textContent = seatNumber;
 
+        document.getElementById("total-price").textContent = totalPrice.toLocaleString();
 
-        document.getElementById(
-            "order-name"
-        ).textContent =
-            orderName;
+        const tossPayments = TossPayments(clientKey);
 
+        const payment = tossPayments.payment({customerKey:TossPayments.ANONYMOUS});
 
-        document.getElementById(
-            "total-price"
-        ).textContent =
-            totalPrice.toLocaleString();
-
-
-        const tossPayments =
-            TossPayments(clientKey);
-
-
-        const payment =
-            tossPayments.payment({
-                customerKey:
-                    TossPayments.ANONYMOUS
-            });
-
-
-        paymentButton.disabled =
-            false;
+        paymentButton.disabled = false;
 
 
         paymentButton.addEventListener(
             "click",
             async function () {
 
-                paymentButton.disabled =
-                    true;
+                paymentButton.disabled = true;
 
                 try {
 
@@ -146,56 +106,67 @@ async function main() {
                             + "/payments/fail",
 
                         customerName:
-                            "테스트 구매자"
+                            member.name
                     });
 
                 } catch (error) {
 
-                    console.error(
-                        "토스 결제창 오류:",
-                        error
-                    );
+                    console.error("토스 결제창 오류:", error);
 
-                    paymentButton.disabled =
-                        false;
+                    paymentButton.disabled = false;
                 }
             }
         );
 
     } catch (error) {
 
-        console.error(
-            "결제 정보 조회 오류:",
-            error
-        );
+        console.error("결제 정보 조회 오류:",error);
 
-        alert(
-            error.message
-        );
+        alert(error.message);
+		
+		location.replace("/mainpage.html");
+		return;
     }
 }
 
 
 main();
 
+async function getCurrentMember() {
 
-function getAuthHeaders() {
+    const response =
+        await fetch(
+            "/members/me",
+            {
+                method:
+                    "GET",
 
-    const token =
-        localStorage.getItem(
-            "token"
+                headers:
+                    getAuthHeaders()
+            }
         );
 
 
-    if (!token) {
+    if (!response.ok) {
+
         throw new Error(
-            "로그인이 필요합니다."
+            "회원 정보를 불러오지 못했습니다."
         );
     }
 
 
+    return await response.json();
+}
+
+function getAuthHeaders() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        throw new Error("로그인이 필요합니다.");
+    }
+
     return {
-        "Authorization":
-            `Bearer ${token}`
+        "Authorization": `Bearer ${token}`
     };
 }

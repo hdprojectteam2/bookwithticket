@@ -15,7 +15,7 @@
 
 .order-left {
 	flex: 1;
-	min-width: 0;
+	min-width: 350px;
 	padding: 28px;
 }
 
