@@ -1,5 +1,6 @@
 package com.example.bookwithticket.history.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,6 +52,9 @@ public class PerformanceHistoryServiceImpl implements PerformanceHistoryService 
 
 		String refundStatus = null;
 		String refundStatusCode = null;
+		
+		String paymentMethod = null;
+        LocalDateTime paidAt = null;
 
 		Optional<PaymentEntity> paymentOptional = paymentRepository
 				.findFirstByReservationIdAndStatusInOrderByCreatedAtDesc(reservation.getId(),
@@ -59,6 +63,11 @@ public class PerformanceHistoryServiceImpl implements PerformanceHistoryService 
 		if (paymentOptional.isPresent()) {
 
 			PaymentEntity payment = paymentOptional.get();
+			
+            if (payment.getMethod() != null) {
+                paymentMethod = payment.getMethod().toString();
+            }
+            paidAt = payment.getApprovedAt();
 
 			Optional<RefundEntity> refundOptional = refundRepository.findByPaymentId(payment.getId());
 
@@ -76,7 +85,7 @@ public class PerformanceHistoryServiceImpl implements PerformanceHistoryService 
 				schedule.getPerformanceTime(), performance.getPosterUrl(), performance.getVenue(),
 				reservation.getSeat().getSeatNumber(), reservation.getTotalPrice(),
 				convertReservationStatus(reservation.getStatus()), reservation.getStatus().name(), refundStatus,
-				refundStatusCode);
+				refundStatusCode, paymentMethod, paidAt);
 	}
 
 	private String convertReservationStatus(ReservationStatus status) {
@@ -98,5 +107,15 @@ public class PerformanceHistoryServiceImpl implements PerformanceHistoryService 
 		case COMPLETED -> "환불 완료";
 		case FAILED -> "환불 처리 실패";
 		};
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public PerformanceHistoryDto findReservationHistoryDetail(Long memberId, Long reservationId) {
+
+		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
+				.orElseThrow(() -> new IllegalArgumentException("예매 내역을 찾을 수 없습니다."));
+
+		return toDto(reservation);
 	}
 }

@@ -1,9 +1,15 @@
 window.onload = function() {
-    loadBookCart();
+	const token = localStorage.getItem("token");
+	if (!token) {
+		alert("로그인이 필요합니다.");
+		location.href = "/login.html";
+		return;
+	}
+	
+	loadBookCart();
     loadPerformanceCart();
 
-    const openPerformanceCart =
-        localStorage.getItem("openPerformanceCart");
+    const openPerformanceCart = localStorage.getItem("openPerformanceCart");
 
     if (openPerformanceCart === "true") {
         cartTab("ticketCart");
@@ -31,7 +37,9 @@ async function loadBookCart() {
 
     try {
         const response =
-            await fetch("/api/cart");
+            await fetch("/api/cart",{
+				headers: getAuthHeaders()
+			});
 
         if (!response.ok) {
             throw new Error(
@@ -608,14 +616,13 @@ async function updateQuantity(input) {
 
         const response =
             await fetch(
-                "/api/cart/items/"
-                + cartItemId,
+                "/api/cart/items/"+ cartItemId,
                 {
                     method: "PATCH",
 
                     headers: {
-                        "Content-Type":
-                            "application/x-www-form-urlencoded"
+                        "Content-Type": "application/x-www-form-urlencoded",
+						...getAuthHeaders()
                     },
 
                     body: params
@@ -653,10 +660,10 @@ async function deleteCartItem(cartItemId) {
 
         const response =
             await fetch(
-                "/api/cart/items/"
-                + cartItemId,
+                "/api/cart/items/" + cartItemId,
                 {
-                    method: "DELETE"
+                    method: "DELETE",
+					headers: getAuthHeaders()
                 }
             );
 
@@ -694,7 +701,8 @@ async function deleteAllItems() {
             await fetch(
                 "/api/cart/items",
                 {
-                    method: "DELETE"
+                    method: "DELETE",
+					headers: getAuthHeaders()
                 }
             );
 
@@ -753,8 +761,8 @@ async function orderDelivery() {
                     method: "POST",
 
                     headers: {
-                        "Content-Type":
-                            "application/json"
+                        "Content-Type": "application/json",
+						...getAuthHeaders()
                     },
 
                     body:
@@ -802,7 +810,10 @@ async function loadPerformanceCart() {
 
         const response =
             await fetch(
-                "/api/cart/performances"
+                "/api/cart/performances",
+				{
+					headers: getAuthHeaders()
+				}
             );
 
 
@@ -981,7 +992,7 @@ function createPerformanceButton(item) {
                     )
                 "
             >
-                예매하기
+                상세보기
             </button>
         `;
     }
@@ -1007,16 +1018,9 @@ function createPerformanceButton(item) {
 }
 
 
-function moveToPerformance(
-    performanceId,
-    scheduleId
-) {
+function moveToPerformance(performanceId, scheduleId) {
 
-    location.href =
-        "/performances/"
-        + performanceId
-        + "?scheduleId="
-        + scheduleId;
+    location.href =	"/detail.html?id=" + encodeURIComponent(performanceId);
 }
 
 
@@ -1028,10 +1032,10 @@ async function deletePerformanceCartItem(
 
         const response =
             await fetch(
-                "/api/cart/performances/"
-                + itemId,
+                "/api/cart/performances/" + itemId,
                 {
-                    method: "DELETE"
+                    method: "DELETE",
+					headers: getAuthHeaders()
                 }
             );
 
@@ -1076,7 +1080,8 @@ async function deleteAllPerformanceItems() {
             await fetch(
                 "/api/cart/performances",
                 {
-                    method: "DELETE"
+                    method: "DELETE",
+					headers: getAuthHeaders()
                 }
             );
 
@@ -1158,4 +1163,21 @@ function formatDateTime(dateTime) {
         `${year}.${month}.${day} `
         + `${hour}:${minute}`
     );
+}
+
+function getAuthHeaders() {
+
+    const token =
+        localStorage.getItem("token");
+
+    if (!token) {
+        throw new Error(
+            "로그인이 필요합니다."
+        );
+    }
+
+    return {
+        "Authorization":
+            `Bearer ${token}`
+    };
 }

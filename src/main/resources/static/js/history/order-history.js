@@ -1,6 +1,12 @@
 window.onload = function() {
-    loadBookHistory();
-    loadPerformanceHistory();
+	const token = localStorage.getItem("token");
+	if (!token) {
+		alert("로그인이 필요합니다.");
+		location.href = "/login.html";
+		return;
+	}
+	loadBookHistory();
+	loadPerformanceHistory();
 };
 
 
@@ -26,7 +32,13 @@ async function loadBookHistory() {
     const box = document.getElementById("bookHistory");
 
     try {
-        const response = await fetch("/api/history/books");
+        const response = 		
+			await fetch(
+		        "/api/history/books",
+		        {
+		            headers: getAuthHeaders()
+		        }
+		    );
 
         if (!response.ok) {
             throw new Error("도서 구매내역 조회에 실패했습니다.");
@@ -92,6 +104,12 @@ function createBookHistory(history) {
 	            </div>
 	
 	            <div class="history-actions">
+					<button
+				        type="button"
+				        class="detail-button"
+				        onclick="moveToDetail('book', '${history.orderNumber}')">
+				        상세보기
+				    </button>
 	                ${refundButton}
 	            </div>
 			</div>
@@ -150,7 +168,13 @@ async function loadPerformanceHistory() {
     const box = document.getElementById("ticketHistory");
 
     try {
-        const response = await fetch("/api/history/performances");
+        const response = 
+			await fetch(
+			     "/api/history/performances",
+			     {
+			         headers: getAuthHeaders()
+			     }
+			 );
 
         if (!response.ok) {
             throw new Error("티켓 구매내역 조회에 실패했습니다.");
@@ -240,6 +264,13 @@ function createPerformanceHistory(history) {
                 </div>
 
                 <div class="history-actions">
+					<button
+				        type="button"
+				        class="detail-button"
+				        onclick="moveToDetail('performance', '${history.reservationNumber}')">
+				        상세보기
+				    </button>
+				
                     ${refundButton}
                 </div>
 
@@ -364,7 +395,8 @@ async function requestRefund(orderNumber) {
             {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+					...getAuthHeaders()
                 },
                 body: JSON.stringify({
                     reason: trimmedReason
@@ -412,4 +444,21 @@ function formatDateTime(dateTime) {
     const minute = String(date.getMinutes()).padStart(2, "0");
 
     return `${year}-${month}-${day} ${hour}:${minute}`;
+}
+
+function moveToDetail(type, id) {
+    location.href = "/history/detail?type=" + encodeURIComponent(type) + "&id=" + encodeURIComponent(id);
+}
+
+function getAuthHeaders() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        throw new Error("로그인이 필요합니다.");
+    }
+
+    return {
+        "Authorization": `Bearer ${token}`
+    };
 }

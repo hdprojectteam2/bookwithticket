@@ -27,6 +27,7 @@ async function confirmPayment() {
 
         headers: {
           "Content-Type": "application/json",
+		  ...getAuthHeaders()
         },
 
         body: JSON.stringify({
@@ -68,3 +69,18 @@ async function confirmPayment() {
 }
 
 confirmPayment();
+
+function getAuthHeaders() {
+
+    const token =
+        localStorage.getItem("token");
+
+    if (!token) {
+        throw new Error("로그인이 필요합니다.");
+    }
+
+    return {
+        "Authorization":
+            `Bearer ${token}`
+    };
+}

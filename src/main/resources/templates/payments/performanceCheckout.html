@@ -1,53 +1,66 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="utf-8" />
 
     <script src="https://js.tosspayments.com/v2/standard"></script>
     <script src="/js/payments/checkout.js" defer></script>
 
-    <link rel="stylesheet" href="/css/payments/payment.css">
+    <link
+        rel="stylesheet"
+        href="/css/payments/payment.css"
+    >
 </head>
 
 <body>
 
     <h1>결제하기</h1>
 
+
+    <!--
+        페이지 진입 시 전달받은 예매 ID만 저장
+        예: 1
+    -->
     <div
         id="payment-data"
-        th:data-order-number="${paymentOrderId}"
-        th:data-order-name="${orderName}"
-        th:data-total-price="${reservation.totalPrice}"
-        th:data-client-key="${tossClientKey}">
+        th:data-order-number="${orderNumber}">
     </div>
+
 
     <div>
         주문번호:
-        <span th:text="${paymentOrderId}"></span>
+        <span id="order-number"></span>
     </div>
+
 
     <div>
         주문상품:
-        <span th:text="${orderName}"></span>
+        <span id="order-name"></span>
     </div>
+
 
     <div>
         좌석:
-        <span th:text="${reservation.seat.seatNumber}"></span>
+        <span id="seat-number"></span>
     </div>
+
 
     <div>
         결제금액:
-        <span th:text="${reservation.totalPrice}"></span>원
+        <span id="total-price"></span>원
     </div>
+
 
     <button
         class="button"
         id="payment-button"
+        type="button"
         style="margin-top: 30px"
         disabled>
         결제하기
     </button>
 
 </body>
+
 </html>
