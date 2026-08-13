@@ -1,12 +1,12 @@
 window.onload = function() {
-	const token = localStorage.getItem("token");
-	if (!token) {
-		alert("로그인이 필요합니다.");
-		location.href = "/login.html";
-		return;
-	}
-	
-	loadBookCart();
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("로그인이 필요합니다.");
+        location.href = "/login.html";
+        return;
+    }
+
+    loadBookCart();
     loadPerformanceCart();
 
     const openPerformanceCart = localStorage.getItem("openPerformanceCart");
@@ -37,9 +37,9 @@ async function loadBookCart() {
 
     try {
         const response =
-            await fetch("/api/cart",{
-				headers: getAuthHeaders()
-			});
+            await fetch("/api/cart", {
+                headers: getAuthHeaders()
+            });
 
         if (!response.ok) {
             throw new Error(
@@ -50,15 +50,23 @@ async function loadBookCart() {
         const items =
             await response.json();
 
-        if (items.length === 0) {
-            box.innerHTML = `
-                <div class="empty-cart">
-                    장바구니가 비어있습니다.
-                </div>
-            `;
+			if (items.length === 0) {
+				box.innerHTML = `
+					<section class="cart-panel">
+						<div class="cart-header">
+							<div class="cart-title">
+						    	도서 장바구니
+						        <span>(0개)</span>
+						    </div>
+						</div>
+						<div class="empty-cart">
+							공연 장바구니가 비어있습니다.
+						</div>
+					</section>
+					`;
 
-            return;
-        }
+			    return;
+			}
 
         box.innerHTML = `
             <div class="cart-layout">
@@ -616,13 +624,13 @@ async function updateQuantity(input) {
 
         const response =
             await fetch(
-                "/api/cart/items/"+ cartItemId,
+                "/api/cart/items/" + cartItemId,
                 {
                     method: "PATCH",
 
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
-						...getAuthHeaders()
+                        ...getAuthHeaders()
                     },
 
                     body: params
@@ -663,7 +671,7 @@ async function deleteCartItem(cartItemId) {
                 "/api/cart/items/" + cartItemId,
                 {
                     method: "DELETE",
-					headers: getAuthHeaders()
+                    headers: getAuthHeaders()
                 }
             );
 
@@ -702,7 +710,7 @@ async function deleteAllItems() {
                 "/api/cart/items",
                 {
                     method: "DELETE",
-					headers: getAuthHeaders()
+                    headers: getAuthHeaders()
                 }
             );
 
@@ -762,7 +770,7 @@ async function orderDelivery() {
 
                     headers: {
                         "Content-Type": "application/json",
-						...getAuthHeaders()
+                        ...getAuthHeaders()
                     },
 
                     body:
@@ -811,9 +819,9 @@ async function loadPerformanceCart() {
         const response =
             await fetch(
                 "/api/cart/performances",
-				{
-					headers: getAuthHeaders()
-				}
+                {
+                    headers: getAuthHeaders()
+                }
             );
 
 
@@ -826,20 +834,27 @@ async function loadPerformanceCart() {
         const items = await response.json();
 
 
-        if (items.length === 0) {
+		if (items.length === 0) {
+		    box.innerHTML = `
+		        <section class="cart-panel">
+		            <div class="cart-header">
+		                <div class="cart-title">
+		                    티켓 장바구니
+		                    <span>(0개)</span>
+		                </div>
+		            </div>
+		            <div class="empty-cart">
+		                공연 장바구니가 비어있습니다.
+		            </div>
+		        </section>
+		    `;
 
-            box.innerHTML = `
-                <div class="empty-cart">
-                    공연 장바구니가 비어있습니다.
-                </div>
-            `;
-
-            return;
-        }
+		    return;
+		}
 
 
         box.innerHTML = `
-            <section class="cart-panel">
+            <section class="cart-box">
 
                 <div class="cart-header">
 
@@ -1020,7 +1035,7 @@ function createPerformanceButton(item) {
 
 function moveToPerformance(performanceId, scheduleId) {
 
-    location.href =	"/detail.html?id=" + encodeURIComponent(performanceId);
+    location.href = "/detail.html?id=" + encodeURIComponent(performanceId);
 }
 
 
@@ -1035,7 +1050,7 @@ async function deletePerformanceCartItem(
                 "/api/cart/performances/" + itemId,
                 {
                     method: "DELETE",
-					headers: getAuthHeaders()
+                    headers: getAuthHeaders()
                 }
             );
 
@@ -1081,7 +1096,7 @@ async function deleteAllPerformanceItems() {
                 "/api/cart/performances",
                 {
                     method: "DELETE",
-					headers: getAuthHeaders()
+                    headers: getAuthHeaders()
                 }
             );
 
