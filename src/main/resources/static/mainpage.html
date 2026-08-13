@@ -355,13 +355,13 @@
         });
     }
 
-    function parseJwtEmail(token) {
+    function parseJwtToken(token) {
         try {
             if (!token) return null;
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const payload = JSON.parse(atob(base64));
-            return payload.sub || payload.email || null;
+            return payload;
         } catch (e) {
             return null;
         }
@@ -373,9 +373,17 @@
         if (!authLinks) return;
 
         if (token && token !== 'undefined') {
-            const userEmail = parseJwtEmail(token);
+            const payload = parseJwtToken(token);
+            const userEmail = payload ? (payload.sub || payload.email || '') : '';
+            const role = payload ? (payload.role || '') : '';
             const userDisplay = userEmail ? `<span style="font-weight:bold; color:#2c3e50; margin-right:8px;">${userEmail} 님</span>` : '';
-            authLinks.innerHTML = `${userDisplay}<a href="#" onclick="logout(); return false;">로그아웃</a>`;
+            
+            let adminLinks = '';
+            if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+                adminLinks = ` <span>|</span> <a href="/admin.html" style="color:#8e44ad; font-weight:bold;">도서 관리자</a> <span>|</span> <a href="/admin/orders" style="color:#27ae60; font-weight:bold;">주문/배송 관리자</a>`;
+            }
+
+            authLinks.innerHTML = `${userDisplay}<a href="#" onclick="logout(); return false;">로그아웃</a>${adminLinks}`;
         } else {
             authLinks.innerHTML = `<a href="/login.html">로그인</a> <span>|</span> <a href="/signup.html">회원가입</a>`;
         }

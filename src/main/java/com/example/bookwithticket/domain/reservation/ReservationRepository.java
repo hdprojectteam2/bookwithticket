@@ -4,9 +4,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
-    List<Reservation> findByMemberIdOrderByIdDesc(Long memberId);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.schedule s JOIN FETCH s.performance JOIN FETCH r.seat WHERE r.memberId = :memberId ORDER BY r.id DESC")
+    List<Reservation> findByMemberIdOrderByIdDesc(@Param("memberId") Long memberId);
     Optional<Reservation> findByIdAndMemberId(Long id, Long memberId);
     Optional<Reservation> findByScheduleIdAndSeatIdAndStatus(Long scheduleId, Long seatId, ReservationStatus status);
     Optional<Reservation> findFirstByScheduleIdAndSeatIdAndStatusOrderByIdDesc(Long scheduleId, Long seatId, ReservationStatus status);

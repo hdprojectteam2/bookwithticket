@@ -64,8 +64,8 @@ public class SecurityConfig {
                         .requestMatchers("/members/**")
                         .authenticated()
 
-                        .requestMatchers("/admin.html", "/js/admin.js")
-                        .hasRole("ADMIN")
+                        .requestMatchers("/admin.html", "/js/admin.js").permitAll()
+
 
                         // dev의 다른 팀 기능 정책은 현재처럼 유지
                         .anyRequest()
