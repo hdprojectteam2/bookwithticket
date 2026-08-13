@@ -319,7 +319,7 @@ function loadFavoriteBooks(){
                      width="100">
 
 
-                <h4>
+                <h4 onclick="goBook(${book.id})">
                     ${book.title}
                 </h4>
 

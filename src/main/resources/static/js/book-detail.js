@@ -42,16 +42,26 @@ window.onload = function(){
 
 function loadBook(){
 
+    const token =
+        localStorage.getItem("token");
+
+    const headers = {};
+
+    if(token){
+        headers["Authorization"] =
+            "Bearer " + token;
+    }
 
     fetch(
-        "/books/" + id
+        "/books/" + id,
+        {
+            headers: headers
+        }
     )
-
 
         .then(response =>
             response.json()
         )
-
 
         .then(book=>{
 
@@ -132,8 +142,6 @@ function favorite(){
     const token =
         localStorage.getItem("token");
 
-
-
     if(!token){
 
 
@@ -141,6 +149,7 @@ function favorite(){
             "로그인이 필요합니다."
         );
 
+        location.href = "/login.html";
 
         return;
 
