@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>관리자 주문 관리</title>
+<script src="/js/order/admin-order.js" defer></script>
+<link rel="stylesheet" href="/css/order/admin-order.css">
+</head>
+<body>
+	<h1>관리자 주문 관리</h1>
+
+	<div class="admin-tabs">
+		<button type="button" id="book-tab" class="admin-tab active" onclick="changeAdminTab('book')">
+			도서 주문</button>
+
+		<button type="button" id="performance-tab" class="admin-tab"
+			onclick="changeAdminTab('performance')"
+		>공연 예매</button>
+	</div>
+
+	<section id="book-order-section">
+		<table>
+			<thead>
+				<tr>
+					<th>주문번호</th>
+					<th>주문일</th>
+					<th>구매자(회원번호)</th>
+					<th>결제금액</th>
+					<th>배송상태</th>
+					<th>환불상태</th>
+					<th>관리</th>
+				</tr>
+			</thead>
+
+			<tbody id="order-list">
+				<tr>
+					<td colspan="7">판매 내역을 불러오는 중입니다.</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
+
+	<section id="performance-order-section" style="display: none;">
+
+		<table>
+			<thead>
+				<tr>
+					<th>예매번호</th>
+					<th>예매일</th>
+					<th>예매자(회원번호)</th>
+					<th>공연명</th>
+					<th>공연일시</th>
+					<th>좌석</th>
+					<th>결제금액</th>
+					<th>예매상태</th>
+				</tr>
+			</thead>
+
+			<tbody id="performance-order-list">
+			</tbody>
+		</table>
+
+	</section>
+</body>
+<html>

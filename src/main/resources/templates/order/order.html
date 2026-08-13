@@ -1,44 +1,120 @@
 <!DOCTYPE html>
 <html lang="ko">
-<html>
 <head>
 <meta charset="UTF-8">
 <title>주문자 정보 입력</title>
 <script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="/js/kakao/kakao-address.js" defer></script>
 <script src="/js/order/order.js" defer></script>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/order/order.css">
 </head>
 <body>
-	<h1>배송지 입력@@</h1>
+	<div class="order-page">
 
-	<span>배송지 정보</span>
+		<section class="order-left card">
 
-	<div>주문자 정보</div>
-	<input type="text" id="recipient" placeholder="이름을 입력해주세요.">
-	<input type="text" id="phone" placeholder="휴대전화번호를 -없이 입력해 주세요.">
-	<hr>
-	<div>배송지 정보</div>
-	<input type="text" id="zipcode" readonly placeholder="우편번호">
-	<input type="button" onclick="execDaumPostcode()" value="우편번호 찾기">
-	<br>
-	<input type="text" id="address" readonly placeholder="주소">
-	<br>
-	<input type="text" id="detailAddress" placeholder="상세주소">
-	<input type="text" id="deliveryRequest" placeholder="배송 요청사항">
-	<hr>
-	<div>주문내역</div>
-	<div th:unless="${#lists.isEmpty(order.orderItems)}">
-		<div th:each="item : ${order.orderItems}">
-			<span th:text="${item.bookTitle}"></span> <span> x</span> <span
-				th:text="${item.quantity}"></span> <span
-				th:text="${item.totalPrice}+'원'"></span>
-		</div>
+			<div class="section-header">
+
+				<h1>도서 주문</h1>
+
+			</div>
+
+			<div class="divider"></div>
+
+			<section class="content-block">
+
+				<h2 class="block-title">배송지 정보</h2>
+
+				<div class="form-group">
+
+					<label for="recipient"> 주문자 정보 </label> <input type="text" id="recipient"
+						placeholder="이름을 입력해주세요."
+					>
+
+				</div>
+
+				<div class="form-group">
+
+					<label for="phone"> 휴대전화번호 </label> <input type="text" id="phone" placeholder="휴대전화번호를 입력해주세요.">
+
+				</div>
+
+				<div class="form-group">
+
+					<label for="zipcode"> 우편번호 </label>
+
+					<div class="postcode-row">
+
+						<input type="text" id="zipcode" readonly placeholder="우편번호">
+
+						<button type="button" class="outline-btn" onclick="execDaumPostcode()">우편번호 찾기</button>
+
+					</div>
+
+				</div>
+
+				<div class="form-group">
+
+					<label for="address"> 주소 </label> <input type="text" id="address" readonly placeholder="주소">
+
+				</div>
+
+				<div class="form-group">
+
+					<label for="detailAddress"> 상세주소 </label> <input type="text" id="detailAddress"
+						placeholder="상세주소를 입력해주세요."
+					>
+
+				</div>
+
+				<div class="form-group">
+
+					<label for="deliveryRequest"> 배송 요청사항 </label> <input type="text" id="deliveryRequest"
+						placeholder="배송 요청사항을 입력해주세요."
+					>
+
+				</div>
+
+			</section>
+
+			<div class="divider"></div>
+
+		</section>
+
+		<aside class="order-right card">
+
+			<h2 class="summary-title">도서 주문 요약</h2>
+
+			<div class="summary-row">
+
+				<span> 선택 수량 </span> <strong id="summary-quantity"> 0개 </strong>
+
+			</div>
+
+			<div class="summary-row">
+
+				<span> 상품 금액 </span> <strong id="summary-product-price"> 0원 </strong>
+
+			</div>
+
+			<div class="divider"></div>
+
+			<div class="summary-total">
+
+				<span> 최종 결제 금액 </span> <strong id="summary-total-price"> 0원 </strong>
+
+			</div>
+
+			<button type="button" class="primary-btn" id="payment-button" onclick="submitOrder()">
+				결제하기</button>
+
+			<div class="divider"></div>
+
+			<p class="summary-notice">입력한 배송지 정보로 주문이 진행됩니다.</p>
+
+		</aside>
+
 	</div>
-
-
-	<div>
-		최종 결제 금액 : <span th:text="${order.totalPrice}"></span>원
-	</div>
-	<button onclick="submitOrder()">결제하기</button>
 </body>
 </html>

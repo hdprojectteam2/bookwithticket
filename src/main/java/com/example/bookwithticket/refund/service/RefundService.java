@@ -1,5 +1,7 @@
 package com.example.bookwithticket.refund.service;
 
+import java.util.List;
+
 import com.example.bookwithticket.refund.dto.RefundResponse;
 
 public interface RefundService {
@@ -10,4 +12,5 @@ public interface RefundService {
 	RefundResponse rejectBookRefund(Long adminId, Long refundId);
 	
 	RefundResponse requestPerformanceRefund(Long memberId, String reservationNumber, String reason);
+	
 }

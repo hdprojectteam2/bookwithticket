@@ -1,7 +1,5 @@
 package com.example.bookwithticket.refund.service;
 
-import java.time.LocalDateTime;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +7,7 @@ import com.example.bookwithticket.book.repository.BookStockRepository;
 import com.example.bookwithticket.domain.reservation.Reservation;
 import com.example.bookwithticket.domain.reservation.ReservationRepository;
 import com.example.bookwithticket.domain.reservation.ReservationService;
+import com.example.bookwithticket.domain.reservation.ReservationStatus;
 import com.example.bookwithticket.order.entity.BookOrderEntity;
 import com.example.bookwithticket.order.entity.BookOrderItemEntity;
 import com.example.bookwithticket.order.entity.OrderStatus;
@@ -21,7 +20,6 @@ import com.example.bookwithticket.refund.dto.RefundResponse;
 import com.example.bookwithticket.refund.entity.RefundEntity;
 import com.example.bookwithticket.refund.entity.RefundStatus;
 import com.example.bookwithticket.refund.repository.RefundRepository;
-import com.example.bookwithticket.domain.reservation.ReservationStatus;
 
 @Service
 @Transactional
@@ -76,8 +74,12 @@ public class RefundServiceImpl implements RefundService {
 
 	@Override
 	public RefundResponse approveBookRefund(Long adminId, Long refundId) {
-		RefundEntity refund = refundRepository.findByIdAndStatus(refundId, RefundStatus.REQUESTED)
+		RefundEntity refund = refundRepository.findById(refundId)
 				.orElseThrow(() -> new IllegalArgumentException("환불 요청이 없습니다."));
+
+		if (refund.getStatus() != RefundStatus.REQUESTED && refund.getStatus() != RefundStatus.REJECTED) {
+			throw new IllegalArgumentException("승인할 수 없는 환불 상태입니다.");
+		}
 
 		PaymentEntity payment = refund.getPayment();
 		BookOrderEntity order = payment.getBookOrder();
@@ -136,16 +138,7 @@ public class RefundServiceImpl implements RefundService {
 
 		validateReason(reason);
 
-		Long reservationId;
-
-		try {
-
-			reservationId = Long.parseLong(reservationNumber);
-
-		} catch (NumberFormatException e) {
-
-			throw new IllegalArgumentException("올바르지 않은 예매 ID입니다.");
-		}
+		Long reservationId = parsePerformanceReservationId(reservationNumber);
 
 		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
 				.orElseThrow(() -> new IllegalArgumentException("환불할 수 있는 예매가 없습니다."));
@@ -179,16 +172,23 @@ public class RefundServiceImpl implements RefundService {
 		return new RefundResponse(refund.getId(), refund.getStatus().name(), "환불이 완료되었습니다.");
 	}
 
-	private Long parseReservationId(String reservationNumber) {
+	private Long parsePerformanceReservationId(String reservationNumber) {
 
-		if (reservationNumber == null || !reservationNumber.startsWith("R")) {
+		if (reservationNumber == null || reservationNumber.isBlank()) {
 
 			throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
 		}
 
+		String reservationId = reservationNumber;
+
+		if (reservationNumber.startsWith("PERF_")) {
+
+			reservationId = reservationNumber.substring("PERF_".length());
+		}
+
 		try {
 
-			return Long.parseLong(reservationNumber.substring(1));
+			return Long.parseLong(reservationId);
 
 		} catch (NumberFormatException e) {
 

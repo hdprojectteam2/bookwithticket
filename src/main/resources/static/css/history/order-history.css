@@ -84,6 +84,12 @@
     color: #e54848;
 }
 
+.history-actions{
+	display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 .history-bottom {
     display: flex;
     justify-content: space-between;

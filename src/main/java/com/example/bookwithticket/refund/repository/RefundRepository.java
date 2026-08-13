@@ -1,5 +1,6 @@
 package com.example.bookwithticket.refund.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,5 @@ public interface RefundRepository extends JpaRepository<RefundEntity, Long> {
 	Optional<RefundEntity> findByIdAndStatus(Long refundId, RefundStatus status);
 	
     Optional<RefundEntity> findByPaymentId(Long paymentId);
+    
 }

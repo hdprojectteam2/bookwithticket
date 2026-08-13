@@ -5,6 +5,8 @@ import java.util.List;
 import com.example.bookwithticket.history.dto.BookOrderHistoryDto;
 
 public interface BookOrderHistoryService {
-	
+
 	List<BookOrderHistoryDto> findOrderHistory(Long memberId);
+
+	BookOrderHistoryDto findOrderHistoryDetail(Long memberId, String orderNumber);
 }
