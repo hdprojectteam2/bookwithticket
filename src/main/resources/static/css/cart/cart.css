@@ -7,11 +7,13 @@
 	padding: 30px;
 }
 
-.cart-box {
+.cart-left {
+	flex: 1;
 	background-color: white;
 	border: 1px solid #e5e7eb;
 	border-radius: 12px;
 	overflow: hidden;
+	min-width: 600px;
 }
 
 .cart-header {
@@ -76,9 +78,11 @@
 .cart-item {
 	display: flex;
 	align-items: center;
-	gap: 20px;
-	min-height: 150px;
+	gap: 25px;
 	padding: 25px 28px;
+	background-color: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
 }
 
 .cart-item.unavailable {
@@ -286,7 +290,9 @@
 	align-items: center;
 	gap: 25px;
 	padding: 25px 28px;
-	border-bottom: 1px solid #edf0f5;
+	background-color: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
 }
 
 .performance-cart-item:last-child {

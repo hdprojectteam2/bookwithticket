@@ -15,6 +15,9 @@ window.onload = async function() {
         console.error("주문 정보 조회 오류:", error);
 
         alert(error.message);
+		
+		location.replace("/cart");
+		return;
     }
 };
 
@@ -183,10 +186,9 @@ async function submitOrder() {
 
 
 
-async function cancelBookOrder(orderNumbe) {
+async function cancelBookOrder(orderNumber) {
 
     if (!orderNumber) {
-
         throw new Error(
             "주문번호를 확인할 수 없습니다."
         );
