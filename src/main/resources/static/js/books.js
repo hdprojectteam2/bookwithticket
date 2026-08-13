@@ -200,47 +200,35 @@ function createCard(book){
 
 function searchBook(){
 
-
     const keyword =
         document.getElementById(
             "searchInput"
         ).value;
 
-
-
     fetch(
-        "/books/search?keyword="
-        + keyword
+        "/books?keyword="
+        + encodeURIComponent(keyword)
     )
 
+        .then(response => response.json())
 
-        .then(response=>response.json())
-
-
-        .then(data=>{
-
+        .then(data => {
 
             const box =
                 document.getElementById(
                     "allBooks"
                 );
 
+            box.innerHTML = "";
 
-            box.innerHTML="";
+            data.content.forEach(book => {
 
-
-            data.forEach(book=>{
-
-
-                box.innerHTML += createCard(book);
-
+                box.innerHTML +=
+                    createCard(book);
 
             });
 
-
         });
-
-
 }
 
 
@@ -360,40 +348,30 @@ function selectKeyword(title){
 
 function loadCategory(category){
 
-
     fetch(
-        "/books/category/"
-        + category
+        "/books?category="
+        + encodeURIComponent(category)
     )
 
+        .then(response => response.json())
 
-        .then(response=>response.json())
-
-
-        .then(data=>{
-
+        .then(data => {
 
             const box =
                 document.getElementById(
                     "allBooks"
                 );
 
+            box.innerHTML = "";
 
-            box.innerHTML="";
+            data.content.forEach(book => {
 
-
-            data.forEach(book=>{
-
-
-                box.innerHTML += createCard(book);
-
+                box.innerHTML +=
+                    createCard(book);
 
             });
 
-
         });
-
-
 }
 
 
