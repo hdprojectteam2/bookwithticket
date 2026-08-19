@@ -736,14 +736,19 @@ async function deleteAllItems() {
 }
 
 
-async function orderDelivery() {
+function orderDelivery() {
 
-    const checkedItems = document.querySelectorAll("#bookCart .item-checkbox:checked:not(:disabled)");
+    const checkedItems =
+        document.querySelectorAll(
+            ".item-checkbox:checked:not(:disabled)"
+        );
 
 
     if (checkedItems.length === 0) {
 
-        alert("주문할 상품을 선택해주세요.");
+        alert(
+            "주문할 상품을 선택해주세요."
+        );
 
         return;
     }
@@ -754,58 +759,20 @@ async function orderDelivery() {
             checkedItems
         ).map(
             checkbox =>
-                Number(
-                    checkbox.value
-                )
+                Number(checkbox.value)
         );
 
 
-    try {
-
-        const response =
-            await fetch(
-                "/api/orders/prepare",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...getAuthHeaders()
-                    },
-
-                    body:
-                        JSON.stringify({
-                            cartItemIds:
-                                cartItemIds
-                        })
-                }
-            );
+    sessionStorage.setItem(
+        "orderCartItemIds",
+        JSON.stringify(
+            cartItemIds
+        )
+    );
 
 
-        if (!response.ok) {
-
-            const message = await response.text();
-
-            throw new Error(message || "주문 준비에 실패했습니다.");
-        }
-
-
-        const order = await response.json();
-
-
-        location.href =
-            "/order?orderNumber="
-            + encodeURIComponent(
-                order.orderNumber
-            );
-
-
-    } catch (error) {
-
-        console.error("주문 준비 오류:", error);
-
-        alert(error.message);
-    }
+    location.href =
+        "/order";
 }
 
 

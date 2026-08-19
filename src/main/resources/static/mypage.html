@@ -8,7 +8,7 @@
     <title>마이페이지</title>
 
     <link rel="stylesheet" href="/css/style.css">
-
+	<link rel="stylesheet" href="/css/history/order-history.css">
 </head>
 
 
@@ -116,6 +116,19 @@
 
 
     </section>
+    
+    <!-- 도서 구매 내역 -->
+	<section class="member-box" style="margin-top:20px;">
+	
+	    <h3>나의 도서 구매 내역</h3>
+	
+	    <div id="myBookHistory">
+	        <p style="color:#7f8c8d;">
+	            구매 내역을 불러오는 중입니다...
+	        </p>
+	    </div>
+	
+	</section>
 
 
     <!-- 공연 예매 내역 섹션 (최하단 추가) -->
@@ -135,6 +148,7 @@
 
 
 <script src="/js/member.js"></script>
+<script src="/js/history/mypage-book-history.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     loadMyPerformanceReservations();
