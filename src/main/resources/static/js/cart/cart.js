@@ -25,9 +25,17 @@ function cartTab(tabId) {
 
     const ticketCart = document.getElementById("ticketCart");
 
+    const bookCartTab = document.getElementById("bookTab");
+
+    const ticketTab = document.getElementById("ticketTab");
+
     bookCart.hidden = tabId !== "bookCart";
 
     ticketCart.hidden = tabId !== "ticketCart";
+
+    bookTab.classList.toggle("active", tabId === "bookCart");
+
+    ticketTab.classList.toggle("active", tabId === "ticketCart");
 }
 
 
@@ -50,8 +58,8 @@ async function loadBookCart() {
         const items =
             await response.json();
 
-			if (items.length === 0) {
-				box.innerHTML = `
+        if (items.length === 0) {
+            box.innerHTML = `
 					<section class="cart-panel">
 						<div class="cart-header">
 							<div class="cart-title">
@@ -65,8 +73,8 @@ async function loadBookCart() {
 					</section>
 					`;
 
-			    return;
-			}
+            return;
+        }
 
         box.innerHTML = `
             <div class="cart-layout">
@@ -173,12 +181,16 @@ function createBookCartItem(item) {
                 class="cart-book-image"
                 src="${item.thumbnail}"
                 alt="${item.bookTitle}"
+				onclick="goBookDetail(${item.bookId})"
             >
 
 
             <div class="cart-item-info">
 
-                <h3 class="cart-book-title">
+                <h3 
+					class="cart-book-title"
+					onclick="goBookDetail(${item.bookId})"
+				>
                     ${item.bookTitle}
                 </h3>
 
@@ -801,8 +813,8 @@ async function loadPerformanceCart() {
         const items = await response.json();
 
 
-		if (items.length === 0) {
-		    box.innerHTML = `
+        if (items.length === 0) {
+            box.innerHTML = `
 		        <section class="cart-panel">
 		            <div class="cart-header">
 		                <div class="cart-title">
@@ -816,8 +828,8 @@ async function loadPerformanceCart() {
 		        </section>
 		    `;
 
-		    return;
-		}
+            return;
+        }
 
 
         box.innerHTML = `
@@ -1162,4 +1174,12 @@ function getAuthHeaders() {
         "Authorization":
             `Bearer ${token}`
     };
+}
+
+function goBookDetail(bookId) {
+    location.href = `/book-detail.html?id=${encodeURIComponent(bookId)}`;
+}
+
+function back() {
+    window.history.back();
 }

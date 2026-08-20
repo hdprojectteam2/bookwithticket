@@ -526,3 +526,7 @@ async function fillMemberInfo() {
 		alert(error.message);
 	}
 }
+
+function back() {
+    window.history.back();
+}

@@ -98,27 +98,9 @@ function renderBookDetail(order) {
 
             : "";
 
-
-    const refundButton = order.orderStatusCode === "PAID" && order.refundStatusCode == null
-
-            ? `
-                <button
-                    type="button"
-                    class="refund-button"
-                    onclick="requestRefund('${order.orderNumber}')"
-                >
-                    환불 신청
-                </button>
-            `
-
-            : "";
-
-
     const content = document.getElementById("detail-content");
 
-
     if (!content) {
-
         console.error("detail-content 요소를 찾을 수 없습니다.");
 
         return;
@@ -132,85 +114,100 @@ function renderBookDetail(order) {
             <h2>
                 주문 정보
             </h2>
-
-            <div class="detail-row">
-
-                <span>
-                    주문번호
-                </span>
-
-                <strong>
-                    ${order.orderNumber}
-                </strong>
-
-            </div>
-
-
-            <div class="detail-row">
-
-                <span>
-                    주문일시
-                </span>
-
-                <strong>
-                    ${
-                        order.orderedAt
-                            ? formatDateTime(
-                                order.orderedAt
-                            )
-                            : "-"
-                    }
-                </strong>
-
-            </div>
-
-
-            <div class="detail-row">
-
-                <span>
-                    배송 상태
-                </span>
-
-                <strong>
-                    ${order.deliveryStatus || "-"}
-                </strong>
-
-            </div>
 			
-			${
-			    order.trackingNumber
-
-			        ? `
-			            <div class="detail-row">
-
-			                <span>
-			                    택배사
-			                </span>
-
-			                <strong>
-			                    ${order.courier || "-"}
-			                </strong>
-
-			            </div>
-
-
-			            <div class="detail-row">
-
-			                <span>
-			                    송장번호
-			                </span>
-
-			                <strong>
-			                    ${order.trackingNumber}
-			                </strong>
-
-			            </div>
-			        `
-
-			        : ``
-			}					
-
-            ${refundStatus}
+			<div class="detail-item-list">
+			
+	            <div class="detail-row">
+	
+	                <span>
+	                    주문번호 : 
+	                </span>
+	
+	                <strong>
+	                    ${order.orderNumber}
+	                </strong>
+	
+	            </div>
+	
+	
+	            <div class="detail-row">
+	
+	                <span>
+	                    주문일시 : 
+	                </span>
+	
+	                <strong>
+	                    ${
+	                        order.orderedAt
+	                            ? formatDateTime(
+	                                order.orderedAt
+	                            )
+	                            : "-"
+	                    }
+	                </strong>
+	
+	            </div>
+	
+	
+	            <div class="detail-row">
+	
+	                <span>
+	                    배송 상태 : 
+	                </span>
+	
+	                <strong>
+	                    ${order.deliveryStatus || "-"}
+	                </strong>
+	
+	            </div>
+				
+				${
+				    order.trackingNumber
+	
+				        ? `
+				            <div class="detail-row">
+	
+				                <span>
+				                    택배사 : 
+				                </span>
+	
+				                <strong>
+				                    ${order.courier || "-"}
+				                </strong>
+	
+				            </div>
+	
+	
+				            <div class="detail-row">
+	
+				                <span>
+				                    송장번호 : 
+				                </span>
+	
+				                <strong>
+				                    ${order.trackingNumber}
+				                </strong>
+	
+				            </div>
+							
+							<button
+								type="button"
+							    class="tracking-button"
+							    onclick="openDeliveryTracking(
+							    	'${order.courier}',
+							        '${order.trackingNumber}'
+							 	)"
+							>
+							 	택배 조회
+							</button>
+				        `
+	
+				        : ``
+				}					
+	
+	            ${refundStatus}
+				
+			</div>
 
         </section>
 
@@ -236,26 +233,34 @@ function renderBookDetail(order) {
             </h2>
 
 
-            <div class="receiver-box">
+			<div class="receiver-box">
 
-                <strong class="receiver-name">
+			    <div class="detail-row">
+			        <span>받는 사람 : </span>
 
-                    ${order.receiverName || "-"}
+			        <strong>
+			            ${order.receiverName || "-"}
+			        </strong>
+			    </div>
 
-                </strong>
+			    <div class="detail-row">
+			        <span>연락처 : </span>
 
+			        <strong>
+			            ${order.receiverPhone || "-"}
+			        </strong>
+			    </div>
 
-                <p>
-                    ${order.receiverPhone || "-"}
-                </p>
+			    <div class="detail-row">
+			        <span>배송지 : </span>
 
+			        <strong>
+			            ${order.address || "-"}
+			        </strong>
+			    </div>
 
-                <p>
-                    ${order.address || "-"}
-                </p>
-
-            </div>
-
+			</div>
+			
         </section>
 
         <section class="detail-section">
@@ -271,7 +276,7 @@ function renderBookDetail(order) {
                 <div class="payment-total-row">
 
                     <span>
-                        주문금액
+                        주문금액 : 
                     </span>
 
                     <strong>
@@ -284,7 +289,7 @@ function renderBookDetail(order) {
                 <div class="detail-row">
 
                     <span>
-                        결제수단
+                        결제수단 : 
                     </span>
 
                     <strong>
@@ -301,7 +306,7 @@ function renderBookDetail(order) {
                 <div class="detail-row">
 
                     <span>
-                        결제금액
+                        결제금액 : 
                     </span>
 
                     <strong>
@@ -314,7 +319,7 @@ function renderBookDetail(order) {
                 <div class="detail-row">
 
                     <span>
-                        결제일시
+                        결제일시 : 
                     </span>
 
                     <strong>
@@ -333,11 +338,6 @@ function renderBookDetail(order) {
 
         </section>
 
-        <div class="detail-actions">
-
-            ${refundButton}
-
-        </div>
     `;
 }
 
@@ -356,45 +356,39 @@ function createBookDetailItem(item) {
             >
 
 
-            <div>
+			<div class="detail-book-info">
 
-                <h3>
-                    ${item.bookTitle || "-"}
-                </h3>
+			    <h3>
+			        ${item.bookTitle || "-"}
+			    </h3>
 
+			    <div class="book-meta">
+			        ${item.author || ""}
+			        ${
+			            item.author && item.publisher
+			                ? " · "
+			                : ""
+			        }
+			        ${item.publisher || ""}
+			    </div>
 
-                <p>
+			    <div class="book-info-row">
+			        <span>수량 : </span>
 
-                    ${item.author || ""}
+			        <strong>
+			            ${item.quantity}
+			        </strong>
+			    </div>
 
-                    ${
-                        item.author
-                        && item.publisher
+			    <div class="book-info-row">
+			        <span>상품 금액 : </span>
 
-                            ? " · "
+			        <strong>
+			            ${formatPrice(item.totalPrice)}원
+			        </strong>
+			    </div>
 
-                            : ""
-                    }
-
-                    ${item.publisher || ""}
-
-                </p>
-
-
-                <p>
-                    수량:
-                    ${item.quantity}
-                </p>
-
-
-                <p>
-                    상품 금액:
-                    ${formatPrice(
-                        item.totalPrice
-                    )}원
-                </p>
-
-            </div>
+			</div>
 
         </div>
     `;
@@ -461,20 +455,6 @@ function renderPerformanceDetail(reservation) {
             : "";
 
 
-    const refundButton = reservation.reservationStatusCode === "CONFIRMED" && reservation.refundStatusCode == null
-
-            ? `
-                <button
-                    type="button"
-                    class="refund-button"
-                    onclick="requestRefund('${reservation.reservationNumber}')"
-                >
-                    환불 신청
-                </button>
-            `
-
-            : "";
-
 
     const content = document.getElementById("detail-content");
 
@@ -497,7 +477,7 @@ function renderPerformanceDetail(reservation) {
             <div class="detail-row">
 
                 <span>
-                    예매번호
+                    예매번호 : 
                 </span>
 
                 <strong>
@@ -510,7 +490,7 @@ function renderPerformanceDetail(reservation) {
             <div class="detail-row">
 
                 <span>
-                    예매 상태
+                    예매 상태 : 
                 </span>
 
                 <strong>
@@ -541,48 +521,43 @@ function renderPerformanceDetail(reservation) {
                 >
 
 
-                <div>
+				<div class="detail-performance-info">
 
-                    <h3>
-                        ${reservation.performanceTitle || "-"}
-                    </h3>
+				    <h3>
+				        ${reservation.performanceTitle || "-"}
+				    </h3>
 
+				    <div class="detail-row">
+				        <span>공연장</span>
 
-                    <p>
+				        <strong>
+				            ${reservation.venue || "-"}
+				        </strong>
+				    </div>
 
-                        공연장:
+				    <div class="detail-row">
+				        <span>공연 일시</span>
 
-                        ${reservation.venue || "-"}
+				        <strong>
+				            ${
+				                reservation.performanceStartAt
+				                    ? formatDateTime(
+				                        reservation.performanceStartAt
+				                    )
+				                    : "-"
+				            }
+				        </strong>
+				    </div>
 
-                    </p>
+				    <div class="detail-row">
+				        <span>좌석</span>
 
+				        <strong>
+				            ${reservation.seatNumber || "-"}
+				        </strong>
+				    </div>
 
-                    <p>
-
-                        공연 일시:
-
-                        ${
-                            reservation.performanceStartAt
-
-                                ? formatDateTime(
-                                    reservation.performanceStartAt
-                                )
-
-                                : "-"
-                        }
-
-                    </p>
-
-
-                    <p>
-
-                        좌석:
-
-                        ${reservation.seatNumber || "-"}
-
-                    </p>
-
-                </div>
+				</div>
 
             </div>
 
@@ -601,7 +576,7 @@ function renderPerformanceDetail(reservation) {
                 <div class="payment-total-row">
 
                     <span>
-                        결제금액
+                        결제금액 : 
                     </span>
 
                     <strong>
@@ -616,7 +591,7 @@ function renderPerformanceDetail(reservation) {
                 <div class="detail-row">
 
                     <span>
-                        결제수단
+                        결제수단 : 
                     </span>
 
                     <strong>
@@ -633,7 +608,7 @@ function renderPerformanceDetail(reservation) {
                 <div class="detail-row">
 
                     <span>
-                        결제일시
+                        결제일시 : 
                     </span>
 
                     <strong>
@@ -656,11 +631,6 @@ function renderPerformanceDetail(reservation) {
 
         </section>
 
-        <div class="detail-actions">
-
-            ${refundButton}
-
-        </div>
     `;
 }
 
@@ -883,4 +853,22 @@ function getAuthHeaders() {
         "Authorization":
             `Bearer ${token}`
     };
+}
+
+function openDeliveryTracking(courier, trackingNumber) {
+
+    if (!courier) {
+        alert("택배사 정보가 없습니다.");
+        return;
+    }
+
+
+    if (!trackingNumber) {
+        alert("등록된 송장번호가 없습니다.");
+        return;
+    }
+
+    const url ="/delivery/tracking"+ `?courier=${encodeURIComponent(courier)}&invoice=${encodeURIComponent(trackingNumber)}`;
+
+	location.href = url;
 }
