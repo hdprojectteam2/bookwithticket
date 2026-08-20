@@ -1,6 +1,7 @@
 package com.example.bookwithticket.domain.reservation;
 
 import com.example.bookwithticket.global.common.ApiResponse;
+import com.example.bookwithticket.global.exception.BusinessException;
 import com.example.bookwithticket.member.entity.Member;
 import com.example.bookwithticket.member.repository.MemberRepository;
 import jakarta.validation.Valid;
@@ -62,9 +63,9 @@ public class ReservationController {
 
     private Member getMember(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
-            throw new IllegalArgumentException("로그인이 필요합니다.");
+            throw new BusinessException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
         return memberRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("회원 정보를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "회원 정보를 찾을 수 없습니다."));
     }
 }

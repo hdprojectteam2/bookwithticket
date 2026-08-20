@@ -241,8 +241,9 @@
     
     <div class="search-section">
         <div class="search-form">
-            <input type="text" id="searchInput" class="search-input" placeholder="통합 검색 (도서명 또는 공연 제목 입력) (기능 미연동)">
-            <button class="search-btn">검색</button>
+            <input type="text" id="searchInput" class="search-input" placeholder="통합 검색 (도서명 또는 공연 제목을 입력하세요)" onkeyup="if(event.key==='Enter') executeIntegratedSearch();">
+            <button class="search-btn" onclick="executeIntegratedSearch()">검색</button>
+            <button class="search-btn" style="background-color:#6c757d;" onclick="resetSearch()">전체보기</button>
         </div>
     </div>
 
@@ -267,14 +268,14 @@
     </div>
 
     <div class="section-block">
-        <div class="section-title">인기도서</div>
+        <div class="section-title" id="bookSectionTitle">인기도서</div>
         <div id="bookListGrid" class="content-grid">
             <p>도서 데이터를 불러오는 중입니다...</p>
         </div>
     </div>
 
     <div class="section-block">
-        <div class="section-title">인기공연</div>
+        <div class="section-title" id="perfSectionTitle">인기공연</div>
         <div id="perfListGrid" class="content-grid">
             <p>공연 데이터를 불러오는 중입니다...</p>
         </div>
@@ -283,12 +284,33 @@
 </div>
 
 <script>
-    async function loadStatsAndData() {
+    async function executeIntegratedSearch() {
+        const keyword = document.getElementById('searchInput').value.trim();
+        loadStatsAndData(keyword);
+    }
+
+    function resetSearch() {
+        document.getElementById('searchInput').value = '';
+        loadStatsAndData('');
+    }
+
+    async function loadStatsAndData(keyword = '') {
+        const bookTitleEl = document.getElementById('bookSectionTitle');
+        const perfTitleEl = document.getElementById('perfSectionTitle');
+        if (keyword) {
+            bookTitleEl.innerText = `도서 검색 결과 ('${keyword}')`;
+            perfTitleEl.innerText = `공연 검색 결과 ('${keyword}')`;
+        } else {
+            bookTitleEl.innerText = '인기도서';
+            perfTitleEl.innerText = '인기공연';
+        }
+
         try {
-            const res = await fetch('/books');
+            const bookUrl = keyword ? `/books?keyword=${encodeURIComponent(keyword)}` : '/books';
+            const res = await fetch(bookUrl);
             if (res.ok) {
                 const books = await res.json();
-                const bookList = Array.isArray(books) ? books : [];
+                const bookList = Array.isArray(books) ? books : (books && Array.isArray(books.content) ? books.content : []);
                 document.getElementById('bookCountVal').innerText = `${bookList.length} 권`;
                 renderBooks(bookList);
             } else {
@@ -299,7 +321,8 @@
         }
 
         try {
-            const res = await fetch('/api/performances');
+            const perfUrl = keyword ? `/api/performances?keyword=${encodeURIComponent(keyword)}` : '/api/performances';
+            const res = await fetch(perfUrl);
             const data = await res.json();
             if (res.ok && data && Array.isArray(data.data)) {
                 const perfs = data.data;
