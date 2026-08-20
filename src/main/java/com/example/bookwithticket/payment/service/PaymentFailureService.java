@@ -11,38 +11,35 @@ import com.example.bookwithticket.payment.repository.PaymentRepository;
 @Service
 public class PaymentFailureService {
 
-    private final PaymentRepository paymentRepository;
+	private final PaymentRepository paymentRepository;
 
-    public PaymentFailureService(PaymentRepository paymentRepository) {
-        this.paymentRepository = paymentRepository;
-    }
+	public PaymentFailureService(PaymentRepository paymentRepository) {
+		this.paymentRepository = paymentRepository;
+	}
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void saveFailure(
-            BookOrderEntity order,
-            String paymentKey,
-            String idempotencyKey,
-            int amount,
-            String failCode,
-            String failMessage
-    ) {
-        PaymentEntity failedPayment = PaymentEntity.failed(order, paymentKey, idempotencyKey, amount, failCode, failMessage);
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void saveFailure(BookOrderEntity order, String paymentKey, String idempotencyKey, int amount,
+			String failCode, String failMessage) {
+		PaymentEntity failedPayment = PaymentEntity.failed(order, paymentKey, idempotencyKey, amount, failCode,
+				failMessage);
 
-        paymentRepository.save(failedPayment);
-    }
-    
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void savePerformanceFailure(
-    		Long reservationId,
-    		String paymentKey,
-    		String idempotencyKey,
-    		int amount,
-    		String failCode,
-    		String failMessage
-    ) {
-    	PaymentEntity failedPayment = PaymentEntity.failedPerformance(reservationId, paymentKey, idempotencyKey, amount, failCode, failMessage);
-    	
-    	paymentRepository.save(failedPayment);
-    }
-    
+		paymentRepository.save(failedPayment);
+	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void savePerformanceFailure(Long reservationId, String paymentKey, String idempotencyKey, int amount,
+			String failCode, String failMessage) {
+		PaymentEntity failedPayment = PaymentEntity.failedPerformance(reservationId, paymentKey, idempotencyKey, amount,
+				failCode, failMessage);
+
+		paymentRepository.save(failedPayment);
+	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public void saveExpired(BookOrderEntity order) {
+
+		PaymentEntity expiredPayment = PaymentEntity.expired(order, order.getTotalPrice());
+
+		paymentRepository.save(expiredPayment);
+	}
 }
