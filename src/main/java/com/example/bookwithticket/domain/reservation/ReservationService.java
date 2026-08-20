@@ -106,14 +106,21 @@ public class ReservationService {
             Seat seat = seatRepository.findById(request.seatId())
                     .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "좌석을 찾을 수 없습니다."));
 
-            if (seat.getStatus() == SeatStatus.RESERVED) {
-                throw new BusinessException(HttpStatus.CONFLICT, "예매 완료된 좌석입니다.");
+            // 4-1. 회차와 좌석의 소속 회차 일치 검증
+            if (!seat.getSchedule().getId().equals(request.scheduleId())) {
+                throw new BusinessException(HttpStatus.BAD_REQUEST, "요청한 회차와 좌석의 소속 회차가 일치하지 않습니다.");
+            }
+
+            if (seat.getStatus() == SeatStatus.RESERVED || seat.getStatus() == SeatStatus.HELD) {
+                throw new BusinessException(HttpStatus.CONFLICT, "이미 선점 중이거나 예매 완료된 좌석입니다.");
             }
 
             // 5. DB 상태 변경 및 예약 생성
             seat.updateStatus(SeatStatus.HELD);
             Reservation reservation = new Reservation(memberId, schedule, seat, seat.getPrice(), 10);
-            return ReservationResponse.from(reservationRepository.save(reservation));
+            Reservation saved = reservationRepository.save(reservation);
+            com.example.bookwithticket.global.websocket.SeatWebSocketHandler.broadcastSeatUpdate(request.scheduleId(), request.seatId(), "HELD");
+            return ReservationResponse.from(saved);
         } catch (Exception e) {
             // DB 예외 시 락 해제
             redisTemplate.delete(redisKey);
@@ -132,6 +139,7 @@ public class ReservationService {
             reservation.getSeat().updateStatus(SeatStatus.AVAILABLE);
             //redis 키 삭제
             redisTemplate.delete("seat:hold:" + reservation.getSchedule().getId() + ":" + reservation.getSeat().getId());
+            com.example.bookwithticket.global.websocket.SeatWebSocketHandler.broadcastSeatUpdate(reservation.getSchedule().getId(), reservation.getSeat().getId(), "AVAILABLE");
             throw new BusinessException(HttpStatus.BAD_REQUEST, "선점 시간이 만료되었습니다. 다시 시도해 주세요.");
         }
         //61. 컨펌으로 상태 바꾸고, 예약됨으로 바꾸고 반환 
@@ -139,6 +147,7 @@ public class ReservationService {
         reservation.getSeat().updateStatus(SeatStatus.RESERVED);
         //redis 키 삭제
         redisTemplate.delete("seat:hold:" + reservation.getSchedule().getId() + ":" + reservation.getSeat().getId());
+        com.example.bookwithticket.global.websocket.SeatWebSocketHandler.broadcastSeatUpdate(reservation.getSchedule().getId(), reservation.getSeat().getId(), "RESERVED");
         return ReservationResponse.from(reservation);
     }
 
@@ -160,6 +169,7 @@ public class ReservationService {
             throw new BusinessException(HttpStatus.BAD_REQUEST, "취소할 수 없는 예매 상태입니다.");
         }
 
+        com.example.bookwithticket.global.websocket.SeatWebSocketHandler.broadcastSeatUpdate(reservation.getSchedule().getId(), reservation.getSeat().getId(), "AVAILABLE");
         return ReservationResponse.from(reservation);
     }
 

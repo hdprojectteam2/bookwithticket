@@ -20,7 +20,7 @@
         .card:hover { border-color: #3498db; background: #f0f7fc; transform: translateY(-2px); }
         .card h3 { margin: 0 0 8px 0; color: grey; }
         .badge { display: inline-block; background: #e8f4fd; color: #3498db; padding: 3px 8px;  font-size: 0.8rem; font-weight: bold; }
-        .seats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 400px; margin-top: 15px; }
+        .seats-grid { width: 100%; max-width: 900px; margin: 15px auto 0 auto; }
         .seat-btn { padding: 15px; text-align: center; cursor: pointer; font-weight: bold; color: #fff; border: none; }
         .seat-available { background: #2ecc71; }
         .seat-held { background: #f39c12; }
@@ -50,7 +50,10 @@
     <div class="section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
             <h2 style="margin:0;">공연 검색, 목록</h2>
-            <button id="adminCreateBtn" onclick="openAdminCreateModal()" style="background:#8e44ad; display:none;">+ 공연 신규 등록 (관리자)</button>
+            <div style="display:flex; gap:8px;">
+                <button id="adminImportBtn" onclick="importFromKopis()" style="background:#2980b9; display:none;">+ KOPIS 공연 수집 (관리자)</button>
+                <button id="adminCreateBtn" onclick="openAdminCreateModal()" style="background:#8e44ad; display:none;">+ 공연 신규 등록 (관리자)</button>
+            </div>
         </div>
         <div class="search-bar">
             <input type="text" id="searchInput" placeholder="제목입력" onkeyup="if(event.key === 'Enter') loadPerformances();">
@@ -134,12 +137,30 @@
         <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
             <label><b>공연 일시:</b> <input type="datetime-local" id="newPerfTime" style="width:100%; padding:8px;"></label>
             <label><b>티켓 오픈 일시:</b> <input type="datetime-local" id="newOpenTime" style="width:100%; padding:8px;"></label>
-            <label><b>생성할 총 좌석 수:</b> <input type="number" id="newTotalSeats" value="10" min="1" max="100" style="width:100%; padding:8px;"></label>
+            <label><b>생성할 총 좌석 수:</b> <input type="number" id="newTotalSeats" value="1241" min="1" max="50000" style="width:100%; padding:8px;"></label>
             <label><b>좌석 단가 (원):</b> <input type="number" id="newSeatPrice" value="150000" step="10000" style="width:100%; padding:8px;"></label>
         </div>
         <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
             <button onclick="submitAdminScheduleAndSeats()" style="background:#8e44ad;">회차 및 좌석 생성</button>
             <button onclick="closeAdminScheduleModal()" style="background:#95a5a6;">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- 관리자 KOPIS 공연 검색 및 선택 수집 모달 -->
+<div id="adminKopisModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:25px; width:650px; border:1px solid #ccc; max-height:85vh; overflow-y:auto; text-align:left;">
+        <h3 style="margin-top:0; color:#2980b9; border-bottom:1px solid #eee; padding-bottom:10px;">+ KOPIS 공연 데이터 선택 수집 (관리자)</h3>
+        <div style="display:flex; gap:10px; margin-bottom:15px;">
+            <input type="text" id="kopisSearchKeyword" placeholder="검색어 (예: 뮤지컬, 콘서트, 캣츠)" style="flex:1; padding:8px;" onkeyup="if(event.key==='Enter') executeKopisSearch();">
+            <button onclick="executeKopisSearch()" style="background:#2980b9;">조회</button>
+        </div>
+        <div id="kopisSearchResultArea" style="max-height:400px; overflow-y:auto; border:1px solid #eee; padding:10px; margin-bottom:15px;">
+            <p style="color:#888; text-align:center;">검색어를 입력하고 [조회] 버튼을 클릭하세요.</p>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button onclick="submitSelectedKopisImport()" style="background:#27ae60;">선택한 공연 DB 수집</button>
+            <button onclick="closeAdminKopisModal()" style="background:#95a5a6;">닫기</button>
         </div>
     </div>
 </div>
@@ -157,6 +178,9 @@
     let myReservationIds = [];
 
     async function fetchMyReservationIds() {
+        myReservationIds = [];
+        let token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') return;
         try {
             const res = await fetch('/api/reservations/my', {
                 headers: getAuthHeaders()
@@ -182,11 +206,22 @@
         document.getElementById('adminCreateModal').style.display = 'none';
     }
 
-    function openAdminScheduleModal(perfId, perfTitle) {
+    async function openAdminScheduleModal(perfId, perfTitle) {
         currentPerfId = perfId;
         currentPerfTitle = perfTitle;
         document.getElementById('schModalPerfTitle').innerText = perfTitle || '';
         document.getElementById('adminScheduleModal').style.display = 'flex';
+        try {
+            const res = await fetch(`/api/performances/${perfId}`);
+            const data = await res.json();
+            if (res.ok && data.success && data.data) {
+                const scale = data.data.seatscale || 1241;
+                document.getElementById('newTotalSeats').value = scale;
+                log(`[API 연동 완료] ${perfTitle} 공연의 실제 좌석 수 (${scale}석) 자동 호출 완료`);
+            }
+        } catch (e) {
+            console.error('공연 상세 조회 에러:', e);
+        }
     }
 
     function closeAdminScheduleModal() {
@@ -196,7 +231,7 @@
     async function submitAdminScheduleAndSeats() {
         const perfTimeVal = document.getElementById('newPerfTime').value;
         const openTimeVal = document.getElementById('newOpenTime').value;
-        const totalSeats = parseInt(document.getElementById('newTotalSeats').value) || 10;
+        const totalSeats = parseInt(document.getElementById('newTotalSeats').value) || 0;
         const seatPrice = parseInt(document.getElementById('newSeatPrice').value) || 150000;
 
         if (!perfTimeVal || !openTimeVal) {
@@ -204,29 +239,28 @@
             return;
         }
 
-        const payload = {
-            performanceTime: perfTimeVal + ':00',
-            ticketOpenTime: openTimeVal + ':00',
-            totalSeats,
-            seatPrice
-        };
-
         try {
             const res = await fetch(`/api/performances/${currentPerfId}/schedules`, {
                 method: 'POST',
                 headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    performanceTime: perfTimeVal,
+                    ticketOpenTime: openTimeVal,
+                    totalSeats: totalSeats,
+                    seatPrice: seatPrice
+                })
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                log(`[관리자] 회차 및 ${totalSeats}개 좌석 생성 성공`);
+                log(`[관리자] 회차 및 8x8 섹터 좌석 배치 자동 생성 성공!`);
+                alert('회차 및 8x8 섹터 좌석 배치가 성공적으로 생성되었습니다!');
                 closeAdminScheduleModal();
                 selectPerformance(currentPerfId, currentPerfTitle);
             } else {
                 alert(`생성 실패: ${data.message}`);
             }
         } catch (e) {
-            alert(`통신 에러: ${e.message}`);
+            log(`회차 생성 에러: ${e.message}`);
         }
     }
 
@@ -278,15 +312,23 @@
         try {
             const res = await fetch(`/api/performances/test-token?type=${roleType}`);
             const data = await res.json();
-            if (res.ok && data.success && data.data.token) {
+            if (res.ok && data.success && data.data && data.data.token) {
                 localStorage.setItem('token', data.data.token);
+                localStorage.setItem('accessToken', data.data.token);
                 currentRole = data.data.role || roleType;
                 updateRoleUI(currentRole, data.data.email);
-                log(`[계정 스왑 완료] 계정: ${data.data.email} (${currentRole})`);
+                log(`[계정 스왑 성공] ${data.data.email} (${currentRole})`);
+                await fetchMyReservationIds();
                 await loadPerformances();
+                if (currentScheduleId) {
+                    await loadSeats(currentScheduleId);
+                }
+            } else {
+                alert(`계정 스왑 실패: ${data.message || '토큰 수신 실패'}`);
             }
         } catch (e) {
             log(`[계정 스왑 실패] ${e.message}`);
+            alert(`계정 스왑 에러: ${e.message}`);
         }
     }
 
@@ -294,11 +336,92 @@
         const badge = document.getElementById('userRoleBadge');
         if (badge) {
             badge.innerText = `현재 권한: ${role} (${email || ''})`;
-            badge.style.background = role === 'ADMIN' ? '#8e44ad' : '#2c3e50';
+            badge.style.background = role === 'ADMIN' ? '#8e44ad' : (role === 'GUEST' ? '#7f8c8d' : '#2c3e50');
         }
         const createBtn = document.getElementById('adminCreateBtn');
+        const importBtn = document.getElementById('adminImportBtn');
         if (createBtn) {
             createBtn.style.display = (role === 'ADMIN') ? 'inline-block' : 'none';
+        }
+        if (importBtn) {
+            importBtn.style.display = (role === 'ADMIN') ? 'inline-block' : 'none';
+        }
+    }
+
+    let currentKopisCandidates = [];
+
+    function importFromKopis() {
+        document.getElementById('adminKopisModal').style.display = 'flex';
+        executeKopisSearch();
+    }
+
+    function closeAdminKopisModal() {
+        document.getElementById('adminKopisModal').style.display = 'none';
+    }
+
+    async function executeKopisSearch() {
+        const keyword = document.getElementById('kopisSearchKeyword').value.trim() || '뮤지컬';
+        const area = document.getElementById('kopisSearchResultArea');
+        area.innerHTML = '<p style="color:#888; text-align:center;">KOPIS 검색 중...</p>';
+        try {
+            const res = await fetch(`/api/performances/admin/search/kopis?keyword=${encodeURIComponent(keyword)}`, {
+                headers: getAuthHeaders()
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                currentKopisCandidates = data.data || [];
+                if (currentKopisCandidates.length === 0) {
+                    area.innerHTML = '<p style="color:#e74c3c; text-align:center;">검색 결과가 없습니다.</p>';
+                    return;
+                }
+                let html = '<table style="width:100%; border-collapse:collapse; text-align:left; font-size:0.9rem;">';
+                html += '<tr style="background:#f2f2f2;"><th style="padding:6px;"><input type="checkbox" onchange="toggleAllKopis(this)" checked></th><th style="padding:6px;">포스터</th><th style="padding:6px;">공연명</th><th style="padding:6px;">공연장</th><th style="padding:6px;">장르</th></tr>';
+                currentKopisCandidates.forEach((item, index) => {
+                    html += `<tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:6px;"><input type="checkbox" class="kopis-item-chk" value="${index}" checked></td>
+                        <td style="padding:6px;"><img src="${item.poster}" style="width:40px; height:50px; object-fit:cover; border-radius:3px;"></td>
+                        <td style="padding:6px; font-weight:bold; color:#2c3e50;">${item.prfnm}</td>
+                        <td style="padding:6px; color:#555;">${item.fcltynm || '-'}</td>
+                        <td style="padding:6px;"><span style="background:#e8f4fd; color:#3498db; padding:2px 6px; font-size:0.75rem; border-radius:3px;">${item.genrenm}</span></td>
+                    </tr>`;
+                });
+                html += '</table>';
+                area.innerHTML = html;
+            } else {
+                area.innerHTML = `<p style="color:red;">오류: ${data.message}</p>`;
+            }
+        } catch (e) {
+            area.innerHTML = `<p style="color:red;">에러: ${e.message}</p>`;
+        }
+    }
+
+    function toggleAllKopis(master) {
+        document.querySelectorAll('.kopis-item-chk').forEach(c => c.checked = master.checked);
+    }
+
+    async function submitSelectedKopisImport() {
+        const checkedIndexes = Array.from(document.querySelectorAll('.kopis-item-chk:checked')).map(c => parseInt(c.value));
+        if (checkedIndexes.length === 0) {
+            alert('수집할 공연을 1개 이상 선택해 주세요.');
+            return;
+        }
+        const selectedItems = checkedIndexes.map(idx => currentKopisCandidates[idx]);
+        try {
+            const res = await fetch('/api/performances/admin/import/kopis/select', {
+                method: 'POST',
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify(selectedItems)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(`선택한 KOPIS 공연 수집 및 자동 회차/좌석 적재 완료! (${(data.data || []).length}건 DB 등록)`);
+                closeAdminKopisModal();
+                loadPerformances();
+            } else {
+                alert(`적재 실패: ${data.message}`);
+            }
+        } catch (e) {
+            alert(`통신 에러: ${e.message}`);
         }
     }
 
@@ -361,10 +484,11 @@
                 
                 let adminButtonsHtml = '';
                 if (currentRole === 'ADMIN') {
+                    const hardDeleteBtn = `<button onclick="event.stopPropagation(); hardDeletePerformance(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="background:#c0392b; font-size:0.75rem; padding:4px 8px; margin-left:4px;">영구 삭제</button>`;
                     if (p.active) {
-                        adminButtonsHtml = `<button onclick="event.stopPropagation(); deactivatePerformance(${p.id});" style="background:#e74c3c; font-size:0.75rem; padding:4px 8px;">비활성화</button>`;
+                        adminButtonsHtml = `<button onclick="event.stopPropagation(); deactivatePerformance(${p.id});" style="background:#e74c3c; font-size:0.75rem; padding:4px 8px;">비활성화</button>` + hardDeleteBtn;
                     } else {
-                        adminButtonsHtml = `<button onclick="event.stopPropagation(); activatePerformance(${p.id});" style="background:#2ecc71; font-size:0.75rem; padding:4px 8px;">재활성화(복구)</button>`;
+                        adminButtonsHtml = `<button onclick="event.stopPropagation(); activatePerformance(${p.id});" style="background:#2ecc71; font-size:0.75rem; padding:4px 8px;">재활성화(복구)</button>` + hardDeleteBtn;
                     }
                 }
 
@@ -379,7 +503,7 @@
                         </div>
                         <div>${adminButtonsHtml}</div>
                     </div>
-                    <h3>${p.title}</h3>
+                    <h3>${p.title} <span style="font-size:0.85rem; color:#64748b; font-weight:bold; margin-left:6px;">(${p.seatscale ? p.seatscale.toLocaleString() + '석' : '좌석 미정'})</span></h3>
                     <p style="margin:5px 0; font-size:0.9rem;">공연장: ${p.venue} (${p.runtimeMinutes}분)</p>
                     ${p.originalBookId ? 
 						`<div style="margin:6px 0; font-size:0.85rem;">
@@ -395,6 +519,27 @@
             });
         } catch (e) {
             log(`에러 발생: ${e.message}`);
+        }
+    }
+
+    async function hardDeletePerformance(perfId, perfTitle) {
+        if (!confirm(`정말 공연 [${perfTitle}] 및 관련된 모든 회차/좌석/예매/장바구니 내역을 영구히 완전 삭제하시겠습니까?\n이 작업은 복구할 수 없습니다.`)) return;
+        try {
+            const res = await fetch(`/api/performances/${perfId}/hard`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                log(`[관리자] 공연 [${perfTitle}] 영구 완전 삭제 성공`);
+                alert(`공연 [${perfTitle}] 이(가) DB에서 영구 완전 삭제되었습니다.`);
+                document.getElementById('seatSection').style.display = 'none';
+                loadPerformances();
+            } else {
+                alert(`삭제 실패: ${data.message}`);
+            }
+        } catch (e) {
+            alert(`에러: ${e.message}`);
         }
     }
 
@@ -445,8 +590,10 @@
         currentPerfId = perfId;
         currentPerfTitle = perfTitle;
         document.getElementById('selectedPerfTitle').innerText = perfTitle;
-        document.getElementById('seatSection').style.display = 'block';
+        const schSection = document.getElementById('seatSection');
+        schSection.style.display = 'block';
         document.getElementById('seatArea').style.display = 'none';
+        schSection.scrollIntoView({ behavior: 'smooth' });
 
         try {
             const res = await fetch(`/api/performances/${perfId}/schedules`);
@@ -477,17 +624,25 @@
                 const openTimeStr = openTime.toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 
                 const btn = document.createElement('button');
-                btn.style.marginRight = '8px';
-                btn.style.marginBottom = '6px';
+                btn.style.marginRight = '10px';
+                btn.style.marginBottom = '10px';
                 btn.style.textAlign = 'left';
                 btn.style.lineHeight = '1.5';
+                btn.style.background = '#ffffff';
+                btn.style.color = '#1e293b';
+                btn.style.border = '2px solid #cbd5e1';
+                btn.style.borderRadius = '8px';
+                btn.style.padding = '10px 16px';
+                btn.style.cursor = 'pointer';
+                btn.style.transition = 'all 0.2s ease';
                 btn.dataset.scheduleId = s.id;
 
+                const seatInfoStr = (s.totalSeats > 0) ? `<div style="font-size:0.85rem; color:#16a34a; font-weight:bold; margin-top:3px;">(잔여 ${s.availableSeats}석 / 총 ${s.totalSeats}석)</div>` : '';
                 if (isOpen) {
-                    btn.innerHTML = `${perfTimeStr}<br><span style="font-size:0.78rem; color:#e74c3c;">티켓 오픈: ${openTimeStr}</span>`;
+                    btn.innerHTML = `<div style="font-size:0.95rem; font-weight:bold;">${perfTimeStr}</div>${seatInfoStr}<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">티켓 오픈: ${openTimeStr}</div>`;
                     btn.onclick = () => loadSeats(s.id);
                 } else {
-                    btn.innerHTML = `${perfTimeStr}<br><span style="font-size:0.78rem; color:#e74c3c;">티켓 오픈 예정: ${openTimeStr}</span>`;
+                    btn.innerHTML = `<div style="font-size:0.95rem; font-weight:bold;">${perfTimeStr}</div>${seatInfoStr}<div style="font-size:0.78rem; color:#dc2626; font-weight:bold; margin-top:2px;">오픈 예정: ${openTimeStr}</div>`;
                     btn.disabled = true;
                     btn.style.opacity = '0.5';
                     btn.style.cursor = 'not-allowed';
@@ -499,41 +654,181 @@
             log(`회차 로드 에러: ${e.message}`);
         }
     }
-	//26. 좌석 출력 함수 
-    async function loadSeats(scheduleId) {
-		//27. 좌석 선택 보여줌
+
+    let currentSelectedZone = null;
+
+    function resetZoneSelection() {
+        currentSelectedZone = null;
+        if (currentScheduleId) {
+            loadSeats(currentScheduleId, null);
+        }
+    }
+
+    async function loadSeats(scheduleId, zoneFilter) {
         currentScheduleId = scheduleId;
+        if (zoneFilter !== undefined) {
+            currentSelectedZone = zoneFilter;
+        }
+
         document.querySelectorAll('#scheduleList button').forEach(b => {
             if (b.dataset.scheduleId == scheduleId) {
-                b.style.background = '#2c3e50';
-                b.style.color = '#fff';
+                b.style.background = '#0f172a';
+                b.style.color = '#ffffff';
+                b.style.borderColor = '#0f172a';
                 b.style.fontWeight = 'bold';
-                b.style.outline = '2px solid #16a085';
             } else {
-                b.style.background = '#3498db';
-                b.style.color = '#fff';
+                b.style.background = '#ffffff';
+                b.style.color = '#1e293b';
+                b.style.borderColor = '#cbd5e1';
                 b.style.fontWeight = 'normal';
-                b.style.outline = 'none';
             }
         });
-        document.getElementById('seatArea').style.display = 'block';
+
+        const seatAreaEl = document.getElementById('seatArea');
+        seatAreaEl.style.display = 'block';
+        seatAreaEl.scrollIntoView({ behavior: 'smooth' });
 
         try {
             await fetchMyReservationIds();
             const res = await fetch(`/api/performances/schedules/${scheduleId}/seats`);
             const data = await res.json();
-            const seats = (data && Array.isArray(data.data)) ? data.data : [];
-            log(`GET /api/performances/schedules/${scheduleId}/seats -> 좌석 상태 조회 (${seats.length}개)`);
+            const allSeats = (data && Array.isArray(data.data)) ? data.data : [];
+            log(`GET /api/performances/schedules/${scheduleId}/seats -> 좌석 상태 조회 (${allSeats.length}개)`);
+
             const grid = document.getElementById('seatsGrid');
             grid.innerHTML = '';
-            
-            seats.forEach(seat => {
+            grid.style.maxWidth = '850px';
+            grid.style.margin = '0 auto';
+            grid.style.padding = '15px';
+
+            // 섹터 태그 및 각 섹터별 잔여 좌석 수 집계 ([1섹터 (1~64번)] 등)
+            const sectorMap = new Map();
+            allSeats.forEach(s => {
+                if (s.seatNumber) {
+                    const match = s.seatNumber.match(/\[(.*?)\]/) || s.seatNumber.match(/(.*?섹터|.*?구역)/);
+                    if (match && match[1]) {
+                        const secName = match[1];
+                        if (!sectorMap.has(secName)) {
+                            sectorMap.set(secName, { total: 0, available: 0, seats: [] });
+                        }
+                        const secInfo = sectorMap.get(secName);
+                        secInfo.total++;
+                        if (s.status === 'AVAILABLE') secInfo.available++;
+                        secInfo.seats.push(s);
+                    }
+                }
+            });
+
+            // 1단계: 섹터 미선택 시 ➔ 64개 단위 섹터 블록 카드만 목록으로 표시
+            if (!currentSelectedZone && sectorMap.size > 0) {
+                const headerBox = document.createElement('div');
+                headerBox.style.marginBottom = '20px';
+                headerBox.style.textAlign = 'center';
+                headerBox.innerHTML = `
+                    <h3 style="margin:0 0 8px 0; color:#2c3e50;">📍 관람 섹터(블록) 선택</h3>
+                    <p style="margin:0; color:#7f8c8d; font-size:0.9rem;">입장할 섹터 블록을 클릭하시면 해당 64개 좌석판(8x8 배치)이 나타납니다.</p>
+                `;
+                grid.appendChild(headerBox);
+
+                const cardsContainer = document.createElement('div');
+                cardsContainer.style.display = 'grid';
+                cardsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(170px, 1fr))';
+                cardsContainer.style.gap = '14px';
+                cardsContainer.style.width = '100%';
+
+                sectorMap.forEach((info, secName) => {
+                    const card = document.createElement('div');
+                    card.style.background = '#f8fafc';
+                    card.style.border = '2px solid #cbd5e1';
+                    card.style.borderRadius = '10px';
+                    card.style.padding = '14px 10px';
+                    card.style.cursor = 'pointer';
+                    card.style.textAlign = 'center';
+                    card.style.transition = 'all 0.2s ease';
+                    card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.05)';
+                    card.style.wordBreak = 'keep-all';
+
+                    card.onmouseover = () => {
+                        card.style.borderColor = '#3498db';
+                        card.style.background = '#ebf5fb';
+                        card.style.transform = 'translateY(-2px)';
+                    };
+                    card.onmouseout = () => {
+                        card.style.borderColor = '#cbd5e1';
+                        card.style.background = '#f8fafc';
+                        card.style.transform = 'translateY(0)';
+                    };
+
+                    card.onclick = () => loadSeats(scheduleId, secName);
+
+                    card.innerHTML = `
+                        <div style="font-weight:bold; font-size:0.95rem; color:#2c3e50; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${secName}">${secName}</div>
+                        <div style="font-size:0.8rem; color:#16a34a; font-weight:bold; margin-bottom:10px; white-space:nowrap;">잔여 ${info.available}석 / 총 ${info.total}석</div>
+                        <button style="background:#3498db; color:#fff; border:none; padding:6px 14px; border-radius:5px; font-size:0.82rem; font-weight:bold; cursor:pointer; white-space:nowrap; display:inline-block;">입장하기 ➔</button>
+                    `;
+                    cardsContainer.appendChild(card);
+                });
+
+                grid.appendChild(cardsContainer);
+                return;
+            }
+
+            // 2단계: 특정 섹터 선택 시 ➔ 상단 네비게이션 + 규격 맞춤 8x8 (64석) 좌석판 렌더링
+            const topNav = document.createElement('div');
+            topNav.style.width = '100%';
+            topNav.style.marginBottom = '15px';
+            topNav.style.padding = '12px 16px';
+            topNav.style.background = '#edf2f7';
+            topNav.style.border = '1px solid #cbd5e0';
+            topNav.style.borderRadius = '8px';
+            topNav.style.display = 'flex';
+            topNav.style.alignItems = 'center';
+            topNav.style.justifyContent = 'space-between';
+
+            const activeZoneTitle = currentSelectedZone ? `📍 현재 구역: <span style="color:#2b6cb0; font-weight:bold;">${currentSelectedZone}</span>` : '전체 좌석 보기';
+            topNav.innerHTML = `
+                <div style="font-size:1rem; font-weight:bold; color:#2d3748;">${activeZoneTitle}</div>
+                <button onclick="resetZoneSelection()" style="background:#4a5568; color:#fff; font-size:0.85rem; padding:6px 14px; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">← 전체 섹터 목록으로 돌아가기</button>
+            `;
+            grid.appendChild(topNav);
+
+            const filteredSeats = allSeats.filter(seat => !currentSelectedZone || (seat.seatNumber && seat.seatNumber.includes(currentSelectedZone)));
+
+            if (filteredSeats.length === 0) {
+                const emptyMsg = document.createElement('p');
+                emptyMsg.style.width = '100%';
+                emptyMsg.style.color = '#999';
+                emptyMsg.style.textAlign = 'center';
+                emptyMsg.innerText = '해당 섹터에 좌석이 없습니다.';
+                grid.appendChild(emptyMsg);
+                return;
+            }
+
+            // 한 화면 규격에 딱 맞는 8x8 (64석) 전용 고정 콘테이너
+            const seatContainer = document.createElement('div');
+            seatContainer.style.display = 'grid';
+            seatContainer.style.gridTemplateColumns = 'repeat(8, 1fr)';
+            seatContainer.style.gap = '8px';
+            seatContainer.style.width = '100%';
+            seatContainer.style.maxWidth = '760px';
+            seatContainer.style.margin = '0 auto';
+            seatContainer.style.padding = '16px';
+            seatContainer.style.background = '#1a202c';
+            seatContainer.style.borderRadius = '12px';
+            seatContainer.style.boxShadow = '0 6px 18px rgba(0,0,0,0.15)';
+
+            filteredSeats.forEach(seat => {
                 const btn = document.createElement('button');
                 btn.className = `seat-btn seat-${(seat.status || 'AVAILABLE').toLowerCase()}`;
                 btn.innerText = `${seat.seatNumber}\n(${(seat.price || 0).toLocaleString()}원)`;
+                btn.style.fontSize = '0.75rem';
+                btn.style.padding = '8px 4px';
+                btn.style.minHeight = '52px';
                 btn.onclick = () => handleSeatClick(seat);
-                grid.appendChild(btn);
+                seatContainer.appendChild(btn);
             });
+
+            grid.appendChild(seatContainer);
         } catch (e) {
             log(`좌석 로드 에러: ${e.message}`);
         }
@@ -547,12 +842,16 @@
                     headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ scheduleId: currentScheduleId, seatId: seat.id })
                 });
+                if (res.status === 401) {
+                    await switchAccount('USER');
+                    return handleSeatClick(seat);
+                }
                 const data = await res.json();
                 if (res.ok && data.success) {
                     lastReservationId = data.data.id;
                     lastHoldExpiresAt = data.data.holdExpiresAt;
                     log(`선점 성공 예매 ID: ${data.data.id}, 만료시각: ${data.data.holdExpiresAt}`);
-                    await loadSeats(currentScheduleId);
+                    await loadSeats(currentScheduleId, currentSelectedZone);
                     openCustomModal({
                         ...seat,
                         status: 'HELD',
@@ -707,18 +1006,18 @@
     async function initPage() {
         let token = localStorage.getItem('token') || localStorage.getItem('accessToken');
         if (!token || token === 'undefined') {
-            await switchAccount('USER');
+            await switchAccount('ADMIN');
         } else {
             const decoded = parseJwtToken(token);
             if (decoded) {
-                currentRole = decoded.role || 'USER';
+                currentRole = decoded.role || 'ADMIN';
                 const email = decoded.sub || '';
                 updateRoleUI(currentRole, email);
             } else {
-                updateRoleUI(currentRole, 'test@example.com');
+                await switchAccount('ADMIN');
             }
-            await loadPerformances();
         }
+        await loadPerformances();
         const urlParams = new URLSearchParams(window.location.search);
         const perfId = urlParams.get('perfId');
         const scheduleId = urlParams.get('scheduleId');
@@ -738,7 +1037,31 @@
                 log(`자동 회차 로드 에러: ${e.message}`);
             }
         }
+        initWebSocket();
     }
+
+    function initWebSocket() {
+        try {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/seats`;
+            const socket = new WebSocket(wsUrl);
+            socket.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (currentScheduleId && data.scheduleId == currentScheduleId) {
+                        log(`[웹소켓 0.05초 실시간 수신] 좌석 #${data.seatId} 상태 변경: ${data.status}`);
+                        loadSeats(currentScheduleId, currentSelectedZone);
+                    }
+                } catch (e) {}
+            };
+            socket.onclose = function() {
+                setTimeout(initWebSocket, 2000);
+            };
+        } catch (e) {
+            console.error('웹소켓 연결 오류:', e);
+        }
+    }
+
     initPage();
 </script>
 </body>

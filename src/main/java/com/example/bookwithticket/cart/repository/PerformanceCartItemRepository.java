@@ -31,4 +31,6 @@ public interface PerformanceCartItemRepository
     findByIdAndCartMemberId(Long cartItemId, Long memberId);
     
     void deleteByCartMemberId(Long memberId);
+    
+    void deleteByPerformanceScheduleId(Long performanceScheduleId);
 }

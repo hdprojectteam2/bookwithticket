@@ -70,9 +70,11 @@
                     if (schRes.ok && schData.success && Array.isArray(schData.data) && schData.data.length > 0) {
                         scheduleHtml = schData.data.map(s => {
                             const timeStr = new Date(s.performanceTime).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                            const seatInfoStr = (s.totalSeats > 0) ? ` <span style="font-size:0.85rem; color:#27ae60; font-weight:bold;">(잔여 ${s.availableSeats}석 / 총 ${s.totalSeats}석)</span>` : '';
                             return `<div style="display:inline-block; margin-right:10px; margin-bottom:10px; padding:10px 14px; background:#fff; border:1px solid #ccc;">
-                                <b>${timeStr}</b>
+                                <b>${timeStr}</b>${seatInfoStr}
                                 <button onclick="location.href='/index.html?perfId=${id}&scheduleId=${s.id}'" style="margin-left:10px; background:#3498db; padding:5px 10px; font-size:0.8rem;">예매하기</button>
+                                <button onclick="addPerformanceToCart(${s.id})" style="margin-left:5px; background:#e67e22; padding:5px 10px; font-size:0.8rem;">장바구니 담기</button>
                             </div>`;
                         }).join('');
                     }
@@ -109,6 +111,44 @@
         } catch (e) {
             log(`에러 발생: ${e.message}`);
             document.getElementById('detailContent').innerHTML = `<p style="color:red;">통신 에러: ${e.message}</p><button class="btn-back" onclick="location.href='/index.html'">← 메인 목록으로 돌아가기</button>`;
+        }
+    }
+
+    async function addPerformanceToCart(scheduleId) {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') {
+            alert('로그인이 필요합니다.');
+            location.href = '/login.html';
+            return;
+        }
+
+        const params = new URLSearchParams();
+        params.append("performanceScheduleId", String(scheduleId));
+
+        try {
+            const res = await fetch('/api/cart/performances', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: params
+            });
+
+            if (res.ok) {
+                log(`[성공] 공연 회차 #${scheduleId} 장바구니 등록 완료`);
+                if (confirm('공연이 장바구니에 담겼습니다.\n장바구니 페이지로 이동하시겠습니까?')) {
+                    localStorage.setItem('openPerformanceCart', 'true');
+                    location.href = '/cart';
+                }
+            } else {
+                const msg = await res.text();
+                log(`[실패] 장바구니 등록 실패: ${msg}`);
+                alert(`장바구니 담기 실패: ${msg || '오류가 발생했습니다.'}`);
+            }
+        } catch (e) {
+            log(`장바구니 에러: ${e.message}`);
+            alert(`에러: ${e.message}`);
         }
     }
 

@@ -52,7 +52,7 @@ public class MemberController {
 
     @GetMapping("/check-email")
     public ResponseEntity<EmailCheckResponseDto> checkEmail(
-            @RequestParam @Email(message = "이메일 형식이 올바르지 않습니다.") String email
+            @RequestParam(name = "email") @Email(message = "이메일 형식이 올바르지 않습니다.") String email
     ) {
         return ResponseEntity.ok(
                 new EmailCheckResponseDto(memberService.isEmailAvailable(email))

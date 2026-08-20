@@ -64,8 +64,16 @@ public class SecurityConfig {
                         .requestMatchers("/members/**")
                         .authenticated()
 
-                        .requestMatchers("/admin.html", "/js/admin.js")
-                        .hasRole("ADMIN")
+                        // 공연 예매/선점 및 주문 결제 API 로그인(인증) 필수 적용 (원천 401 Unauthorized 보장)
+                        .requestMatchers(
+                                "/api/reservations/**",
+                                "/api/orders/**",
+                                "/api/payments/**",
+                                "/api/refunds/**"
+                        ).authenticated()
+
+                        .requestMatchers("/admin.html", "/js/admin.js").permitAll()
+
 
                         // dev의 다른 팀 기능 정책은 현재처럼 유지
                         .anyRequest()

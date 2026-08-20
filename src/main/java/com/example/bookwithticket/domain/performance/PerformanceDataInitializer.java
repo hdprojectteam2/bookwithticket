@@ -1,14 +1,16 @@
 package com.example.bookwithticket.domain.performance;
 
-import com.example.bookwithticket.domain.reservation.Seat;
+import com.example.bookwithticket.cart.repository.CartItemRepository;
+import com.example.bookwithticket.cart.repository.PerformanceCartItemRepository;
+import com.example.bookwithticket.domain.reservation.ReservationRepository;
 import com.example.bookwithticket.domain.reservation.SeatRepository;
 import com.example.bookwithticket.member.entity.Member;
 import com.example.bookwithticket.member.jwt.JwtUtil;
 import com.example.bookwithticket.member.repository.MemberRepository;
-import java.time.LocalDateTime;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class PerformanceDataInitializer implements CommandLineRunner {
@@ -16,6 +18,9 @@ public class PerformanceDataInitializer implements CommandLineRunner {
     private final PerformanceRepository performanceRepository;
     private final PerformanceScheduleRepository scheduleRepository;
     private final SeatRepository seatRepository;
+    private final ReservationRepository reservationRepository;
+    private final PerformanceCartItemRepository performanceCartItemRepository;
+    private final CartItemRepository cartItemRepository;
     private final MemberRepository memberRepository;
     private final JwtUtil jwtUtil;
 
@@ -23,16 +28,23 @@ public class PerformanceDataInitializer implements CommandLineRunner {
             PerformanceRepository performanceRepository,
             PerformanceScheduleRepository scheduleRepository,
             SeatRepository seatRepository,
+            ReservationRepository reservationRepository,
+            PerformanceCartItemRepository performanceCartItemRepository,
+            CartItemRepository cartItemRepository,
             MemberRepository memberRepository,
             JwtUtil jwtUtil) {
         this.performanceRepository = performanceRepository;
         this.scheduleRepository = scheduleRepository;
         this.seatRepository = seatRepository;
+        this.reservationRepository = reservationRepository;
+        this.performanceCartItemRepository = performanceCartItemRepository;
+        this.cartItemRepository = cartItemRepository;
         this.memberRepository = memberRepository;
         this.jwtUtil = jwtUtil;
     }
 
     @Override
+    @Transactional
     public void run(String... args) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -81,52 +93,18 @@ public class PerformanceDataInitializer implements CommandLineRunner {
         System.out.println("관리자 계정 (ADMIN): " + adminMember.getEmail() + " | Token: " + adminToken);
         System.out.println("==================================================");
 
-        if (performanceRepository.count() > 0) {
-            return;
+        // 3. 기존 누적 DB 데이터 초기화 (장바구니 외래 키 삭제 순서 보장)
+        try {
+            performanceCartItemRepository.deleteAllInBatch();
+            cartItemRepository.deleteAllInBatch();
+            reservationRepository.deleteAllInBatch();
+            seatRepository.deleteAllInBatch();
+            scheduleRepository.deleteAllInBatch();
+            performanceRepository.deleteAllInBatch();
+        } catch (Exception e) {
+            System.err.println("[DB 초기화 경고] " + e.getMessage());
         }
 
-        // 샘플 공연 데이터 생성
-        Performance p1 = new Performance(
-                "뮤지컬 ",
-                PerformanceCategory.MUSICAL,
-                "극장",
-                "https://example.com/poster1.jpg",
-                170,
-                "뮤지컬 설명",
-                1L
-        );
-
-        Performance p2 = new Performance(
-                "콘서트  ",
-                PerformanceCategory.CONCERT,
-                "공연장",
-                "https://example.com/poster2.jpg",
-                180,
-                "콘서트설명",
-                null
-        );
-
-        performanceRepository.save(p1);
-        performanceRepository.save(p2);
-
-        LocalDateTime now = LocalDateTime.now();
-
-        PerformanceSchedule s1 = new PerformanceSchedule(p1, now.plusDays(5), now.minusHours(1));
-        scheduleRepository.save(s1);
-        for (int i = 1; i <= 10; i++) {
-            seatRepository.save(new Seat(s1, "A-" + i, 150000));
-        }
-
-        PerformanceSchedule s2 = new PerformanceSchedule(p2, now.plusDays(10), now.minusHours(2));
-        PerformanceSchedule s3 = new PerformanceSchedule(p2, now.plusDays(11), now.plusHours(2));
-        scheduleRepository.save(s2);
-        scheduleRepository.save(s3);
-
-        for (int i = 1; i <= 10; i++) {
-            seatRepository.save(new Seat(s2, "VIP-" + i, 180000));
-        }
-        for (int i = 1; i <= 10; i++) {
-            seatRepository.save(new Seat(s3, "VIP-" + i, 180000));
-        }
+        // 하드코딩 수동 샘플 공연 데이터 전면 삭제 (0건의 완전 깨끗한 DB 상태 유지)
     }
 }
