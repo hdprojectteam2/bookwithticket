@@ -57,6 +57,10 @@
                 placeholder="비밀번호"
         >
 
+        <small>
+            비밀번호는 8~64자로 입력해주세요.
+        </small>
+
     </div>
 
 
@@ -124,18 +128,28 @@
         <label>주소</label>
 
         <input
+                type="text"
                 id="zipcode"
                 placeholder="우편번호"
+                readonly
         >
 
+        <button
+                type="button"
+                onclick="execDaumPostcode()"
+        >
+            주소 검색
+        </button>
 
         <input
+                type="text"
                 id="address"
                 placeholder="주소"
+                readonly
         >
 
-
         <input
+                type="text"
                 id="detailAddress"
                 placeholder="상세주소"
         >
@@ -207,7 +221,8 @@
 
 
 <script src="/js/signup.js"></script>
-
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="/js/kakao/kakao-address.js"></script>
 
 </body>
 
