@@ -38,20 +38,22 @@ public class PerformanceService {
         List<Performance> performances;
         
         if (keyword != null && !keyword.isBlank()) {
-            performances = performanceRepository.findByTitleContainingOrderByIdDesc(keyword.trim());
+            performances = includeInactive
+                    ? performanceRepository.findByTitleContainingOrderByIdDesc(keyword.trim())
+                    : performanceRepository.findByTitleContainingAndActiveTrueOrderByIdDesc(keyword.trim());
         } else if (category != null) {
-            performances = performanceRepository.findByCategoryOrderByIdDesc(category);
+            performances = includeInactive
+                    ? performanceRepository.findByCategoryOrderByIdDesc(category)
+                    : performanceRepository.findByCategoryAndActiveTrueOrderByIdDesc(category);
         } else {
-            performances = performanceRepository.findAllByOrderByIdDesc();
+            performances = includeInactive
+                    ? performanceRepository.findAllByOrderByIdDesc()
+                    : performanceRepository.findByActiveTrueOrderByIdDesc();
         }
         
-        List<PerformanceResponse> responseList = new ArrayList<>();
-        for (Performance p : performances) {
-            if (includeInactive || p.isActive()) {
-                responseList.add(PerformanceResponse.from(p));
-            }
-        }
-        return responseList;
+        return performances.stream()
+                .map(PerformanceResponse::from)
+                .toList();
     }
 
     //detail에서 사용 

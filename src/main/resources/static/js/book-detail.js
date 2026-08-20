@@ -14,23 +14,33 @@ const id =
 
 let favoriteStatus = false;
 
-
-
-
-
 window.onload = function(){
-
-
     loadBook();
-
-
     loadReviews();
-
-
     loadReviewInfo();
-
-
+    loadLinkedPerformance();
 };
+
+async function loadLinkedPerformance() {
+    try {
+        const res = await fetch('/api/performances');
+        const data = await res.json();
+        if (res.ok && data && Array.isArray(data.data)) {
+            const matchedPerf = data.data.find(p => p.originalBookId == id);
+            if (matchedPerf) {
+                const box = document.getElementById('linkedPerformanceBox');
+                const btn = document.getElementById('linkedPerfBtn');
+                if (box && btn) {
+                    btn.href = `/detail.html?id=${matchedPerf.id}`;
+                    btn.innerText = `🎭 '${matchedPerf.title}' 공연 예매하러 가기 ➔`;
+                    box.style.display = 'block';
+                }
+            }
+        }
+    } catch (e) {
+        console.error('원작 공연 연동 조회 에러:', e);
+    }
+}
 
 
 
