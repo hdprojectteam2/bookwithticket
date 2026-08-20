@@ -196,4 +196,75 @@ public class RefundServiceImpl implements RefundService {
 		}
 	}
 
+	@Override
+	public RefundResponse forceBookRefund(Long adminId, String orderNumber) {
+
+		BookOrderEntity order = bookOrderRepository.findByOrderNumberAndOrderStatus(orderNumber, OrderStatus.PAID)
+				.orElseThrow(() -> new IllegalArgumentException("강제 환불할 수 있는 주문이 없습니다."));
+
+		PaymentEntity payment = paymentRepository.findByBookOrderIdAndStatus(order.getId(), PaymentStatus.DONE)
+				.orElseThrow(() -> new IllegalArgumentException("환불 가능한 결제 정보가 없습니다."));
+
+		if (refundRepository.existsByPaymentId(payment.getId())) {
+
+			throw new IllegalArgumentException("이미 환불 요청 또는 환불 처리된 주문입니다.");
+		}
+
+		RefundEntity refund = new RefundEntity(adminId, payment, payment.getAmount(), "관리자 강제 환불");
+
+		refundRepository.save(refund);
+
+		refund.approve(adminId);
+
+		CompleteRefund(order, payment, refund);
+
+		return new RefundResponse(refund.getId(), refund.getStatus().name(), "관리자 강제 환불이 완료되었습니다.");
+	}
+
+	@Override
+	public RefundResponse forcePerformanceRefund(Long adminId, Long reservationId) {
+
+		/*
+		 * 공연 예매 조회
+		 */
+		Reservation reservation = reservationRepository.findById(reservationId)
+				.orElseThrow(() -> new IllegalArgumentException("예매 정보를 찾을 수 없습니다."));
+
+		/*
+		 * 결제가 완료된 예매만 관리자 환불 가능
+		 */
+		if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
+
+			throw new IllegalArgumentException("환불 가능한 공연 예매가 아닙니다.");
+		}
+
+		/*
+		 * 해당 공연의 정상 결제 조회
+		 */
+		PaymentEntity payment = paymentRepository
+				.findFirstByReservationIdAndStatusOrderByCreatedAtDesc(reservation.getId(), PaymentStatus.DONE)
+				.orElseThrow(() -> new IllegalArgumentException("환불 가능한 결제 정보가 없습니다."));
+
+		if (refundRepository.existsByPaymentId(payment.getId())) {
+
+			throw new IllegalArgumentException("이미 환불 요청 또는 환불 처리된 예매입니다.");
+		}
+
+		RefundEntity refund = new RefundEntity(adminId, payment, payment.getAmount(), "관리자 강제 환불");
+
+		refundRepository.save(refund);
+
+		refund.approve(adminId);
+
+		tossPaymentClient.cancelPayment(payment.getPaymentKey(), refund.getReason());
+
+		payment.cancel();
+
+		reservationService.cancelReservation(reservation.getMemberId(), reservation.getId());
+
+		refund.complete();
+
+		return new RefundResponse(refund.getId(), refund.getStatus().name(), "공연 강제 환불이 완료되었습니다.");
+	}
+
 }

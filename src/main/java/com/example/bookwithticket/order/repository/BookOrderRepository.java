@@ -40,6 +40,8 @@ public interface BookOrderRepository extends JpaRepository<BookOrderEntity, Long
 			List<OrderStatus> orderStatuses);
 
 	List<BookOrderEntity> findAllByOrderByCreatedAtDesc();
-	
+
 	Optional<BookOrderEntity> findByOrderNumber(String orderNumber);
+
+	Optional<BookOrderEntity> findByOrderNumberAndOrderStatus(String orderNumber, OrderStatus orderStatus);
 }

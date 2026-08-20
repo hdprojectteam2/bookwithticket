@@ -18,11 +18,13 @@ import com.example.bookwithticket.member.entity.Member;
 import com.example.bookwithticket.member.service.MemberService;
 import com.example.bookwithticket.order.dto.AdminOrderResponse;
 import com.example.bookwithticket.order.dto.AdminReservationResponse;
-import com.example.bookwithticket.order.dto.DeliveryRequest;
 import com.example.bookwithticket.order.dto.DeliveryStatusRequest;
+import com.example.bookwithticket.order.dto.OrderCreateRequest;
+import com.example.bookwithticket.order.dto.OrderMemberInfoResponse;
 import com.example.bookwithticket.order.dto.OrderPageDto;
 import com.example.bookwithticket.order.dto.OrderPreparedRequest;
 import com.example.bookwithticket.order.dto.OrderPreparedResponse;
+import com.example.bookwithticket.order.dto.OrderPreviewResponse;
 import com.example.bookwithticket.order.dto.ShippingRequest;
 import com.example.bookwithticket.order.service.AdminReservationService;
 import com.example.bookwithticket.order.service.OrderService;
@@ -55,21 +57,46 @@ public class OrderController {
 		return member.getId();
 	}
 
-	/* 장바구니에서 주문자 정보 입력 페이지 이동 시 임시 주문 생성 */
+	@GetMapping("/order")
+	public String orderPage() {
+		return "order/order";
+	}
+	
 	@ResponseBody
-	@PostMapping("/api/orders/prepare")
-	public ResponseEntity<OrderPreparedResponse> prepareOrder(@RequestBody OrderPreparedRequest request,
-			Authentication authentication) {
-		Long memberId = getCurrentMemberId(authentication);
+	@GetMapping("/api/orders/member-info")
+	public ResponseEntity<OrderMemberInfoResponse> getMemberInfo(
+	        Authentication authentication) {
 
-		OrderPreparedResponse response = orderService.prepareOrder(memberId, request);
+	    if (authentication == null || !authentication.isAuthenticated()) {
+	        throw new IllegalArgumentException("로그인이 필요합니다.");
+	    }
 
-		return ResponseEntity.ok(response);
+	    String email = authentication.getName();
+
+	    Member member = memberService.findMyInfo(email);
+
+	    OrderMemberInfoResponse response =
+	            new OrderMemberInfoResponse(
+	                    member.getName(),
+	                    member.getPhone(),
+	                    member.getZipcode(),
+	                    member.getAddress(),
+	                    member.getDetailAddress()
+	            );
+
+	    return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/order")
-	public String deliveryPage() {
-		return "order/order";
+	@ResponseBody
+	@PostMapping("/api/orders")
+	public ResponseEntity<OrderPreparedResponse> createOrder(@RequestBody OrderCreateRequest request,
+			Authentication authentication) {
+
+		Long memberId = getCurrentMemberId(authentication);
+
+		OrderPreparedResponse response = orderService.createOrder(memberId, request);
+
+		return ResponseEntity.ok(response);
 	}
 
 	@ResponseBody
@@ -91,15 +118,6 @@ public class OrderController {
 		return ResponseEntity.badRequest().body(exception.getMessage());
 	}
 
-	@ResponseBody
-	@PutMapping("/api/orders/{orderNumber}/delivery")
-	public ResponseEntity<String> saveDelivery(@PathVariable(name = "orderNumber") String orderNumber,
-			@RequestBody DeliveryRequest request, Authentication authentication) {
-		Long memberId = getCurrentMemberId(authentication);
-
-		orderService.saveDelivery(memberId, orderNumber, request);
-		return ResponseEntity.ok("배송지 정보 저장 완료");
-	}
 
 	@PostMapping("/api/orders/{orderNumber}/cancel")
 	public ResponseEntity<Void> cancelOrder(@PathVariable(name = "orderNumber") String orderNumber,
@@ -175,5 +193,20 @@ public class OrderController {
 	public ResponseEntity<List<AdminReservationResponse>> getAdminReservations() {
 
 		return ResponseEntity.ok(adminReservationService.findReservations());
+	}
+
+	@ResponseBody
+	@PostMapping("/api/orders/preview")
+	public ResponseEntity<OrderPreviewResponse> previewOrder(
+
+			@RequestBody OrderPreparedRequest request,
+
+			Authentication authentication) {
+
+		Long memberId = getCurrentMemberId(authentication);
+
+		OrderPreviewResponse response = orderService.previewOrder(memberId, request);
+
+		return ResponseEntity.ok(response);
 	}
 }

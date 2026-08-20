@@ -1,4 +1,5 @@
 let openedOrderNumber = null;
+let openedReservationId = null;
 
 window.addEventListener(
     "DOMContentLoaded",
@@ -71,7 +72,7 @@ async function checkAdmin() {
 
     alert("관리자 페이지에 접근할 수 없습니다.");
 
-    location.href ="/";
+    location.href = "/";
 
     return false;
 }
@@ -326,7 +327,7 @@ function createOrderDetail(order) {
                 <input
                     type="text"
                     id="tracking-${order.orderNumber}"
-                    value="${escapeAttribute(order.trackingNumber?? "")}"
+                    value="${escapeAttribute(order.trackingNumber ?? "")}"
                     placeholder="송장번호"
                 >
 
@@ -634,22 +635,22 @@ function createRefundControl(order) {
             </button>
         `;
     }
-	
-	if (
-	        order.refundStatus === "REJECTED"
-	        && order.refundId
-	    ) {
 
-	        return `
+    if (
+        order.refundStatus === "REJECTED"
+        && order.refundId
+    ) {
+
+        return `
 
 	            <div class="refund-reason">
 
 	                환불 사유:
 
 	                ${escapeHtml(
-	                    order.refundReason
-	                    ?? "-"
-	                )}
+            order.refundReason
+            ?? "-"
+        )}
 
 	            </div>
 
@@ -669,19 +670,19 @@ function createRefundControl(order) {
 
 	            </button>
 	        `;
-	    }
+    }
 
     if (order.refundStatus === "COMPLETED") {
-        return 	`
+        return `
 
 		        <div class="refund-reason">
 
 			        환불 사유:
 	
 			        ${escapeHtml(
-			        	order.refundReason
-			            ?? "-"
-			         )}
+            order.refundReason
+            ?? "-"
+        )}
 
 		        </div>
 
@@ -692,7 +693,20 @@ function createRefundControl(order) {
 		        `;
     }
 
-    return "환불 요청 없음";
+    if (order.orderStatus === "PAID") {
+
+        return `
+	        <div>환불 요청 없음</div>
+
+	        <button
+	            type="button"
+	            onclick="forceRefund('${order.orderNumber}')">
+	            환불
+	        </button>
+	    `;
+    }
+
+    return "환불 불가";
 }
 
 
@@ -734,6 +748,35 @@ async function approveRefund(refundId) {
     await loadOrders();
 }
 
+async function forceRefund(orderNumber) {
+
+    if (!confirm(
+        "사용자의 환불 요청이 없는 주문입니다. 환불하시겠습니까?"
+    )) {
+        return;
+    }
+
+
+    const response =
+        await fetch(
+            `/api/admin/orders/${encodeURIComponent(orderNumber)}/force-refund`,
+            {
+                method: "POST",
+                headers: getAuthHeaders()
+            }
+        );
+
+    if (!response.ok) {
+        alert(await getErrorMessage(response));
+        return;
+    }
+
+    alert("환불이 완료되었습니다.");
+
+
+    await loadOrders();
+}
+
 
 async function rejectRefund(refundId) {
 
@@ -753,7 +796,7 @@ async function rejectRefund(refundId) {
                     getAuthHeaders()
             }
         );
-		
+
 
 
     if (!response.ok) {
@@ -1098,18 +1141,23 @@ async function loadPerformanceOrders() {
     const reservations = await response.json();
 
     renderPerformanceOrders(reservations);
-}
+	}
 
 function renderPerformanceOrders(reservations) {
 
-    const list = document.getElementById("performance-order-list");
+    const list =
+        document.getElementById(
+            "performance-order-list"
+        );
 
-
-    if (!Array.isArray(reservations) || reservations.length === 0) {
+    if (
+        !Array.isArray(reservations)
+        || reservations.length === 0
+    ) {
 
         list.innerHTML = `
             <tr>
-                <td colspan="8">
+                <td colspan="9">
                     공연 예매 내역이 없습니다.
                 </td>
             </tr>
@@ -1169,7 +1217,228 @@ function renderPerformanceOrders(reservations) {
                         )}
                     </td>
 
+                    <td>
+                        <button
+                            type="button"
+                            onclick="
+                                togglePerformanceDetail(
+                                    ${reservation.reservationId}
+                                )
+                            "
+                        >
+                            상세/관리
+                        </button>
+                    </td>
+
                 </tr>
+
+
+                <tr
+                    id="performance-detail-${reservation.reservationId}"
+                    style="display:none;"
+                >
+                    <td colspan="9">
+
+                        ${createPerformanceDetail(
+                            reservation
+                        )}
+
+                    </td>
+                </tr>
+
             `)
             .join("");
+}
+
+function togglePerformanceDetail(reservationId) {
+
+    const detailRow = document.getElementById(`performance-detail-${reservationId}`);
+
+    if (!detailRow) {
+        return;
+    }
+
+    if (detailRow.style.display === "none" || !detailRow.style.display) {
+     
+		detailRow.style.display = "table-row";
+
+    } else {
+        detailRow.style.display = "none";
+    }
+}
+
+function createPerformanceDetail(reservation) {
+
+    return `
+        <div class="detail-box">
+
+            <div class="detail-section">
+
+                <h3>
+                    예매 정보
+                </h3>
+
+                <div>
+                    예매번호:
+                    ${reservation.reservationId ?? "-"}
+                </div>
+
+                <div>
+                    회원번호:
+                    ${reservation.memberId ?? "-"}
+                </div>
+
+                <div>
+                    예매일:
+					${reservation.reservedAt
+						? formatDate(reservation.reservedAt)
+					    : "-"
+					}
+                </div>
+
+                <div>
+                    예매상태:
+                    ${getReservationStatusText(
+                        reservation.reservationStatus
+                    )}
+                </div>
+
+                <div>
+                    좌석:
+                    ${escapeHtml(
+                        reservation.seatNumber ?? "-"
+                    )}
+                </div>
+
+                <div>
+                    결제금액:
+                    ${formatPrice(
+                        reservation.totalPrice
+                    )}원
+                </div>
+
+            </div>
+
+
+            <div class="detail-section">
+
+                <h3>
+                    환불
+                </h3>
+
+                ${createPerformanceRefundControl(
+                    reservation
+                )}
+
+            </div>
+
+        </div>
+    `;
+}
+
+function createPerformanceRefundControl(reservation) {
+
+    if (reservation.reservationStatus === "CONFIRMED") {
+
+        return `
+            <div class="refund-control">
+
+                <div>
+                    환불 요청 없음
+                </div>
+
+                <button
+                    type="button"
+                    onclick="
+                        forcePerformanceRefund(
+                            ${reservation.reservationId}
+                        )
+                    "
+                >
+                    환불
+                </button>
+
+            </div>
+        `;
+    }
+
+
+    if (reservation.reservationStatus === "CANCELLED") {
+
+        return `
+            <div class="refund-control">
+                환불 완료
+            </div>
+        `;
+    }
+
+
+    return `
+        <div class="refund-control">
+            환불 불가
+        </div>
+    `;
+}
+
+async function forcePerformanceRefund(reservationId) {
+
+    if (!confirm("사용자의 환불 요청 없이 해당 공연 예매를 환불하시겠습니까?")) {
+        return;
+    }
+
+
+    const response =
+        await fetch(
+            `/api/admin/reservations/${reservationId}/force-refund`,
+            {
+                method: "POST",
+                headers: getAuthHeaders()
+            }
+        );
+
+
+    if (!response.ok) {
+
+        alert(await getErrorMessage(response));
+
+        return;
+    }
+
+
+    alert("공연 환불이 완료되었습니다.");
+
+
+    await loadPerformanceOrders();
+}
+
+function togglePerformanceDetail(reservationId) {
+
+    const selectedRow = document.getElementById(`performance-detail-${reservationId}`);
+
+    if (!selectedRow) {
+        return;
+    }
+
+    if (openedReservationId === reservationId && selectedRow.style.display === "table-row") {
+        selectedRow.style.display = "none";
+
+        openedReservationId = null;
+
+        return;
+    }
+
+
+    if (openedReservationId) {
+
+        const previousRow =document.getElementById(`performance-detail-${openedReservationId}`);
+
+        if (previousRow) {
+            previousRow.style.display = "none";
+        }
+    }
+
+
+    selectedRow.style.display = "table-row";
+
+    openedReservationId = reservationId;
 }
