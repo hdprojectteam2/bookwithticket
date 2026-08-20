@@ -1,138 +1,48 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>도서 목록</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도서 | Booketing</title>
     <link rel="stylesheet" href="/css/style.css">
-
 </head>
+<body class="bk-page bk-books-page">
+<div class="bk-wide-shell">
+    <header class="bk-topbar">
+        <a href="/mainpage.html" class="bk-brand"><span class="bk-logo">B</span><span>Booketing</span></a>
+        <nav class="bk-nav"><a href="/mainpage.html">홈</a><a href="/books.html" class="active">도서</a><a href="/mypage.html">마이페이지</a></nav>
+    </header>
 
+    <main>
+        <section class="bk-books-hero">
+            <span class="bk-eyebrow">BOOKETING BOOKS</span>
+            <h1>오늘의 책을 발견해보세요</h1>
+            <p>인기 도서부터 신간까지, 원하는 책을 쉽고 빠르게 찾아보세요.</p>
+            <div class="bk-search-area">
+                <div class="bk-search-box"><span>⌕</span><input id="searchInput" type="text" placeholder="제목이나 저자를 검색해보세요" autocomplete="off"><button id="searchButton" class="bk-primary" type="button">검색</button></div>
+                <div id="suggestions" class="bk-suggestions"></div>
+            </div>
+            <div id="categoryBox" class="bk-category-row"><button class="active" data-category="" type="button">전체</button></div>
+        </section>
 
-<body>
+        <section class="bk-books-section">
+            <div class="bk-section-head"><div><span class="bk-eyebrow">POPULAR</span><h2>지금 많이 보는 책</h2></div><span class="bk-section-note">Booketing 인기 도서</span></div>
+            <div id="popularBooks" class="bk-book-grid bk-feature-grid"><p class="bk-empty-text">인기 도서를 불러오는 중입니다.</p></div>
+        </section>
 
-<div style="margin-bottom: 15px;">
-    <a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+        <section class="bk-books-section">
+            <div class="bk-section-head"><div><span class="bk-eyebrow">NEW BOOKS</span><h2>새로 들어온 책</h2></div><span class="bk-section-note">최근 등록 도서</span></div>
+            <div id="newBooks" class="bk-book-grid bk-feature-grid"><p class="bk-empty-text">신간 도서를 불러오는 중입니다.</p></div>
+        </section>
+
+        <section class="bk-books-section bk-all-books">
+            <div class="bk-section-head bk-list-head"><div><span class="bk-eyebrow">ALL BOOKS</span><h2>전체 도서</h2><p id="bookResultText" class="bk-section-note">도서를 불러오는 중입니다.</p></div><select id="sortSelect" class="bk-sort-select"><option value="latest">최신순</option><option value="bestseller">인기순</option><option value="priceAsc">낮은 가격순</option><option value="priceDesc">높은 가격순</option></select></div>
+            <div id="allBooks" class="bk-book-grid"></div>
+            <div id="booksEmpty" class="bk-empty-state" hidden><strong>검색 결과가 없어요</strong><p>다른 검색어나 카테고리로 찾아보세요.</p><button id="resetBooksButton" class="bk-secondary" type="button">전체 도서 보기</button></div>
+            <div id="pagination" class="bk-pagination"></div>
+        </section>
+    </main>
 </div>
-
-<h1>
-    📚 Book With Ticket
-</h1>
-
-
-
-
-<!-- 검색 -->
-
-<div class="search-box">
-
-
-    <input
-            id="searchInput"
-            type="text"
-            placeholder="도서를 검색하세요"
-            autocomplete="off"
-    >
-
-
-    <button onclick="searchBook()">
-        검색
-    </button>
-
-
-
-    <div id="suggestions"></div>
-
-
-</div>
-
-
-
-
-
-
-
-<!-- 카테고리 -->
-
-<div class="category-box">
-
-
-    <button onclick="loadCategory('IT')">
-        IT
-    </button>
-
-
-    <button onclick="loadCategory('소설')">
-        소설
-    </button>
-
-
-    <button onclick="loadCategory('경제')">
-        경제
-    </button>
-
-
-    <button onclick="loadCategory('자기계발')">
-        자기계발
-    </button>
-
-
-</div>
-
-
-
-
-
-
-
-<h2>
-    🔥 인기 도서
-</h2>
-
-
-<div id="popularBooks"
-     class="book-list">
-
-</div>
-
-
-
-
-
-
-
-<h2>
-    🆕 신간 도서
-</h2>
-
-
-<div id="newBooks"
-     class="book-list">
-
-</div>
-
-
-
-
-
-
-
-<h2>
-    📚 전체 도서
-</h2>
-
-
-<div id="allBooks"
-     class="book-list">
-
-</div>
-
 <script src="/js/books.js"></script>
-
-
 </body>
-
 </html>

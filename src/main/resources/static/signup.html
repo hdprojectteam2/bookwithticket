@@ -1,232 +1,94 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>회원가입</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 | Booketing</title>
     <link rel="stylesheet" href="/css/style.css">
-
 </head>
+<body class="bk-page bk-soft-page">
+<div class="bk-narrow-shell">
+    <header class="bk-topbar">
+        <a href="/mainpage.html" class="bk-brand"><span class="bk-logo">B</span><span>Booketing</span></a>
+        <a href="/login.html" class="bk-text-link">로그인</a>
+    </header>
 
+    <main class="bk-form-card">
+        <div class="bk-heading">
+            <span class="bk-eyebrow">JOIN BOOKETING</span>
+            <h1>회원가입</h1>
+            <p>책과 공연을 더 편하게 즐길 수 있도록 기본 정보를 입력해주세요.</p>
+        </div>
 
-<body>
+        <section class="bk-form-section">
+            <div class="bk-section-caption">계정 정보</div>
+            <div class="bk-field">
+                <label for="email">이메일 <em>*</em></label>
+                <div class="bk-inline-field">
+                    <input id="email" type="email" placeholder="example@email.com" autocomplete="email">
+                    <button id="emailCheckButton" class="bk-secondary" type="button">중복 확인</button>
+                </div>
+                <p id="emailCheck" class="bk-field-message"></p>
+            </div>
 
-<div style="margin-bottom: 15px;">
-    <a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+            <div class="bk-two-col">
+                <div class="bk-field">
+                    <label for="password">비밀번호 <em>*</em></label>
+                    <div class="bk-password-wrap">
+                        <input id="password" type="password" placeholder="8~64자" autocomplete="new-password">
+                        <button class="bk-input-action signup-password-toggle" data-target="password" type="button">보기</button>
+                    </div>
+                    <small>8~64자로 입력해주세요.</small>
+                </div>
+                <div class="bk-field">
+                    <label for="passwordCheck">비밀번호 확인 <em>*</em></label>
+                    <div class="bk-password-wrap">
+                        <input id="passwordCheck" type="password" placeholder="비밀번호 확인" autocomplete="new-password">
+                        <button class="bk-input-action signup-password-toggle" data-target="passwordCheck" type="button">보기</button>
+                    </div>
+                    <p id="passwordCheckMessage" class="bk-field-message"></p>
+                </div>
+            </div>
+        </section>
+
+        <section class="bk-form-section">
+            <div class="bk-section-caption">회원 정보</div>
+            <div class="bk-two-col">
+                <div class="bk-field">
+                    <label for="name">이름 <em>*</em></label>
+                    <input id="name" type="text" placeholder="이름" autocomplete="name">
+                </div>
+                <div class="bk-field">
+                    <label for="phone">휴대폰 번호</label>
+                    <input id="phone" type="tel" placeholder="010-0000-0000" autocomplete="tel">
+                </div>
+            </div>
+
+            <div class="bk-field">
+                <label>주소</label>
+                <div class="bk-inline-field bk-postcode-row">
+                    <input id="zipcode" type="text" placeholder="우편번호" readonly>
+                    <button class="bk-secondary" type="button" onclick="execDaumPostcode()">주소 검색</button>
+                </div>
+                <input id="address" type="text" placeholder="주소" readonly>
+                <input id="detailAddress" type="text" placeholder="상세주소">
+            </div>
+        </section>
+
+        <section class="bk-form-section bk-agreements">
+            <div class="bk-section-caption">약관 동의</div>
+            <label class="bk-check"><input id="agree" type="checkbox"><span>이용약관 동의 <b>필수</b></span></label>
+            <label class="bk-check"><input id="marketingAgree" type="checkbox"><span>마케팅 정보 수신 동의 <i>선택</i></span></label>
+        </section>
+
+        <p id="signupMessage" class="bk-message" aria-live="polite"></p>
+        <button id="signupButton" class="bk-primary bk-full" type="button">가입하기</button>
+
+        <div class="bk-switch"><span>이미 회원이신가요?</span><a href="/login.html">로그인</a></div>
+    </main>
 </div>
-
-<h1>회원가입</h1>
-
-
-
-<div class="signup-box">
-
-
-    <!-- 이메일 -->
-
-    <div>
-        <label>이메일</label>
-
-        <input
-                id="email"
-                type="email"
-                placeholder="이메일 입력"
-        >
-
-        <button onclick="checkEmail()">
-            중복 확인
-        </button>
-
-        <p id="emailCheck"></p>
-
-    </div>
-
-
-
-
-
-    <!-- 비밀번호 -->
-
-    <div>
-
-        <label>비밀번호</label>
-
-        <input
-                id="password"
-                type="password"
-                placeholder="비밀번호"
-        >
-
-        <small>
-            비밀번호는 8~64자로 입력해주세요.
-        </small>
-
-    </div>
-
-
-
-
-
-    <!-- 비밀번호 확인 -->
-
-    <div>
-
-        <label>비밀번호 확인</label>
-
-        <input
-                id="passwordCheck"
-                type="password"
-                placeholder="비밀번호 확인"
-        >
-
-    </div>
-
-
-
-
-
-    <!-- 이름 -->
-
-    <div>
-
-        <label>이름</label>
-
-        <input
-                id="name"
-                type="text"
-                placeholder="이름"
-        >
-
-    </div>
-
-
-
-
-
-    <!-- 전화번호 -->
-
-    <div>
-
-        <label>휴대폰 번호</label>
-
-        <input
-                id="phone"
-                type="text"
-                placeholder="010-0000-0000"
-        >
-
-    </div>
-
-
-
-
-
-    <!-- 주소 -->
-
-    <div>
-
-        <label>주소</label>
-
-        <input
-                type="text"
-                id="zipcode"
-                placeholder="우편번호"
-                readonly
-        >
-
-        <button
-                type="button"
-                onclick="execDaumPostcode()"
-        >
-            주소 검색
-        </button>
-
-        <input
-                type="text"
-                id="address"
-                placeholder="주소"
-                readonly
-        >
-
-        <input
-                type="text"
-                id="detailAddress"
-                placeholder="상세주소"
-        >
-
-    </div>
-
-
-
-
-
-
-    <!-- 약관 -->
-
-    <div>
-
-
-        <label>
-
-            <input
-                    id="agree"
-                    type="checkbox"
-            >
-
-            이용약관 동의 (필수)
-
-        </label>
-
-
-
-    </div>
-
-
-
-
-    <div>
-
-
-        <label>
-
-            <input
-                    id="marketingAgree"
-                    type="checkbox"
-            >
-
-            마케팅 정보 수신 동의 (선택)
-
-        </label>
-
-
-
-    </div>
-
-
-
-
-
-    <button onclick="signup()">
-
-        가입하기
-
-    </button>
-
-
-
-</div>
-
-
-
-
-
 <script src="/js/signup.js"></script>
 <script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="/js/kakao/kakao-address.js"></script>
-
 </body>
-
 </html>

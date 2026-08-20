@@ -1,190 +1,465 @@
-window.onload = function(){
+/* =====================================================
+   INIT
+===================================================== */
 
-    getMemberInfo();
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-};
-
-
-
-
-
-function getMemberInfo(){
+        getMemberInfo();
 
 
-    const token =
-        localStorage.getItem("token");
+        const updateButton =
+            document.getElementById(
+                "memberUpdateButton"
+            );
 
 
-
-    fetch("/members/me", {
-
-
-        method:"GET",
-
-
-        headers:{
+        const toggleButton =
+            document.getElementById(
+                "updatePasswordToggle"
+            );
 
 
-            "Authorization":
-                "Bearer " + token
+        updateButton?.addEventListener(
+            "click",
+            updateMember
+        );
 
 
-        }
+        toggleButton?.addEventListener(
+            "click",
+            () => {
+
+                togglePassword(
+                    "password",
+                    toggleButton
+                );
+
+            }
+        );
+
+    }
+);
 
 
-    })
+/* =====================================================
+   TOKEN
+===================================================== */
 
+function getToken() {
 
-        .then(response=>response.json())
-
-
-        .then(member=>{
-
-
-            document.getElementById("email")
-                .innerText = member.email;
-
-
-            document.getElementById("name")
-                .value = member.name ?? "";
-
-
-            document.getElementById("phone")
-                .value = member.phone ?? "";
-
-
-            document.getElementById("zipcode")
-                .value = member.zipcode ?? "";
-
-
-            document.getElementById("address")
-                .value = member.address ?? "";
-
-
-            document.getElementById("detailAddress")
-                .value = member.detailAddress ?? "";
-
-
-        });
-
+    return localStorage.getItem(
+        "token"
+    );
 
 }
 
 
+/* =====================================================
+   MEMBER INFO
+===================================================== */
+
+async function getMemberInfo() {
+
+    if (!getToken()) {
+
+        location.href =
+            "/login.html";
+
+        return;
+
+    }
 
 
+    try {
+
+        const response =
+            await fetch(
+                "/members/me",
+                {
+                    headers: {
+                        Authorization:
+                            "Bearer " +
+                            getToken()
+                    }
+                }
+            );
 
 
+        if (!response.ok) {
 
-function updateMember(){
+            throw new Error(
+                "회원정보를 불러오지 못했습니다."
+            );
+
+        }
 
 
-    const token =
-        localStorage.getItem("token");
+        const member =
+            await response.json();
 
+
+        const emailElement =
+            document.getElementById(
+                "email"
+            );
+
+
+        if (emailElement) {
+
+            emailElement.textContent =
+                member.email || "-";
+
+        }
+
+
+        setValue(
+            "name",
+            member.name
+        );
+
+        setValue(
+            "phone",
+            member.phone
+        );
+
+        setValue(
+            "zipcode",
+            member.zipcode
+        );
+
+        setValue(
+            "address",
+            member.address
+        );
+
+        setValue(
+            "detailAddress",
+            member.detailAddress
+        );
+
+
+        const marketingAgree =
+            document.getElementById(
+                "marketingAgree"
+            );
+
+
+        if (marketingAgree) {
+
+            marketingAgree.checked =
+                Boolean(
+                    member.marketingAgree
+                );
+
+        }
+
+
+    } catch (error) {
+
+        setMessage(
+            "memberUpdateMessage",
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   UPDATE MEMBER
+===================================================== */
+
+async function updateMember() {
+
+    const button =
+        document.getElementById(
+            "memberUpdateButton"
+        );
+
+
+    const passwordInput =
+        document.getElementById(
+            "password"
+        );
+
+
+    const marketingAgree =
+        document.getElementById(
+            "marketingAgree"
+        );
 
 
     const data = {
 
-
         name:
-        document.getElementById("name").value,
-
-
-        phone:
-        document.getElementById("phone").value,
-
-
-        zipcode:
-        document.getElementById("zipcode").value,
-
-
-        address:
-        document.getElementById("address").value,
-
-
-        detailAddress:
-        document.getElementById("detailAddress").value,
-
+            getValue("name") ||
+            null,
 
         password:
-            document.getElementById("password").value || null
+            passwordInput?.value ||
+            null,
 
+        phone:
+            getValue("phone"),
+
+        zipcode:
+            getValue("zipcode"),
+
+        address:
+            getValue("address"),
+
+        detailAddress:
+            getValue(
+                "detailAddress"
+            ),
+
+        marketingAgree:
+            marketingAgree?.checked ||
+            false
 
     };
 
 
+    /* 이름 필수 */
+
+    if (!data.name) {
+
+        setMessage(
+            "memberUpdateMessage",
+            "이름을 입력해주세요.",
+            "error"
+        );
+
+        return;
+
+    }
 
 
-    fetch("/members/me", {
+    /* 비밀번호 입력 시 길이 검사 */
+
+    if (
+        data.password &&
+        (
+            data.password.length < 8 ||
+            data.password.length > 64
+        )
+    ) {
+
+        setMessage(
+            "memberUpdateMessage",
+            "비밀번호는 8~64자로 입력해주세요.",
+            "error"
+        );
+
+        return;
+
+    }
 
 
-        method:"PUT",
+    if (button) {
+
+        button.disabled = true;
+        button.textContent =
+            "저장 중...";
+
+    }
 
 
-        headers:{
+    try {
 
+        const response =
+            await fetch(
+                "/members/me",
+                {
+                    method: "PUT",
 
-            "Content-Type":
-                "application/json",
+                    headers: {
 
+                        "Content-Type":
+                            "application/json",
 
-            "Authorization":
-                "Bearer " + token
+                        Authorization:
+                            "Bearer " +
+                            getToken()
 
+                    },
 
-        },
+                    body:
+                        JSON.stringify(
+                            data
+                        )
 
-
-        body:
-            JSON.stringify(data)
-
-
-    })
-
-
-
-        .then(response=>{
-
-
-            if(!response.ok){
-
-                throw new Error(
-                    "수정 실패"
-                );
-
-            }
-
-
-            return response.json();
-
-
-        })
-
-
-
-        .then(()=>{
-
-
-            alert(
-                "회원정보가 수정되었습니다."
+                }
             );
 
 
-            location.href="/mypage.html";
+        const result =
+            await response
+                .json()
+                .catch(
+                    () => ({})
+                );
 
 
-        })
+        if (!response.ok) {
+
+            throw new Error(
+                result.message ||
+                "회원정보 수정에 실패했습니다."
+            );
+
+        }
 
 
+        setMessage(
+            "memberUpdateMessage",
+            "회원정보가 수정되었습니다.",
+            "success"
+        );
 
-        .catch(error=>{
+
+        setTimeout(
+            () => {
+
+                location.href =
+                    "/mypage.html";
+
+            },
+            600
+        );
 
 
-            alert(error.message);
+    } catch (error) {
+
+        setMessage(
+            "memberUpdateMessage",
+            error.message,
+            "error"
+        );
 
 
-        });
+        if (button) {
 
+            button.disabled = false;
+
+            button.textContent =
+                "변경사항 저장";
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   VALUE UTIL
+===================================================== */
+
+function getValue(id) {
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+
+    return element?.value
+        .trim() || "";
+
+}
+
+
+function setValue(
+    id,
+    value
+) {
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+
+    if (element) {
+
+        element.value =
+            value ?? "";
+
+    }
+
+}
+
+
+/* =====================================================
+   PASSWORD TOGGLE
+===================================================== */
+
+function togglePassword(
+    id,
+    button
+) {
+
+    const input =
+        document.getElementById(
+            id
+        );
+
+
+    if (!input) {
+        return;
+    }
+
+
+    const isHidden =
+        input.type === "password";
+
+
+    input.type =
+        isHidden
+            ? "text"
+            : "password";
+
+
+    button.textContent =
+        isHidden
+            ? "숨기기"
+            : "보기";
+
+}
+
+
+/* =====================================================
+   MESSAGE
+===================================================== */
+
+function setMessage(
+    id,
+    text,
+    type
+) {
+
+    const element =
+        document.getElementById(
+            id
+        );
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.textContent =
+        text;
+
+
+    element.className =
+        "bk-message " +
+        type;
 
 }

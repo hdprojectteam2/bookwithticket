@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8787
 spring:
   application:
     name: bookwithticket
@@ -16,6 +16,7 @@ spring:
       hibernate:
         format_sql: false
     database-platform: org.hibernate.dialect.MySQLDialect
+
 aladin:
   book:
     api-key: ttbsw01pp1612001
@@ -28,3 +29,5 @@ toss:
   payments:
     secret-key: test_sk_5OWRapdA8dJgo5p5yDJ9Vo1zEqZK
     client-key: test_ck_eqRGgYO1r5AYGgZOlNJ2rQnN2Eya
+
+

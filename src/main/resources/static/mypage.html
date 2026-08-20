@@ -1,266 +1,115 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-
-<meta charset="UTF-8">
-
-<title>마이페이지</title>
-
-<link rel="stylesheet" href="/css/style.css">
-<link rel="stylesheet" href="/css/history/order-history.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 | Booketing</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
-
-
-<body>
-
-	<div
-		style="padding: 15px 20px 0 20px; max-width: 1000px; margin: 0 auto; display: flex; gap: 10px;"
-	>
-		<button onclick="location.href='/mainpage.html'"
-			style="background: #34495e; color: #fff; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold;"
-		>메인페이지로 이동</button>
-		<button onclick="location.href='/history'"
-			style="background: #2ecc71; color: #fff; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold;"
-		>통합 구매내역 이동</button>
-	</div>
-
-	<h1>마이페이지</h1>
-
-
-
-	<div class="mypage-container">
-
-
-
-		<h2>
-			👤 <span id="memberName"></span>님
-		</h2>
-
-
-
-
-		<section class="member-box">
-
-
-			<h3>회원 정보</h3>
-
-
-			<p>
-				이메일 : <span id="email"></span>
-			</p>
-
-
-			<p>
-				이름 : <span id="name"></span>
-			</p>
-
-
-			<p>
-				전화번호 : <span id="phone"></span>
-			</p>
-
-
-			<p>
-				주소 : <span id="address"></span>
-			</p>
-
-
-
-			<button onclick="goUpdate()">회원정보 수정</button>
-
-			<button onclick="logout()">로그아웃</button>
-
-			<button onclick="deleteMember()">회원 탈퇴</button>
-
-
-		</section>
-
-
-
-
-
-
-		<section class="member-box">
-
-
-			<h3>나의 도서 활동</h3>
-
-
-			<h4>📖 최근 본 도서</h4>
-
-
-			<div id="recentBooks"></div>
-
-
-
-
-			<h4>❤️ 관심 도서</h4>
-
-
-			<div id="favoriteBooks"></div>
-
-			<h4>✍️ 내가 작성한 리뷰</h4>
-
-
-			<div id="myReviews"></div>
-
-
-		</section>
-
-		<!-- 도서 구매 내역 -->
-		<section class="member-box" style="margin-top: 20px;">
-
-			<h3>나의 도서 구매 내역</h3>
-
-			<div id="myBookHistory">
-				<p style="color: #7f8c8d;">구매 내역을 불러오는 중입니다...</p>
-			</div>
-
-		</section>
-
-
-		<!-- 공연 예매 내역 섹션 (최하단 추가) -->
-		<section class="member-box" style="margin-top: 20px;">
-			<div
-				style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"
-			>
-				<h3 style="margin: 0;">나의 공연 예매 내역</h3>
-				<label style="font-size: 0.88rem; cursor: pointer; color: #555;"> <input type="checkbox"
-					id="showAllHistoryToggle" onchange="loadMyPerformanceReservations()"
-				> 취소 내역 포함해 보기
-				</label>
-			</div>
-			<div id="myPerformanceReservations">
-				<p style="color: #7f8c8d;">예매 내역을 불러오는 중입니다...</p>
-			</div>
-		</section>
-
-	</div>
-
-
-	<script src="/js/member.js"></script>
-	<script src="/js/history/mypage-book-history.js"></script>
-	<script>
-document.addEventListener("DOMContentLoaded", function() {
-    loadMyPerformanceReservations();
-});
-
-async function loadMyPerformanceReservations() {
-    const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
-    const container = document.getElementById("myPerformanceReservations");
-    const showAll = document.getElementById("showAllHistoryToggle")?.checked || false;
-    if (!container) return;
-
-    if (!token || token === "undefined") {
-        container.innerHTML = "<p style='color:#e74c3c;'>로그인이 필요합니다.</p>";
-        return;
+<body class="bk-page bk-soft-page">
+<div class="bk-wide-shell">
+    <header class="bk-topbar">
+        <a href="/mainpage.html" class="bk-brand"><span class="bk-logo">B</span><span>Booketing</span></a>
+        <nav class="bk-nav">
+            <a href="/mainpage.html">홈</a>
+            <a href="/books.html">도서</a>
+            <a href="/history">구매내역</a>
+            <a href="/mypage.html" class="active">마이페이지</a>
+        </nav>
+    </header>
+
+    <main class="bk-mypage-main">
+        <div class="bk-page-heading">
+            <span class="bk-eyebrow">MY BOOKETING</span>
+            <h1><span id="memberName"></span>님의 마이페이지</h1>
+            <p>회원정보와 나의 도서 활동, 예매 내역을 한곳에서 확인해보세요.</p>
+        </div>
+
+        <div class="bk-mypage-layout">
+            <aside class="bk-card bk-profile-card">
+                <div class="bk-avatar">B</div>
+                <h2 id="name">-</h2>
+                <p id="email">-</p>
+                <dl class="bk-profile-list">
+                    <div><dt>전화번호</dt><dd id="phone">-</dd></div>
+                    <div><dt>주소</dt><dd id="address">-</dd></div>
+                </dl>
+                <div class="bk-profile-actions">
+                    <button class="bk-primary" type="button" onclick="goUpdate()">회원정보 수정</button>
+                    <button class="bk-secondary" type="button" onclick="logout()">로그아웃</button>
+                    <button class="bk-danger-link" type="button" onclick="deleteMember()">회원 탈퇴</button>
+                </div>
+            </aside>
+
+            <div class="bk-mypage-content">
+                <section class="bk-card">
+                    <div class="bk-section-head">
+                        <div><span class="bk-eyebrow">BOOK ACTIVITY</span><h2>나의 도서 활동</h2></div>
+                        <a href="/books.html" class="bk-text-link">도서 둘러보기 →</a>
+                    </div>
+
+                    <div class="bk-activity-block">
+                        <h3>최근 본 도서</h3>
+                        <div id="recentBooks" class="bk-mini-book-grid"></div>
+                    </div>
+                    <div class="bk-activity-block">
+                        <h3>관심 도서</h3>
+                        <div id="favoriteBooks" class="bk-mini-book-grid"></div>
+                    </div>
+                    <div class="bk-activity-block">
+                        <h3>내가 작성한 리뷰</h3>
+                        <div id="myReviews" class="bk-review-list"></div>
+                    </div>
+                </section>
+
+                <section class="bk-card">
+                    <div class="bk-section-head">
+                        <div><span class="bk-eyebrow">RESERVATION</span><h2>나의 공연 예매 내역</h2></div>
+                        <label class="bk-check bk-compact-check"><input type="checkbox" id="showAllHistoryToggle" onchange="loadMyPerformanceReservations()"><span>취소 내역 포함</span></label>
+                    </div>
+                    <div id="myPerformanceReservations"><p class="bk-empty-text">예매 내역을 불러오는 중입니다.</p></div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+<script src="/js/member.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', loadMyPerformanceReservations);
+    async function loadMyPerformanceReservations() {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        const container = document.getElementById('myPerformanceReservations');
+        const showAll = document.getElementById('showAllHistoryToggle')?.checked || false;
+        if (!container) return;
+        if (!token || token === 'undefined') { container.innerHTML = '<p class="bk-error-text">로그인이 필요합니다.</p>'; return; }
+        try {
+            const response = await fetch('/api/reservations/my', {headers:{'Authorization':`Bearer ${token}`}});
+            const result = await response.json();
+            if (!response.ok || !result.data) { container.innerHTML='<p class="bk-empty-text">예매 내역이 없습니다.</p>'; return; }
+            let reservations=(result.data||[]).filter(r=>r.status!=='EXPIRED');
+            if(!showAll) reservations=reservations.filter(r=>r.status==='HELD'||r.status==='CONFIRMED');
+            if(!reservations.length){container.innerHTML='<p class="bk-empty-text">예매 내역이 없습니다.</p>';return;}
+            container.innerHTML='<div class="bk-reservation-list">'+reservations.map(r=>{
+                const status={HELD:'선점 중',CONFIRMED:'예매 완료',CANCELED:'취소됨',EXPIRED:'시간 만료'}[r.status]||r.status;
+                const cls={HELD:'held',CONFIRMED:'confirmed',CANCELED:'canceled',EXPIRED:'canceled'}[r.status]||'canceled';
+                const time=r.performanceTime?new Date(r.performanceTime).toLocaleString('ko-KR'):'-';
+                const cancel=r.status==='HELD'||r.status==='CONFIRMED'?`<button class="bk-secondary bk-small-btn" onclick="cancelMyReservation(${r.id}, '${r.status}')">${r.status==='HELD'?'선점 취소':'예매 취소'}</button>`:'';
+                return `<article class="bk-reservation-item"><div class="bk-reservation-main"><div class="bk-reservation-top"><strong>예매 #${r.id}</strong><span class="bk-status ${cls}">${status}</span></div><h3>${r.performanceTitle||'공연'}</h3><p>${time} · 좌석 ${r.seatNumber||'-'} · ${Number(r.price||0).toLocaleString()}원</p></div>${cancel}</article>`;
+            }).join('')+'</div>';
+        } catch(e){container.innerHTML='<p class="bk-error-text">예매 내역을 불러오지 못했습니다.</p>';}
     }
-
-    try {
-        const response = await fetch("/api/reservations/my", {
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
-        const result = await response.json();
-        
-        if (!response.ok || !result.data) {
-            container.innerHTML = "<p style='color:#7f8c8d;'>예매 내역이 없습니다.</p>";
-            return;
-        }
-
-        let reservations = (result.data || []).filter(r => r.status !== 'EXPIRED');
-        if (!showAll) {
-            reservations = reservations.filter(r => r.status === 'HELD' || r.status === 'CONFIRMED');
-        }
-
-        if (reservations.length === 0) {
-            container.innerHTML = "<p style='color:#7f8c8d;'>예매 내역이 없습니다.</p>";
-            return;
-        }
-
-        let html = '<div style="line-height:1.8;">';
-        reservations.forEach((r) => {
-            const statusMap = {
-                'HELD': '<span style="color:#f39c12; font-weight:bold;">[선점 중 (결제 대기)]</span>',
-                'CONFIRMED': '<span style="color:#2ecc71; font-weight:bold;">[예매 완료]</span>',
-                'CANCELED': '<span style="color:#95a5a6;">[취소됨]</span>',
-                'EXPIRED': '<span style="color:#e74c3c;">[시간 만료]</span>'
-            };
-            const statusStr = statusMap[r.status] || r.status;
-            const perfTimeStr = r.performanceTime ? new Date(r.performanceTime).toLocaleString('ko-KR') : '';
-
-            html += `<p style="border-bottom:1px solid #ccc; padding-bottom:12px; margin-bottom:12px;">`;
-            html += `<b>예매 번호:</b> #${r.id} ${statusStr}<br>`;
-            html += `<b>공연 제목:</b> ${r.performanceTitle || '공연'}<br>`;
-            html += `<b>공연 일시:</b> ${perfTimeStr}<br>`;
-            html += `<b>좌석 번호:</b> ${r.seatNumber || ''}<br>`;
-            html += `<b>예매 금액:</b> ${Number(r.price).toLocaleString()}원<br>`;
-            
-            if (r.status === 'HELD') {
-                html += `<button onclick="cancelMyReservation(${r.id}, 'HELD')" style="margin-top:6px; background:#e67e22; color:#fff; border:none; padding:4px 10px; cursor:pointer; font-weight:bold;">선점 취소</button><br>`;
-            } else if (r.status === 'CONFIRMED') {
-                html += `<button onclick="cancelMyReservation(${r.id}, 'CONFIRMED')" style="margin-top:6px; background:#e74c3c; color:#fff; border:none; padding:4px 10px; cursor:pointer; font-weight:bold;">예매 취소 (환불)</button><br>`;
-            }
-            html += `</p>`;
-        });
-        html += '</div>';
-        container.innerHTML = html;
-    } catch (e) {
-        container.innerHTML = "<p style='color:#e74c3c;'>예매 내역 로드 중 오류가 발생했습니다.</p>";
-    }
-}
-
-async function cancelMyReservation(reservationId, currentStatus) {
-    const confirmMsg = currentStatus === 'CONFIRMED' 
-        ? `예매 번호 #${reservationId} 건을 결제 취소 및 환불하시겠습니까?`
-        : `예매 번호 #${reservationId} 건의 좌석 선점을 취소하시겠습니까?`;
-
-    if (!confirm(confirmMsg)) return;
-
-    const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
-    try {
-    	let response;
-        if (currentStatus === 'CONFIRMED') {
-            response = await fetch(
-                `/api/payments/PERF_${reservationId}/refund`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        reason: "공연 예매 취소"
-                    })
-                }
-            );
-        } else {
-        	response = await fetch(
-                `/api/reservations/${reservationId}/cancel`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                }
-            );
-        }
-        const result = await response.json();
-        if (response.ok) {
-            const successMsg = currentStatus === 'CONFIRMED' ? "예매 결제 환불 및 취소가 완료되었습니다." : "좌석 선점이 취소되었습니다.";
-            alert(successMsg);
+    async function cancelMyReservation(reservationId,currentStatus){
+        const msg=currentStatus==='CONFIRMED'?`예매 번호 #${reservationId} 건을 결제 취소 및 환불하시겠습니까?`:`예매 번호 #${reservationId} 건의 좌석 선점을 취소하시겠습니까?`;
+        if(!confirm(msg)) return;
+        const token=localStorage.getItem('token')||localStorage.getItem('accessToken');
+        try{
+            const response=await fetch(`/api/reservations/${reservationId}/cancel`,{method:'POST',headers:{'Authorization':`Bearer ${token}`}});
+            const result=await response.json().catch(()=>({}));
+            if(!response.ok) throw new Error(result.message||'취소에 실패했습니다.');
+            alert(currentStatus==='CONFIRMED'?'예매 취소 및 환불이 완료되었습니다.':'좌석 선점이 취소되었습니다.');
             loadMyPerformanceReservations();
-        } else {
-            alert(`취소 실패: ${result.message || '오류가 발생했습니다.'}`);
-        }
-    } catch (e) {
-        alert(`에러 발생: ${e.message}`);
+        }catch(e){alert(e.message);}
     }
-}
 </script>
-
 </body>
-
 </html>

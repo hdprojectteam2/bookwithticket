@@ -1,281 +1,42 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>도서 상세</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도서 상세 | Booketing</title>
     <link rel="stylesheet" href="/css/style.css">
-
 </head>
+<body class="bk-page bk-book-detail-page">
+<div class="bk-wide-shell">
+    <header class="bk-topbar"><a href="/mainpage.html" class="bk-brand"><span class="bk-logo">B</span><span>Booketing</span></a><nav class="bk-nav"><a href="/mainpage.html">홈</a><a href="/books.html" class="active">도서</a><a href="/mypage.html">마이페이지</a></nav></header>
 
+    <main class="bk-detail-main">
+        <div class="bk-breadcrumb"><a href="/books.html">도서</a><span>›</span><span id="breadcrumbTitle">상세</span></div>
 
-<body>
+        <section class="bk-detail-hero">
+            <div class="bk-detail-cover"><img id="thumbnail" alt="도서 표지"></div>
+            <div class="bk-detail-info">
+                <span id="category" class="bk-eyebrow"></span>
+                <h1 id="title">도서 정보를 불러오는 중입니다.</h1>
+                <p class="bk-book-byline"><span id="author"></span><span class="bk-dot">·</span><span id="publisher"></span></p>
+                <div class="bk-review-summary"><span class="bk-stars">★</span><strong id="averageRating">0.0</strong><span id="reviewCount">리뷰 0개</span></div>
+                <div class="bk-detail-price"><span id="discountRate" class="bk-discount-text"></span><strong><span id="salePrice"></span>원</strong><del id="originalPrice"></del></div>
+                <div class="bk-detail-meta"><div><span>재고</span><strong><span id="stock"></span>권</strong></div><div><span>ISBN</span><strong id="isbn">-</strong></div><div><span>출간일</span><strong id="publishedDate">-</strong></div><div><span>분류</span><strong id="categoryText">-</strong></div></div>
+                <div class="bk-detail-actions"><button id="favoriteButton" class="bk-secondary" type="button" onclick="favorite()">♡ 관심 도서</button><button id="cartButton" class="bk-primary" type="button" onclick="cart()">장바구니 담기</button></div>
+            </div>
+        </section>
 
-<div style="margin-bottom: 15px;">
-    <a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+        <section class="bk-detail-section"><span class="bk-eyebrow">ABOUT BOOK</span><h2>책 소개</h2><p id="description" class="bk-description"></p></section>
+
+        <section class="bk-detail-section">
+            <div class="bk-section-head"><div><span class="bk-eyebrow">REVIEWS</span><h2>리뷰</h2></div><div id="reviewInfo" class="bk-review-info"></div></div>
+            <div class="bk-reviews-layout">
+                <div id="reviewList" class="bk-review-list"></div>
+                <aside class="bk-review-write"><h3>리뷰 작성</h3><p>읽은 책에 대한 의견을 남겨주세요.</p><label for="rating">평점</label><select id="rating"><option value="5">★★★★★ 5점</option><option value="4">★★★★☆ 4점</option><option value="3">★★★☆☆ 3점</option><option value="2">★★☆☆☆ 2점</option><option value="1">★☆☆☆☆ 1점</option></select><label for="reviewContent">내용</label><textarea id="reviewContent" placeholder="리뷰를 작성해주세요"></textarea><button id="reviewSubmitButton" class="bk-primary bk-full" type="button" onclick="saveReview()">리뷰 등록</button></aside>
+            </div>
+        </section>
+    </main>
 </div>
-
-<h1>
-    📖 도서 상세
-</h1>
-
-
-
-
-
-<div class="detail-container">
-
-
-
-    <div class="book-image">
-
-
-        <img id="thumbnail"
-             width="250">
-
-
-    </div>
-
-
-
-
-
-    <div class="book-info">
-
-
-
-        <h2 id="title"></h2>
-
-
-
-
-        <p>
-            저자 :
-            <span id="author"></span>
-        </p>
-
-
-
-        <p>
-            출판사 :
-            <span id="publisher"></span>
-        </p>
-
-
-
-
-        <p>
-            가격 :
-            <span id="price"></span>
-            원
-        </p>
-
-
-
-
-        <p>
-            카테고리 :
-            <span id="category"></span>
-        </p>
-
-
-
-
-        <p>
-            재고 :
-            <span id="stock"></span>
-            개
-        </p>
-
-
-
-
-
-        <button onclick="favorite()">
-            ❤️ 관심 도서
-        </button>
-
-        <button onclick="cart()">
-            🛒 장바구니
-        </button>
-
-        <div id="linkedPerformanceBox" style="display:none; margin-top:15px; padding:12px; background:#e8f4fd; border:1px solid #3498db; border-radius:6px;">
-            <p style="margin:0 0 8px 0; font-weight:bold; color:#2980b9; font-size:0.95rem;">🎭 이 책을 원작으로 한 공연/뮤지컬</p>
-            <a id="linkedPerfBtn" href="#" style="display:inline-block; background:#8e44ad; color:#fff; padding:8px 15px; border-radius:4px; font-weight:bold; font-size:0.9rem; text-decoration:none;">공연 예매하러 가기 ➔</a>
-        </div>
-
-    </div>
-
-</div>
-
-
-
-
-
-
-
-
-
-<div class="description-box">
-
-
-
-    <h2>
-        📖 책 소개
-    </h2>
-
-
-
-    <p id="description"></p>
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
-<!-- 리뷰 영역 -->
-
-<div class="review-box">
-
-
-
-    <h2>
-        ⭐ 리뷰
-    </h2>
-
-
-
-
-
-    <!-- 평균 평점 -->
-
-    <div id="reviewInfo">
-
-    </div>
-
-
-
-
-
-
-    <!-- 리뷰 목록 -->
-
-    <div id="reviewList">
-
-
-    </div>
-
-
-
-
-
-
-
-
-    <hr>
-
-
-
-
-
-    <!-- 리뷰 작성 -->
-
-
-    <h3>
-        리뷰 작성
-    </h3>
-
-
-
-
-
-    <select id="rating">
-
-
-        <option value="5">
-            ⭐⭐⭐⭐⭐
-        </option>
-
-
-        <option value="4">
-            ⭐⭐⭐⭐
-        </option>
-
-
-        <option value="3">
-            ⭐⭐⭐
-        </option>
-
-
-        <option value="2">
-            ⭐⭐
-        </option>
-
-
-        <option value="1">
-            ⭐
-        </option>
-
-
-    </select>
-
-
-
-
-
-
-
-
-    <textarea
-
-            id="reviewContent"
-
-            placeholder="리뷰를 작성해주세요">
-
-    </textarea>
-
-
-
-
-
-
-
-
-    <button onclick="saveReview()">
-
-
-        리뷰 등록
-
-
-    </button>
-
-
-
-
-</div>
-
-
-
-
-
-
-
-
-
 <script src="/js/book-detail.js"></script>
-
-
-
 </body>
-
 </html>
