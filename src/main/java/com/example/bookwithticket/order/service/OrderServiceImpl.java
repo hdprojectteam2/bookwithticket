@@ -35,6 +35,7 @@ import com.example.bookwithticket.order.repository.BookOrderRepository;
 import com.example.bookwithticket.payment.entity.PaymentEntity;
 import com.example.bookwithticket.payment.entity.PaymentStatus;
 import com.example.bookwithticket.payment.repository.PaymentRepository;
+import com.example.bookwithticket.payment.service.PaymentFailureService;
 import com.example.bookwithticket.refund.entity.RefundEntity;
 import com.example.bookwithticket.refund.repository.RefundRepository;
 
@@ -48,16 +49,20 @@ public class OrderServiceImpl implements OrderService {
 	private final BookStockRepository bookRepository;
 	private final PaymentRepository paymentRepository;
 	private final RefundRepository refundRepository;
+	private final PaymentFailureService paymentFailureService;
 
 	public OrderServiceImpl(CartItemRepository cartItemRepository, BookOrderRepository bookOrderRepository,
 			AddressRepository addressRepository, BookStockRepository bookRepository,
-			PaymentRepository paymentRepository, RefundRepository refundRepository) {
+			PaymentRepository paymentRepository, RefundRepository refundRepository,
+			PaymentFailureService paymentFailureService) {
 		this.cartItemRepository = cartItemRepository;
 		this.bookOrderRepository = bookOrderRepository;
 		this.addressRepository = addressRepository;
 		this.bookRepository = bookRepository;
 		this.paymentRepository = paymentRepository;
 		this.refundRepository = refundRepository;
+		this.paymentFailureService = paymentFailureService;
+
 	}
 
 	@Override
@@ -166,8 +171,13 @@ public class OrderServiceImpl implements OrderService {
 
 		List<BookOrderEntity> expiredOrders = bookOrderRepository
 				.findByOrderStatusAndCreatedAtBefore(OrderStatus.PAYMENT_PENDING, expirationTime);
+
 		for (BookOrderEntity order : expiredOrders) {
+
+			paymentFailureService.saveExpired(order);
+
 			for (BookOrderItemEntity orderItem : order.getOrderItems()) {
+
 				bookRepository.increaseStock(orderItem.getBook().getId(), orderItem.getQuantity());
 			}
 
