@@ -8,4 +8,5 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
     List<Seat> findByScheduleIdOrderByIdAsc(Long scheduleId);
     List<Seat> findByScheduleIdOrderBySeatNumberAsc(Long scheduleId);
     Optional<Seat> findByScheduleIdAndSeatNumber(Long scheduleId, String seatNumber);
+    void deleteByScheduleId(Long scheduleId);
 }

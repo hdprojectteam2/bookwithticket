@@ -14,8 +14,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Optional<Reservation> findByIdAndMemberId(Long id, Long memberId);
     Optional<Reservation> findByScheduleIdAndSeatIdAndStatus(Long scheduleId, Long seatId, ReservationStatus status);
     Optional<Reservation> findFirstByScheduleIdAndSeatIdAndStatusOrderByIdDesc(Long scheduleId, Long seatId, ReservationStatus status);
-    // N+1 문제 해결을 위한 
     List<Reservation> findByScheduleIdAndStatusIn(Long scheduleId, List<ReservationStatus> statuses);
+    
     // 만료된 HELD 예약 조회 (스케줄러용)
     List<Reservation> findByStatusAndHoldExpiresAtBefore(ReservationStatus status, LocalDateTime dateTime);
+    
+    // 스케줄 ID에 연관된 모든 예매 삭제
+    void deleteByScheduleId(Long scheduleId);
 }
