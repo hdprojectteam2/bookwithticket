@@ -1,155 +1,44 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>회원정보 수정</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원정보 수정 | Booketing</title>
     <link rel="stylesheet" href="/css/style.css">
-
 </head>
+<body class="bk-page bk-soft-page">
+<div class="bk-narrow-shell">
+    <header class="bk-topbar">
+        <a href="/mainpage.html" class="bk-brand"><span class="bk-logo">B</span><span>Booketing</span></a>
+        <a href="/mypage.html" class="bk-text-link">← 마이페이지</a>
+    </header>
 
+    <main class="bk-form-card">
+        <div class="bk-heading">
+            <span class="bk-eyebrow">MEMBER SETTINGS</span>
+            <h1>회원정보 수정</h1>
+            <p>변경할 정보만 수정한 뒤 저장해주세요.</p>
+        </div>
 
-<body>
+        <div class="bk-readonly"><span>이메일</span><strong id="email">-</strong><small>이메일은 변경할 수 없습니다.</small></div>
 
+        <div class="bk-two-col">
+            <div class="bk-field"><label for="name">이름</label><input id="name" type="text"></div>
+            <div class="bk-field"><label for="phone">전화번호</label><input id="phone" type="tel" placeholder="010-0000-0000"></div>
+        </div>
 
-<h1>회원정보 수정</h1>
+        <div class="bk-section-caption bk-divider-caption">주소 정보</div>
+        <div class="bk-field"><input id="zipcode" type="text" placeholder="우편번호"><input id="address" type="text" placeholder="주소"><input id="detailAddress" type="text" placeholder="상세주소"></div>
 
+        <div class="bk-section-caption bk-divider-caption">비밀번호 변경</div>
+        <div class="bk-field"><label for="password">새 비밀번호</label><div class="bk-password-wrap"><input id="password" type="password" placeholder="변경할 때만 입력"><button id="updatePasswordToggle" class="bk-input-action" type="button">보기</button></div><small>변경하지 않으려면 비워두세요.</small></div>
 
+        <label class="bk-check"><input id="marketingAgree" type="checkbox"><span>마케팅 정보 수신 동의</span></label>
+        <p id="memberUpdateMessage" class="bk-message" aria-live="polite"></p>
 
-<div class="update-box">
-
-
-    <div>
-
-        <label>
-            이메일
-        </label>
-
-        <p id="email">
-            -
-        </p>
-
-    </div>
-
-
-
-    <div>
-
-        <label>
-            이름
-        </label>
-
-        <input
-                id="name"
-                type="text"
-        >
-
-    </div>
-
-
-
-
-    <div>
-
-        <label>
-            전화번호
-        </label>
-
-        <input
-                id="phone"
-                type="text"
-        >
-
-    </div>
-
-
-
-
-    <div>
-
-        <label>
-            우편번호
-        </label>
-
-        <input
-                id="zipcode"
-                type="text"
-        >
-
-    </div>
-
-
-
-
-    <div>
-
-        <label>
-            주소
-        </label>
-
-        <input
-                id="address"
-                type="text"
-        >
-
-    </div>
-
-
-
-
-    <div>
-
-        <label>
-            상세주소
-        </label>
-
-        <input
-                id="detailAddress"
-                type="text"
-        >
-
-    </div>
-
-
-
-
-
-    <div>
-
-        <label>
-            새 비밀번호
-        </label>
-
-        <input
-                id="password"
-                type="password"
-                placeholder="변경할 때만 입력"
-        >
-
-    </div>
-
-
-
-
-    <button onclick="updateMember()">
-
-        수정하기
-
-    </button>
-
-
+        <div class="bk-form-actions"><button class="bk-secondary" type="button" onclick="location.href='/mypage.html'">취소</button><button id="memberUpdateButton" class="bk-primary" type="button">변경사항 저장</button></div>
+    </main>
 </div>
-
-
-
-
-
 <script src="/js/member-update.js"></script>
-
-
 </body>
-
 </html>

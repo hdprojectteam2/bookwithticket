@@ -45,12 +45,19 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/members/signup",
                                 "/members/login",
-                                "/members/check-email"
+                                "/members/check-email",
+                                "/members/count"
                         ).permitAll()
 
                         // 도서 조회 공개
                         .requestMatchers(HttpMethod.GET, "/books", "/books/**")
                         .permitAll()
+
+                        // 리뷰 작성/삭제는 로그인 회원
+                        .requestMatchers(HttpMethod.POST, "/books/*/reviews")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/reviews/**")
+                        .authenticated()
 
                         // 도서 변경/알라딘 적재 ADMIN
                         .requestMatchers(HttpMethod.POST, "/books/**")
@@ -64,8 +71,16 @@ public class SecurityConfig {
                         .requestMatchers("/members/**")
                         .authenticated()
 
-                        .requestMatchers("/admin.html", "/js/admin.js")
-                        .hasRole("ADMIN")
+                        // 공연 예매/선점 및 주문 결제 API 로그인(인증) 필수 적용 (원천 401 Unauthorized 보장)
+                        .requestMatchers(
+                                "/api/reservations/**",
+                                "/api/orders/**",
+                                "/api/payments/**",
+                                "/api/refunds/**"
+                        ).authenticated()
+
+                        .requestMatchers("/admin.html", "/js/admin.js").permitAll()
+
 
                         // dev의 다른 팀 기능 정책은 현재처럼 유지
                         .anyRequest()

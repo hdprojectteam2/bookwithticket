@@ -1,44 +1,48 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
     <meta charset="UTF-8">
-    <title>로그인</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 | Booketing</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
+<body class="bk-page bk-auth-page">
+<main class="bk-auth-shell">
+    <a href="/mainpage.html" class="bk-brand"><span class="bk-logo">B</span><span>Booketing</span></a>
 
+    <section class="bk-auth-card">
+        <div class="bk-heading bk-center">
+            <span class="bk-eyebrow">WELCOME BACK</span>
+            <h1>다시 만나서 반가워요</h1>
+            <p>로그인하고 책과 공연을 한곳에서 즐겨보세요.</p>
+        </div>
 
-<body>
+        <form id="loginForm" class="bk-form" novalidate>
+            <div class="bk-field">
+                <label for="email">이메일</label>
+                <input id="email" type="email" placeholder="example@email.com" autocomplete="email">
+            </div>
 
-<h1>로그인</h1>
+            <div class="bk-field">
+                <label for="password">비밀번호</label>
+                <div class="bk-password-wrap">
+                    <input id="password" type="password" placeholder="비밀번호를 입력해주세요" autocomplete="current-password">
+                    <button class="bk-input-action" id="loginPasswordToggle" type="button">보기</button>
+                </div>
+            </div>
 
+            <p id="loginMessage" class="bk-message" aria-live="polite"></p>
+            <button id="loginButton" class="bk-primary bk-full" type="submit">로그인</button>
+        </form>
 
-<input
-        id="email"
-        type="email"
-        placeholder="이메일"
->
+        <div class="bk-switch">
+            <span>아직 회원이 아니신가요?</span>
+            <a href="/signup.html">회원가입</a>
+        </div>
+    </section>
 
-
-<input
-        id="password"
-        type="password"
-        placeholder="비밀번호"
->
-
-
-<button onclick="login()">
-    로그인
-</button>
-
-<button onclick="location.href='/signup.html'">
-    회원가입
-</button>
-
-
+    <a href="/mainpage.html" class="bk-back-link">← Booketing 홈으로</a>
+</main>
 <script src="/js/auth.js"></script>
-
 </body>
-
 </html>

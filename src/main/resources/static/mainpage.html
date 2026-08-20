@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BookWithTicket - 통합 메인</title>
+    <title>Booketing - 통합 메인</title>
     <style>
         * {
             box-sizing: border-box;
@@ -228,7 +228,7 @@
 </div>
 
 <header class="main-header">
-    <a href="/mainpage.html" class="brand-title">BookWithTicket</a>
+    <a href="/mainpage.html" class="brand-title">Booketing</a>
     <ul class="header-menu">
         <li><a href="/books.html">도서</a></li>
         <li><a href="/index.html">공연</a></li>
@@ -238,11 +238,11 @@
 </header>
 
 <div class="container">
-    
+
     <div class="search-section">
         <div class="search-form">
-            <input type="text" id="searchInput" class="search-input" placeholder="통합 검색 (도서명 또는 공연 제목 입력) (기능 미연동)">
-            <button class="search-btn">검색</button>
+            <input type="text" id="searchInput" class="search-input" placeholder="도서명 또는 공연 제목을 검색하세요">
+            <button class="search-btn" id="mainSearchButton">검색</button>
         </div>
     </div>
 
@@ -262,7 +262,7 @@
         </div>
         <div class="stat-item">
             <span class="stat-label">전체 회원수</span>
-            <span class="stat-value" id="memberCountVal">150 명</span>
+            <span class="stat-value" id="memberCountVal">-</span>
         </div>
     </div>
 
@@ -285,12 +285,13 @@
 <script>
     async function loadStatsAndData() {
         try {
-            const res = await fetch('/books');
+            const res = await fetch('/books?page=0&size=1');
             if (res.ok) {
-                const books = await res.json();
-                const bookList = Array.isArray(books) ? books : [];
-                document.getElementById('bookCountVal').innerText = `${bookList.length} 권`;
-                renderBooks(bookList);
+                const page = await res.json();
+                document.getElementById('bookCountVal').innerText = `${Number(page.totalElements || 0).toLocaleString()} 권`;
+                const popularRes = await fetch('/books/popular');
+                const bookList = popularRes.ok ? await popularRes.json() : [];
+                renderBooks(Array.isArray(bookList) ? bookList.slice(0, 8) : []);
             } else {
                 document.getElementById('bookListGrid').innerHTML = '<p>도서 목록을 가져올 수 없습니다.</p>';
             }
@@ -355,13 +356,30 @@
         });
     }
 
-    function parseJwtEmail(token) {
+
+    function updateMemberSummary() {
+        const token = localStorage.getItem('token');
+        document.getElementById('memberCountVal').innerText = token ? '로그인 중' : '비회원';
+    }
+
+    function runMainSearch() {
+        const keyword = document.getElementById('searchInput').value.trim();
+        if (!keyword) return;
+        location.href = '/books.html?keyword=' + encodeURIComponent(keyword);
+    }
+
+    document.getElementById('mainSearchButton')?.addEventListener('click', runMainSearch);
+    document.getElementById('searchInput')?.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') runMainSearch();
+    });
+
+    function parseJwtToken(token) {
         try {
             if (!token) return null;
             const base64Url = token.split('.')[1];
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const payload = JSON.parse(atob(base64));
-            return payload.sub || payload.email || null;
+            return payload;
         } catch (e) {
             return null;
         }
@@ -373,9 +391,17 @@
         if (!authLinks) return;
 
         if (token && token !== 'undefined') {
-            const userEmail = parseJwtEmail(token);
+            const payload = parseJwtToken(token);
+            const userEmail = payload ? (payload.sub || payload.email || '') : '';
+            const role = payload ? (payload.role || '') : '';
             const userDisplay = userEmail ? `<span style="font-weight:bold; color:#2c3e50; margin-right:8px;">${userEmail} 님</span>` : '';
-            authLinks.innerHTML = `${userDisplay}<a href="#" onclick="logout(); return false;">로그아웃</a>`;
+
+            let adminLinks = '';
+            if (role === 'ADMIN' || role === 'ROLE_ADMIN') {
+                adminLinks = ` <span>|</span> <a href="/admin.html" style="color:#8e44ad; font-weight:bold;">도서 관리자</a> <span>|</span> <a href="/admin/orders" style="color:#27ae60; font-weight:bold;">주문/배송 관리자</a>`;
+            }
+
+            authLinks.innerHTML = `${userDisplay}<a href="#" onclick="logout(); return false;">로그아웃</a>${adminLinks}`;
         } else {
             authLinks.innerHTML = `<a href="/login.html">로그인</a> <span>|</span> <a href="/signup.html">회원가입</a>`;
         }
@@ -389,6 +415,7 @@
     }
 
     checkAuthStatus();
+    updateMemberSummary();
     loadStatsAndData();
 </script>
 
