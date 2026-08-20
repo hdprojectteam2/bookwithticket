@@ -142,6 +142,7 @@ public class OrderController {
 		return ResponseEntity.ok(order);
 	}
 
+	@PreAuthorize("hasRole('ADMIN')")
 	@GetMapping("/admin/orders")
 	public String adminOrdersPage() {
 		return "order/adminOrder";

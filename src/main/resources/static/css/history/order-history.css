@@ -94,7 +94,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    padding-bottom: 20px;
+	border-bottom: 1px solid oklch(70.4% 0.04 256.788);
 }
 
 .empty-history{
@@ -180,4 +181,19 @@
 .reservation-status.cancelled {
     background-color: #fff0f0;
     color: #e54848;
+}
+
+.history-more-button {
+    display: block;
+    margin: 20px auto 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 15px;
+    color: oklch(70.4% 0.04 256.788);
+}
+
+.history-more-button:hover {
+	cursor: pointer;
+    text-decoration: underline;
 }

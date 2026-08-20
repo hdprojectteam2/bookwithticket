@@ -3,158 +3,145 @@
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <title>마이페이지</title>
+<title>마이페이지</title>
 
-    <link rel="stylesheet" href="/css/style.css">
-	<link rel="stylesheet" href="/css/history/order-history.css">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/history/order-history.css">
 </head>
 
 
 <body>
 
-<div style="padding:15px 20px 0 20px; max-width:1000px; margin:0 auto; display:flex; justify-content:space-between; align-items:center;">
-    <a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
-    <button onclick="location.href='/history'" style="background:#2ecc71; color:#fff; border:none; padding:8px 16px; cursor:pointer; font-weight:bold; border-radius:4px;">통합 구매내역 이동</button>
-</div>
+	<div
+		style="padding: 15px 20px 0 20px; max-width: 1000px; margin: 0 auto; display: flex; gap: 10px;"
+	>
+		<button onclick="location.href='/mainpage.html'"
+			style="background: #34495e; color: #fff; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold;"
+		>메인페이지로 이동</button>
+		<button onclick="location.href='/history'"
+			style="background: #2ecc71; color: #fff; border: none; padding: 8px 16px; cursor: pointer; font-weight: bold;"
+		>통합 구매내역 이동</button>
+	</div>
 
-<h1>마이페이지</h1>
-
-
-
-<div class="mypage-container">
-
-
-
-    <h2>
-        👤 <span id="memberName"></span>님
-    </h2>
+	<h1>마이페이지</h1>
 
 
 
-
-    <section class="member-box">
-
-
-        <h3>
-            회원 정보
-        </h3>
-
-
-        <p>
-            이메일 :
-            <span id="email"></span>
-        </p>
-
-
-        <p>
-            이름 :
-            <span id="name"></span>
-        </p>
-
-
-        <p>
-            전화번호 :
-            <span id="phone"></span>
-        </p>
-
-
-        <p>
-            주소 :
-            <span id="address"></span>
-        </p>
+	<div class="mypage-container">
 
 
 
-        <button onclick="goUpdate()">
-            회원정보 수정
-        </button>
-
-        <button onclick="logout()">
-            로그아웃
-        </button>
-
-        <button onclick="deleteMember()">
-            회원 탈퇴
-        </button>
+		<h2>
+			👤 <span id="memberName"></span>님
+		</h2>
 
 
-    </section>
+
+
+		<section class="member-box">
+
+
+			<h3>회원 정보</h3>
+
+
+			<p>
+				이메일 : <span id="email"></span>
+			</p>
+
+
+			<p>
+				이름 : <span id="name"></span>
+			</p>
+
+
+			<p>
+				전화번호 : <span id="phone"></span>
+			</p>
+
+
+			<p>
+				주소 : <span id="address"></span>
+			</p>
+
+
+
+			<button onclick="goUpdate()">회원정보 수정</button>
+
+			<button onclick="logout()">로그아웃</button>
+
+			<button onclick="deleteMember()">회원 탈퇴</button>
+
+
+		</section>
 
 
 
 
 
 
-    <section class="member-box">
+		<section class="member-box">
 
 
-        <h3>
-            나의 도서 활동
-        </h3>
+			<h3>나의 도서 활동</h3>
 
 
-        <h4>
-            📖 최근 본 도서
-        </h4>
+			<h4>📖 최근 본 도서</h4>
 
 
-        <div id="recentBooks"></div>
+			<div id="recentBooks"></div>
 
 
 
 
-        <h4>
-            ❤️ 관심 도서
-        </h4>
+			<h4>❤️ 관심 도서</h4>
 
 
-        <div id="favoriteBooks"></div>
+			<div id="favoriteBooks"></div>
 
-        <h4>
-            ✍️ 내가 작성한 리뷰
-        </h4>
+			<h4>✍️ 내가 작성한 리뷰</h4>
 
 
-        <div id="myReviews"></div>
+			<div id="myReviews"></div>
 
 
-    </section>
-    
-    <!-- 도서 구매 내역 -->
-	<section class="member-box" style="margin-top:20px;">
-	
-	    <h3>나의 도서 구매 내역</h3>
-	
-	    <div id="myBookHistory">
-	        <p style="color:#7f8c8d;">
-	            구매 내역을 불러오는 중입니다...
-	        </p>
-	    </div>
-	
-	</section>
+		</section>
+
+		<!-- 도서 구매 내역 -->
+		<section class="member-box" style="margin-top: 20px;">
+
+			<h3>나의 도서 구매 내역</h3>
+
+			<div id="myBookHistory">
+				<p style="color: #7f8c8d;">구매 내역을 불러오는 중입니다...</p>
+			</div>
+
+		</section>
 
 
-    <!-- 공연 예매 내역 섹션 (최하단 추가) -->
-    <section class="member-box" style="margin-top:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 style="margin:0;">나의 공연 예매 내역</h3>
-            <label style="font-size:0.88rem; cursor:pointer; color:#555;">
-                <input type="checkbox" id="showAllHistoryToggle" onchange="loadMyPerformanceReservations()"> 취소 내역 포함해 보기
-            </label>
-        </div>
-        <div id="myPerformanceReservations">
-            <p style="color:#7f8c8d;">예매 내역을 불러오는 중입니다...</p>
-        </div>
-    </section>
+		<!-- 공연 예매 내역 섹션 (최하단 추가) -->
+		<section class="member-box" style="margin-top: 20px;">
+			<div
+				style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"
+			>
+				<h3 style="margin: 0;">나의 공연 예매 내역</h3>
+				<label style="font-size: 0.88rem; cursor: pointer; color: #555;"> <input type="checkbox"
+					id="showAllHistoryToggle" onchange="loadMyPerformanceReservations()"
+				> 취소 내역 포함해 보기
+				</label>
+			</div>
+			<div id="myPerformanceReservations">
+				<p style="color: #7f8c8d;">예매 내역을 불러오는 중입니다...</p>
+			</div>
+		</section>
 
-</div>
+	</div>
 
 
-<script src="/js/member.js"></script>
-<script src="/js/history/mypage-book-history.js"></script>
-<script>
+	<script src="/js/member.js"></script>
+	<script src="/js/history/mypage-book-history.js"></script>
+	<script>
 document.addEventListener("DOMContentLoaded", function() {
     loadMyPerformanceReservations();
 });
@@ -234,12 +221,32 @@ async function cancelMyReservation(reservationId, currentStatus) {
 
     const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
     try {
-        const response = await fetch(`/api/reservations/${reservationId}/cancel`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
+    	let response;
+        if (currentStatus === 'CONFIRMED') {
+            response = await fetch(
+                `/api/payments/PERF_${reservationId}/refund`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        reason: "공연 예매 취소"
+                    })
+                }
+            );
+        } else {
+        	response = await fetch(
+                `/api/reservations/${reservationId}/cancel`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                }
+            );
+        }
         const result = await response.json();
         if (response.ok) {
             const successMsg = currentStatus === 'CONFIRMED' ? "예매 결제 환불 및 취소가 완료되었습니다." : "좌석 선점이 취소되었습니다.";

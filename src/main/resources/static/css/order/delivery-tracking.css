@@ -1,0 +1,119 @@
+.tracking-page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 30px 24px;
+}
+
+.tracking-page h1 {
+    margin-bottom: 25px;
+}
+
+.tracking-loading {
+    padding: 30px;
+    text-align: center;
+}
+
+.tracking-summary {
+    padding: 20px;
+    margin-bottom: 30px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.tracking-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 10px 0;
+}
+
+.tracking-summary-row + .tracking-summary-row {
+    border-top: 1px solid #eee;
+}
+
+.tracking-summary-row span {
+    color: #777;
+}
+
+.tracking-history {
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.tracking-history h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.tracking-list {
+    position: relative;
+}
+
+.tracking-item {
+    position: relative;
+    display: flex;
+    gap: 15px;
+    padding: 0 0 25px 0;
+}
+
+.tracking-item:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 12px;
+    bottom: 0;
+    width: 2px;
+    background: #ddd;
+}
+
+.tracking-dot {
+    position: relative;
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+    margin-top: 5px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #555;
+}
+
+.tracking-item-content {
+    flex: 1;
+}
+
+.tracking-item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.tracking-kind {
+    font-size: 15px;
+}
+
+.tracking-time {
+    color: #888;
+    font-size: 13px;
+}
+
+.tracking-place {
+    margin-top: 6px;
+    color: #555;
+}
+
+.tracking-driver {
+    margin-top: 5px;
+    color: #888;
+    font-size: 13px;
+}
+
+.tracking-error {
+    padding: 30px;
+    text-align: center;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}

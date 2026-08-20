@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", function() {
     loadMyBookHistory();
 });
 
+//구매 내역에서 보여줄 기본 도서 개수
+let bookHistoryVisibleCount = 3;
 
 async function loadMyBookHistory() {
 
@@ -41,9 +43,7 @@ async function loadMyBookHistory() {
             throw new Error("도서 구매내역 조회에 실패했습니다.");
         }
 
-
         const histories = await response.json();
-
 
         if (histories.length === 0) {
 
@@ -56,9 +56,29 @@ async function loadMyBookHistory() {
             return;
         }
 
+		const visibleHistories = histories.slice(0, bookHistoryVisibleCount);
 
-        box.innerHTML = histories.map(history => createMyBookHistory(history)).join("");
+		let html =
+		    visibleHistories
+		        .map(history => createMyBookHistory(history))
+		        .join("");
 
+
+		if (histories.length > bookHistoryVisibleCount) {
+		    html += `
+
+		        <button
+		            type="button"
+		            class="history-more-button"
+		            onclick="showMoreBookHistory()"
+		        >
+		            더보기
+		        </button>
+
+		    `;
+		}
+		box.innerHTML = html;
+		
     } catch (error) {
         console.error("도서 구매내역 조회 오류:", error);
 
@@ -68,6 +88,13 @@ async function loadMyBookHistory() {
             </div>
         `;
     }
+}
+
+function showMoreBookHistory() {
+
+    bookHistoryVisibleCount += 3;
+
+    loadMyBookHistory();
 }
 
 

@@ -326,18 +326,20 @@ async function cart(){
 		                }
 		            );
 
-		        const message = await response.text();
 
-		        if (!response.ok) {
+				if (!response.ok) {
 
-		            console.error("서버 오류:", message);
+				    const error =
+				        await response.json();
 
-		            alert(message || "도서 장바구니 추가에 실패했습니다.");
+				    alert(error.message || "도서 장바구니 추가에 실패했습니다.");
 
-		            return;
-		        }
-				
-		        alert(message);
+				    return;
+				}
+
+				const message = await response.text();
+
+				alert(message);
 				
 		    } catch (error) {
 		        
