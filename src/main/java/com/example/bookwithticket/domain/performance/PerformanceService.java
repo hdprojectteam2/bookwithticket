@@ -18,34 +18,42 @@ public class PerformanceService {
     private final PerformanceRepository performanceRepository;
     private final PerformanceScheduleRepository scheduleRepository;
     private final SeatRepository seatRepository;
+    private final com.example.bookwithticket.domain.reservation.ReservationRepository reservationRepository;
+    private final com.example.bookwithticket.cart.repository.PerformanceCartItemRepository performanceCartItemRepository;
 
     public PerformanceService(
             PerformanceRepository performanceRepository,
             PerformanceScheduleRepository scheduleRepository,
-            SeatRepository seatRepository) {
+            SeatRepository seatRepository,
+            com.example.bookwithticket.domain.reservation.ReservationRepository reservationRepository,
+            com.example.bookwithticket.cart.repository.PerformanceCartItemRepository performanceCartItemRepository) {
         this.performanceRepository = performanceRepository;
         this.scheduleRepository = scheduleRepository;
         this.seatRepository = seatRepository;
+        this.reservationRepository = reservationRepository;
+        this.performanceCartItemRepository = performanceCartItemRepository;
     }
     //4. 넘겨받음 , 검색 실행함  , repository로 이동
     public List<PerformanceResponse> getPerformances(String keyword, PerformanceCategory category, boolean includeInactive) {
         List<Performance> performances;
         
         if (keyword != null && !keyword.isBlank()) {
-            performances = performanceRepository.findByTitleContainingOrderByIdDesc(keyword.trim());
+            performances = includeInactive
+                    ? performanceRepository.findByTitleContainingOrderByIdDesc(keyword.trim())
+                    : performanceRepository.findByTitleContainingAndActiveTrueOrderByIdDesc(keyword.trim());
         } else if (category != null) {
-            performances = performanceRepository.findByCategoryOrderByIdDesc(category);
+            performances = includeInactive
+                    ? performanceRepository.findByCategoryOrderByIdDesc(category)
+                    : performanceRepository.findByCategoryAndActiveTrueOrderByIdDesc(category);
         } else {
-            performances = performanceRepository.findAllByOrderByIdDesc();
+            performances = includeInactive
+                    ? performanceRepository.findAllByOrderByIdDesc()
+                    : performanceRepository.findByActiveTrueOrderByIdDesc();
         }
         
-        List<PerformanceResponse> responseList = new ArrayList<>();
-        for (Performance p : performances) {
-            if (includeInactive || p.isActive()) {
-                responseList.add(PerformanceResponse.from(p));
-            }
-        }
-        return responseList;
+        return performances.stream()
+                .map(PerformanceResponse::from)
+                .toList();
     }
 
     //detail에서 사용 
@@ -60,7 +68,12 @@ public class PerformanceService {
 
     public List<ScheduleResponse> getSchedules(Long performanceId) {
         return scheduleRepository.findByPerformanceIdOrderByPerformanceTimeAsc(performanceId)
-                .stream().map(ScheduleResponse::from).toList();
+                .stream().map(s -> {
+                    List<Seat> seats = seatRepository.findByScheduleIdOrderByIdAsc(s.getId());
+                    int total = seats.size();
+                    int available = (int) seats.stream().filter(seat -> seat.getStatus() == com.example.bookwithticket.domain.reservation.SeatStatus.AVAILABLE).count();
+                    return ScheduleResponse.from(s, total, available);
+                }).toList();
     }
 
     // 관리자: 공연 등록
@@ -95,12 +108,17 @@ public class PerformanceService {
         return PerformanceResponse.from(performanceRepository.save(performance));
     }
 
-    // 관리자: 공연 비활성화 (Soft Delete)
+    // 관리자: 공연 비활성화 (Soft Delete) 및 장바구니 연쇄 자동 삭제
     @Transactional
     public void deletePerformance(Long id) {
         Performance performance = performanceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."));
         performance.deactivate();
+
+        List<PerformanceSchedule> schedules = scheduleRepository.findByPerformanceIdOrderByPerformanceTimeAsc(id);
+        for (PerformanceSchedule s : schedules) {
+            performanceCartItemRepository.deleteByPerformanceScheduleId(s.getId());
+        }
     }
 
     // 관리자: 공연 재활성화 (복구)
@@ -109,6 +127,21 @@ public class PerformanceService {
         Performance performance = performanceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."));
         performance.activate();
+    }
+
+    // 관리자: 공연 영구 완전 삭제 (Hard Delete)
+    @Transactional
+    public void hardDeletePerformance(Long id) {
+        Performance performance = performanceRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."));
+        List<PerformanceSchedule> schedules = scheduleRepository.findByPerformanceIdOrderByPerformanceTimeAsc(id);
+        for (PerformanceSchedule s : schedules) {
+            performanceCartItemRepository.deleteByPerformanceScheduleId(s.getId());
+            reservationRepository.deleteByScheduleId(s.getId());
+            seatRepository.deleteByScheduleId(s.getId());
+            scheduleRepository.delete(s);
+        }
+        performanceRepository.delete(performance);
     }
 
     // 관리자: 회차 및 좌석 자동 배치 생성
@@ -124,16 +157,39 @@ public class PerformanceService {
         );
         PerformanceSchedule savedSchedule = scheduleRepository.save(schedule);
 
-        int totalSeats = dto.totalSeats() > 0 ? dto.totalSeats() : 10;
-        int price = dto.seatPrice() > 0 ? dto.seatPrice() : 150000;
+        int totalSeats = (dto.totalSeats() > 0) ? dto.totalSeats() : (performance.getSeatscale() > 0 ? performance.getSeatscale() : 100);
+        int vipCount = Math.max(1, (int) Math.round(totalSeats * 0.10));
+        int rCount = Math.max(1, (int) Math.round(totalSeats * 0.10));
+        int sCount = Math.max(1, (int) Math.round(totalSeats * 0.40));
 
+        List<Seat> seatList = new ArrayList<>();
         for (int i = 1; i <= totalSeats; i++) {
-            char row = (char) ('A' + (i - 1) / 10);
-            int num = ((i - 1) % 10) + 1;
-            String seatNumber = row + "-" + num;
-            seatRepository.save(new Seat(savedSchedule, seatNumber, price));
-        }
+            int sectorNum = ((i - 1) / 64) + 1;
+            int startSeat = (sectorNum - 1) * 64 + 1;
+            int endSeat = Math.min(sectorNum * 64, totalSeats);
+            String sectorName = String.format("%d섹터 (%d~%d번)", sectorNum, startSeat, endSeat);
 
-        return ScheduleResponse.from(savedSchedule);
+            String tier;
+            int price;
+            if (i <= vipCount) {
+                tier = "VIP";
+                price = 180000;
+            } else if (i <= vipCount + rCount) {
+                tier = "R";
+                price = 150000;
+            } else if (i <= vipCount + rCount + sCount) {
+                tier = "S";
+                price = 100000;
+            } else {
+                tier = "A";
+                price = 70000;
+            }
+
+            String seatNumber = String.format("[%s] %s-%d번", sectorName, tier, i);
+            seatList.add(new Seat(savedSchedule, seatNumber, price));
+        }
+        seatRepository.saveAll(seatList);
+
+        return ScheduleResponse.from(savedSchedule, totalSeats, totalSeats);
     }
 }

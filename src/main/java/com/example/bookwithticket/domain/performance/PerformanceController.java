@@ -19,14 +19,17 @@ public class PerformanceController {
     private final PerformanceService performanceService;
     private final MemberRepository memberRepository;
     private final JwtUtil jwtUtil;
+    private final KopisPerformanceImportService kopisImportService;
 
     public PerformanceController(
             PerformanceService performanceService,
             MemberRepository memberRepository,
-            JwtUtil jwtUtil) {
+            JwtUtil jwtUtil,
+            KopisPerformanceImportService kopisImportService) {
         this.performanceService = performanceService;
         this.memberRepository = memberRepository;
         this.jwtUtil = jwtUtil;
+        this.kopisImportService = kopisImportService;
     }
 
     // 임시 테스트용 토큰 발급 API (type: USER / ADMIN)
@@ -35,7 +38,22 @@ public class PerformanceController {
             @RequestParam(value = "type", required = false, defaultValue = "USER") String type) {
         String targetEmail = "ADMIN".equalsIgnoreCase(type) ? "admin@example.com" : "test@example.com";
         Member member = memberRepository.findByEmail(targetEmail)
-                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "테스트 계정을 찾을 수 없습니다."));
+                .orElseGet(() -> {
+                    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+                    boolean isAdmin = "ADMIN".equalsIgnoreCase(type);
+                    Member m = Member.createLocalMember(
+                            targetEmail,
+                            encoder.encode(isAdmin ? "admin123" : "password123"),
+                            isAdmin ? "관리자" : "일반사용자",
+                            isAdmin ? "010-9876-5432" : "010-1234-5678",
+                            "12345",
+                            "서울시",
+                            "101호",
+                            true
+                    );
+                    m.setRole(isAdmin ? "ADMIN" : "USER");
+                    return memberRepository.save(m);
+                });
 
         String token = jwtUtil.createToken(member.getEmail(), member.getRole());
         return ApiResponse.ok(Map.of(
@@ -126,13 +144,41 @@ public class PerformanceController {
         return ApiResponse.ok();
     }
 
+    // 관리자: 공연 영구 완전 삭제 (Hard Delete)
+    @DeleteMapping("/{id}/hard")
+    public ApiResponse<Void> hardDeletePerformance(
+            Authentication authentication,
+            @PathVariable("id") Long id) {
+        checkAdmin(authentication);
+        performanceService.hardDeletePerformance(id);
+        return ApiResponse.ok();
+    }
+
     // 관리자: 회차 및 좌석 자동 생성
-    @PostMapping("/{id}/schedules")
+    @PostMapping({ "/{id}/schedules", "/admin/{id}/schedules" })
     public ApiResponse<ScheduleResponse> createScheduleAndSeats(
             Authentication authentication,
             @PathVariable("id") Long id,
             @jakarta.validation.Valid @RequestBody ScheduleCreateRequest dto) {
         checkAdmin(authentication);
         return ApiResponse.ok("회차 및 좌석이 생성되었습니다.", performanceService.createScheduleAndSeats(id, dto));
+    }
+
+    // 관리자: KOPIS 공연 목록 검색 (적재 전 후보 조회)
+    @GetMapping("/admin/search/kopis")
+    public ApiResponse<List<com.example.bookwithticket.domain.performance.api.KopisPerformanceResponse.Item>> searchKopis(
+            Authentication authentication,
+            @RequestParam(value = "keyword", required = false) String keyword) {
+        checkAdmin(authentication);
+        return ApiResponse.ok(kopisImportService.searchKopis(keyword));
+    }
+
+    // 관리자: 선택한 KOPIS 공연들만 DB 적재
+    @PostMapping("/admin/import/kopis/select")
+    public ApiResponse<List<PerformanceResponse>> importSelectedFromKopis(
+            Authentication authentication,
+            @RequestBody List<com.example.bookwithticket.domain.performance.api.KopisPerformanceResponse.Item> selectedItems) {
+        checkAdmin(authentication);
+        return ApiResponse.ok("선택한 KOPIS 공연 데이터가 성공적으로 적재되었습니다.", kopisImportService.importSelectedItems(selectedItems));
     }
 }

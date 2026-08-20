@@ -61,7 +61,6 @@ public class RefundController {
 		return ResponseEntity.ok(response);
 	}
 
-	
 	/* 관리자 - 환불 승인 */
 	@PreAuthorize("hasRole('ADMIN')")
 	@PostMapping("/api/admin/refunds/{refundId}/approve")
@@ -84,6 +83,29 @@ public class RefundController {
 		Long memberId = getCurrentMemberId(authentication);
 
 		RefundResponse response = refundService.rejectBookRefund(memberId, refundId);
+
+		return ResponseEntity.ok(response);
+	}
+
+	@PreAuthorize("hasRole('ADMIN')")
+	@PostMapping("/api/admin/orders/{orderNumber}/force-refund")
+	public ResponseEntity<RefundResponse> forceBookRefund(@PathVariable("orderNumber") String orderNumber,
+			Authentication authentication) {
+		Long adminId = getCurrentMemberId(authentication);
+
+		RefundResponse response = refundService.forceBookRefund(adminId, orderNumber);
+
+		return ResponseEntity.ok(response);
+	}
+
+	@PreAuthorize("hasRole('ADMIN')")
+	@PostMapping("/api/admin/reservations/{reservationId}/force-refund")
+	public ResponseEntity<RefundResponse> forcePerformanceRefund(
+			@PathVariable(name = "reservationId") Long reservationId,
+			Authentication authentication) {
+		Long adminId = getCurrentMemberId(authentication);
+
+		RefundResponse response = refundService.forcePerformanceRefund(adminId, reservationId);
 
 		return ResponseEntity.ok(response);
 	}

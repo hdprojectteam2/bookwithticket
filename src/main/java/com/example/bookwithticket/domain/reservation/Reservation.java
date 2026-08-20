@@ -53,7 +53,7 @@ public class Reservation extends BaseTimeEntity {
     public int getTotalPrice() { return totalPrice; }
 
     public boolean isExpired() {
-        return status == ReservationStatus.HELD && holdExpiresAt != null && LocalDateTime.now().isAfter(holdExpiresAt);
+        return status == ReservationStatus.EXPIRED || (status == ReservationStatus.HELD && holdExpiresAt != null && LocalDateTime.now().isAfter(holdExpiresAt));
     }
 
     public void confirm() {

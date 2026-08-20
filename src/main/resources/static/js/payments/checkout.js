@@ -59,7 +59,11 @@ async function main() {
 
         document.getElementById("order-name").textContent = orderName;
 
-		document.getElementById("seat-number").textContent = seatNumber;
+		const seatNumberElement = document.getElementById("seat-number");
+		
+		if (seatNumberElement) {
+		    seatNumberElement.textContent = seatNumber;
+		}
 
         document.getElementById("total-price").textContent = totalPrice.toLocaleString();
 

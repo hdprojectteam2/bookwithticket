@@ -17,7 +17,7 @@ public class Seat extends BaseTimeEntity {
     @JoinColumn(name = "schedule_id")
     private PerformanceSchedule schedule;
 
-    @Column(name = "seat_number", nullable = false, length = 20)
+    @Column(name = "seat_number", nullable = false, length = 100)
     private String seatNumber;
 
     @Column(nullable = false)

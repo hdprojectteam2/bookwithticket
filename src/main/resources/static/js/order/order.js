@@ -1,91 +1,143 @@
-window.onload = async function() {
-    const token = localStorage.getItem("token");
+window.onload =
+    async function() {
+        const token = localStorage.getItem("token");
 
-    if (!token) {
-        alert("로그인이 필요합니다.");
-        location.href = "/login.html";
-        return;
+        if (!token) {
+            alert("로그인이 필요합니다.");
+
+            location.href = "/login.html";
+
+            return;
+        }
+
+        const cartItemIds = getCartItemIds();
+
+        if (cartItemIds.length === 0) {
+            alert("주문할 상품 정보가 없습니다.");
+
+            location.replace("/cart");
+
+            return;
+        }
+
+        try {
+
+            await loadOrderPreview(cartItemIds);
+
+
+        } catch (error) {
+
+            console.error("주문 정보 조회 오류:", error);
+
+            alert(error.message);
+
+            location.replace("/cart");
+        }
+    };
+
+
+function getCartItemIds() {
+    const data = sessionStorage.getItem("orderCartItemIds");
+
+
+    if (!data) {
+        return [];
     }
 
 
     try {
-        await loadOrder();
+        const cartItemIds =
+            JSON.parse(
+                data
+            );
+
+
+        if (!Array.isArray(cartItemIds)) {
+            return [];
+        }
+
+        return cartItemIds;
+
 
     } catch (error) {
-        console.error("주문 정보 조회 오류:", error);
 
-        alert(error.message);
-		
-		location.replace("/cart");
-		return;
+        console.error(
+            "장바구니 주문 정보 오류:",
+            error
+        );
+
+        return [];
     }
-};
+}
 
-
-
-async function loadOrder() {
-    const orderNumber = getOrderNumber();
-
-    if (!orderNumber) {
-        throw new Error("주문 번호를 찾을 수 없습니다.");
-    }
-
+async function loadOrderPreview(cartItemIds) {
 
     const response =
         await fetch(
-            `/api/orders/${encodeURIComponent(orderNumber)}`,
+            "/api/orders/preview",
             {
-                headers:
-                    getAuthHeaders()
+                method:
+                    "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    ...getAuthHeaders()
+                },
+
+                body:
+                    JSON.stringify({
+
+                        cartItemIds:
+                            cartItemIds
+                    })
             }
         );
 
 
     if (!response.ok) {
         const message = await response.text();
+
         throw new Error(message || "주문 정보를 불러오지 못했습니다.");
     }
 
+    const preview = await response.json();
 
-    const order = await response.json();
-
-
-    renderOrder(order);
+    renderOrderPreview(preview);
 }
 
-function renderOrder(order) {
+function renderOrderPreview(preview) {
 
-    const items = Array.isArray(order.orderItems) ? order.orderItems : [];
+    setText("summary-quantity", `${preview.totalQuantity}개`);
 
-    const totalQuantity =
-        items.reduce(
-            (sum, item) => {
 
-                return sum
-                    + Number(
-                        item.quantity ?? 0
-                    );
-            },
-            0
-        );
+    setText("summary-product-price", `${formatPrice(preview.totalPrice)}원`);
 
-    setText("summary-quantity", `${totalQuantity}개`);
-    setText("summary-product-price", `${formatPrice(order.totalPrice)}원`);
-    setText("summary-total-price", `${formatPrice(order.totalPrice)}원`);
-    setText("totalPrice", formatPrice(order.totalPrice));
 
+    setText("summary-total-price", `${formatPrice(preview.totalPrice)}원`);
+
+
+    setText("totalPrice", formatPrice(preview.totalPrice));
 }
-
 
 
 async function submitOrder() {
-    const orderNumber = getOrderNumber();
+    const paymentButton = document.getElementById("payment-button");
 
-    if (!orderNumber) {
-        alert("주문 번호를 찾을 수 없습니다.");
+    if (paymentButton && paymentButton.disabled) {
         return;
     }
 
+    const cartItemIds = getCartItemIds();
+
+
+    if (cartItemIds.length === 0) {
+        alert("주문할 상품 정보가 없습니다.");
+
+        return;
+    }
 
     const recipient = document.getElementById("recipient").value.trim();
 
@@ -119,8 +171,16 @@ async function submitOrder() {
         return;
     }
 
+    if (!detailAddress) {
+        alert("상세 주소를 입력해주세요.");
+        return;
+    }
 
     const requestData = {
+
+        cartItemIds:
+            cartItemIds,
+
         recipient:
             recipient,
 
@@ -141,16 +201,20 @@ async function submitOrder() {
     };
 
 
+    let createdOrderNumber = null;
+
     try {
+        if (paymentButton) {
+            paymentButton.disabled = true;
+        }
+
 
         const response =
             await fetch(
-
-                `/api/orders/${encodeURIComponent(orderNumber)}/delivery`,
-
+                "/api/orders",
                 {
                     method:
-                        "PUT",
+                        "POST",
 
                     headers: {
 
@@ -167,24 +231,186 @@ async function submitOrder() {
                 }
             );
 
+
         if (!response.ok) {
 
             const message = await response.text();
 
-
-            throw new Error(message || "배송지 저장에 실패했습니다.");
+            throw new Error(message || "주문 생성에 실패했습니다.");
         }
 
-        location.href = "/payments/checkout?orderNumber=" + encodeURIComponent(orderNumber);
+
+        const order = await response.json();
+
+        createdOrderNumber = order.orderNumber;
+
+        await requestTossPayment(createdOrderNumber);
 
     } catch (error) {
-        console.error("배송지 저장 오류:", error);
+
+        console.error("주문 처리 오류:", error);
+
+        if (createdOrderNumber) {
+
+            try {
+
+                await cancelBookOrder(
+                    createdOrderNumber
+                );
+
+
+            } catch (cancelError) {
+
+                console.error("주문 취소 실패:",cancelError);
+            }
+        }
 
         alert(error.message);
+
+        if (paymentButton) {
+            paymentButton.disabled = false;
+        }
     }
 }
 
+async function requestTossPayment(orderNumber) {
 
+    const member = await getCurrentMember();
+
+    const response =
+        await fetch(
+            "/api/payments/checkout?orderNumber=" + encodeURIComponent(orderNumber),
+            {
+                headers:
+                    getAuthHeaders()
+            }
+        );
+
+
+    if (!response.ok) {
+        let message = "결제 정보를 불러오지 못했습니다.";
+        try {
+
+            const error = await response.json();
+            message = error.message || message;
+
+        } catch (e) {
+
+            const text = await response.text();
+            if (text) {
+                message = text;
+            }
+        }
+
+        throw new Error(message);
+    }
+
+    const checkout = await response.json();
+    const paymentOrderNumber = checkout.orderNumber;
+    const orderName = checkout.orderName;
+    const totalPrice = Number(checkout.totalPrice);
+    const clientKey = checkout.clientKey;
+
+    if (!paymentOrderNumber || !orderName || !Number.isInteger(totalPrice) || totalPrice <= 0 || !clientKey) {
+        throw new Error("결제 정보가 올바르지 않습니다.");
+    }
+
+
+    const tossPayments = TossPayments(clientKey);
+	
+    const payment = tossPayments.payment({ customerKey: TossPayments.ANONYMOUS });
+
+
+    try {
+
+        await payment.requestPayment({
+
+            method:
+                "CARD",
+
+
+            amount: {
+
+                currency:
+                    "KRW",
+
+                value:
+                    totalPrice
+            },
+
+            orderId:
+                paymentOrderNumber,
+
+            orderName:
+                orderName,
+
+            successUrl:
+                window.location.origin + "/payments/success",
+
+            failUrl:
+                window.location.origin + "/payments/fail",
+
+            customerName:
+                member.name
+        });
+
+
+    } catch (error) {
+
+        console.error("토스 결제창 종료:", error);
+
+        try {
+
+            await cancelBookOrder(orderNumber);
+
+            alert("결제가 취소되었습니다.");
+			
+			const paymentButton = document.getElementById("payment-button");
+
+			if (paymentButton) {
+				paymentButton.disabled = false;
+			}
+			
+        } catch (cancelError) {
+
+            console.error("주문 취소 처리 실패:", cancelError);
+
+            alert("결제가 중단되었습니다.");
+			
+			const paymentButton = document.getElementById("payment-button");
+
+			if (paymentButton) {
+				paymentButton.disabled = false;
+			}
+        }
+    }
+}
+
+async function getCurrentMember() {
+
+    const response =
+        await fetch(
+            "/members/me",
+            {
+                method:
+                    "GET",
+
+                headers:
+                    getAuthHeaders()
+            }
+        );
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            "회원 정보를 불러오지 못했습니다."
+        );
+    }
+
+
+    return await response.json();
+}
 
 async function cancelBookOrder(orderNumber) {
 
@@ -216,14 +442,6 @@ async function cancelBookOrder(orderNumber) {
     }
 }
 
-
-
-function getOrderNumber() {
-
-    const params = new URLSearchParams(window.location.search);
-
-    return params.get("orderNumber");
-}
 
 function getAuthHeaders() {
 
@@ -268,4 +486,43 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+	const memberInfoButton = document.getElementById("member-info-button");
+
+	if (memberInfoButton) {
+		memberInfoButton.addEventListener("click", fillMemberInfo);
+	}
+});
+
+async function fillMemberInfo() {
+
+	try {
+		const response = await fetch("/api/orders/member-info", {
+			headers: getAuthHeaders()
+		});
+
+		if (!response.ok) {
+			const message = await response.text();
+
+			throw new Error(message || "회원 정보를 불러오지 못했습니다.");
+		}
+
+		const member = await response.json();
+
+		document.getElementById("recipient").value = member.name ?? "";
+
+		document.getElementById("phone").value = member.phone ?? "";
+
+		document.getElementById("zipcode").value = member.zipcode ?? "";
+
+		document.getElementById("address").value = member.address ?? "";
+
+		document.getElementById("detailAddress").value = member.detailAddress ?? "";
+
+	} catch (error) {
+		alert(error.message);
+	}
 }

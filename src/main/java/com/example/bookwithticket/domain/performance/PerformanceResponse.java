@@ -9,7 +9,8 @@ public record PerformanceResponse(
     int runtimeMinutes,
     String description,
     Long originalBookId,
-    boolean active
+    boolean active,
+    int seatscale
 ) {
     public static PerformanceResponse from(Performance p) {
         return new PerformanceResponse(
@@ -21,7 +22,8 @@ public record PerformanceResponse(
             p.getRuntimeMinutes(),
             p.getDescription(),
             p.getOriginalBookId(),
-            p.isActive()
+            p.isActive(),
+            p.getSeatscale()
         );
     }
 }

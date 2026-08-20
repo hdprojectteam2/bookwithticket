@@ -337,14 +337,6 @@ function renderBookDetail(order) {
 
             ${refundButton}
 
-
-            <button
-                type="button"
-                onclick="location.href='/history'"
-            >
-                목록
-            </button>
-
         </div>
     `;
 }
@@ -668,14 +660,6 @@ function renderPerformanceDetail(reservation) {
 
             ${refundButton}
 
-
-            <button
-                type="button"
-                onclick="location.href='/history'"
-            >
-                목록
-            </button>
-
         </div>
     `;
 }
@@ -751,6 +735,10 @@ async function requestRefund(id) {
 
 
         await loadDetail();
+		
+		if (window.opener && !window.opener.closed && typeof window.opener.loadMyBookHistory === "function") {
+		    window.opener.loadMyBookHistory();
+		}
 
 
     } catch (error) {

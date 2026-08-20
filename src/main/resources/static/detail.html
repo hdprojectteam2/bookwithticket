@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공연 상세 정보</title>
+    <title>BookWithTicket - 공연 상세 정보</title>
     <style>
         * { box-sizing: border-box; font-family: sans-serif; text-decoration: none !important; }
-        body { background-color: grey; margin: 0; padding: 20px; color: black; }
-        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 25px; }
-        h1 { margin-top: 0; color: black; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        body { background-color: #f8f9fa; margin: 0; padding: 20px; color: #212529; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        h1 { margin-top: 0; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 15px; font-size: 1.6rem; }
         .section { margin-bottom: 30px; }
         h2 { color: #34495e; font-size: 1.2rem; margin-bottom: 12px; }
-        button { background: #3498db; color: #fff; border: none; padding: 10px 18px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button { background: #3498db; color: #fff; border: none; padding: 10px 18px; cursor: pointer; font-weight: bold; transition: 0.2s; border-radius: 4px; }
         button:hover { background: #2980b9; }
-        .card { border: 1px solid #e0e0e0; padding: 20px; background: #fafafa; }
-        .card h3 { margin: 0 0 8px 0; color: grey; font-size: 1.4rem; }
-        .badge { display: inline-block; background: #e8f4fd; color: #3498db; padding: 3px 8px; font-size: 0.8rem; font-weight: bold; }
-        .log-box { background: #1e1e1e; color: white; padding: 15px; font-family: monospace; height: 180px; overflow-y: auto; font-size: 0.9rem; }
+        .card { border: 1px solid #e0e0e0; padding: 25px; background: #fafafa; border-radius: 6px; }
+        .card h3 { margin: 0 0 8px 0; color: #2c3e50; font-size: 1.4rem; }
+        .badge { display: inline-block; background: #e8f4fd; color: #3498db; padding: 4px 10px; border-radius: 3px; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; }
+        .log-box { background: #1e1e1e; color: #a9dfbf; padding: 15px; font-family: monospace; height: 160px; overflow-y: auto; font-size: 0.85rem; border-radius: 4px; }
         .btn-back { background: #95a5a6; }
         .btn-back:hover { background: #7f8c8d; }
     </style>
@@ -24,24 +24,19 @@
 <body>
 
 <div class="container">
-    <button onclick="location.href='/mainpage.html'" style="background:#34495e; color:#fff; border:none; padding:8px 16px; cursor:pointer; font-weight:bold; margin-bottom:15px;">메인페이지로 이동</button>
-    <h1>공연 상세 정보</h1>
+    <div style="margin-bottom: 15px;">
+        <a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+    </div>
+    <h1>🎭 공연 상세 정보</h1>
 
     <div class="section">
         <div id="detailContent">로딩 중...</div>
-    </div>
-
-    <!-- 결과확인용 로그 -->
-    <div class="section">
-        <h2>로그</h2>
-        <div id="logBox" class="log-box">로드 완료</div>
     </div>
 </div>
 
 <script>
     function log(msg) {
-        const logBox = document.getElementById('logBox');
-        logBox.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + logBox.innerHTML;
+        console.log(`[${new Date().toLocaleTimeString()}] ${msg}`);
     }
 
     async function loadDetail() {
@@ -70,9 +65,11 @@
                     if (schRes.ok && schData.success && Array.isArray(schData.data) && schData.data.length > 0) {
                         scheduleHtml = schData.data.map(s => {
                             const timeStr = new Date(s.performanceTime).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                            const seatInfoStr = (s.totalSeats > 0) ? ` <span style="font-size:0.85rem; color:#27ae60; font-weight:bold;">(잔여 ${s.availableSeats}석 / 총 ${s.totalSeats}석)</span>` : '';
                             return `<div style="display:inline-block; margin-right:10px; margin-bottom:10px; padding:10px 14px; background:#fff; border:1px solid #ccc;">
-                                <b>${timeStr}</b>
+                                <b>${timeStr}</b>${seatInfoStr}
                                 <button onclick="location.href='/index.html?perfId=${id}&scheduleId=${s.id}'" style="margin-left:10px; background:#3498db; padding:5px 10px; font-size:0.8rem;">예매하기</button>
+                                <button onclick="addPerformanceToCart(${s.id})" style="margin-left:5px; background:#e67e22; padding:5px 10px; font-size:0.8rem;">장바구니 담기</button>
                             </div>`;
                         }).join('');
                     }
@@ -97,11 +94,33 @@
                             <h4 style="margin:0 0 10px 0; color:#34495e;">공연 회차 일정</h4>
                             <div>${scheduleHtml}</div>
                         </div>
+                        <div style="margin-top:20px; padding-top:20px; border-top:1px solid #eee;">
+                            <h4 style="margin:0 0 12px 0; color:#34495e;">⭐ 공연 리뷰</h4>
+                            <div id="reviewInfoArea" style="margin-bottom:12px; color:#666;"></div>
+                            <div id="reviewFormArea" style="margin-bottom:15px; padding:15px; background:#f9f9f9; border-radius:6px; border:1px solid #eee;">
+                                <h5 style="margin:0 0 10px 0; color:#2c3e50;">리뷰 작성</h5>
+                                <div style="margin-bottom:8px;">
+                                    <label style="font-size:0.9rem; color:#555;">평점: </label>
+                                    <select id="reviewRating" style="padding:4px 8px;">
+                                        <option value="5">⭐⭐⭐⭐⭐ (5점)</option>
+                                        <option value="4">⭐⭐⭐⭐ (4점)</option>
+                                        <option value="3">⭐⭐⭐ (3점)</option>
+                                        <option value="2">⭐⭐ (2점)</option>
+                                        <option value="1">⭐ (1점)</option>
+                                    </select>
+                                </div>
+                                <textarea id="reviewContent" rows="3" placeholder="공연에 대한 리뷰를 작성해주세요." style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; resize:vertical; box-sizing:border-box;"></textarea>
+                                <button onclick="submitReview(${p.id})" style="margin-top:8px; background:#27ae60; padding:8px 16px; font-size:0.9rem;">리뷰 등록</button>
+                            </div>
+                            <div id="reviewListArea"><p style="color:#999;">리뷰를 불러오는 중...</p></div>
+                        </div>
                         <div style="margin-top:20px;">
                             <button class="btn-back" onclick="location.href='/index.html'">← 메인 목록으로 돌아가기</button>
                         </div>
                     </div>
                 `;
+                loadReviews(id);
+                loadReviewInfo(id);
             } else {
                 log(`[실패] GET /api/performances/${id} -> HTTP ${res.status} : ${data.message}`);
                 document.getElementById('detailContent').innerHTML = `<p style="color:red;">오류: ${data.message}</p><button class="btn-back" onclick="location.href='/index.html'">← 메인 목록으로 돌아가기</button>`;
@@ -109,6 +128,148 @@
         } catch (e) {
             log(`에러 발생: ${e.message}`);
             document.getElementById('detailContent').innerHTML = `<p style="color:red;">통신 에러: ${e.message}</p><button class="btn-back" onclick="location.href='/index.html'">← 메인 목록으로 돌아가기</button>`;
+        }
+    }
+
+    function getAuthHeaders(extra) {
+        let token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') token = '';
+        return Object.assign({ 'Authorization': token ? 'Bearer ' + token : '' }, extra || {});
+    }
+
+    async function loadReviewInfo(perfId) {
+        try {
+            const res = await fetch(`/api/performances/${perfId}/reviews/info`);
+            const data = await res.json();
+            document.getElementById('reviewInfoArea').innerHTML =
+                `평균 평점: <b style="color:#e67e22;">${data.averageRating}점</b> / 총 <b>${data.reviewCount}건</b>의 리뷰`;
+        } catch (e) {
+            console.log('리뷰 정보 로드 실패:', e);
+        }
+    }
+
+    async function loadReviews(perfId) {
+        try {
+            const res = await fetch(`/api/performances/${perfId}/reviews`);
+            const reviews = await res.json();
+            const area = document.getElementById('reviewListArea');
+            if (!Array.isArray(reviews) || reviews.length === 0) {
+                area.innerHTML = '<p style="color:#999;">아직 작성된 리뷰가 없습니다.</p>';
+                return;
+            }
+            let currentEmail = '';
+            try {
+                const meRes = await fetch('/members/me', { headers: getAuthHeaders() });
+                if (meRes.ok) {
+                    const meData = await meRes.json();
+                    currentEmail = meData.email || '';
+                }
+            } catch (e) {}
+
+            area.innerHTML = reviews.map(r => {
+                const stars = '⭐'.repeat(r.rating);
+                const dateStr = new Date(r.createdAt).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                const deleteBtn = (r.email === currentEmail)
+                    ? `<button onclick="deleteReview(${r.id}, ${perfId})" style="background:#e74c3c; padding:3px 8px; font-size:0.75rem; margin-left:8px;">삭제</button>`
+                    : '';
+                return `<div style="padding:12px; border-bottom:1px solid #eee;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:bold; color:#2c3e50;">${r.name}</span>
+                        <span style="font-size:0.8rem; color:#999;">${dateStr}</span>
+                    </div>
+                    <div style="margin:4px 0;">${stars} <span style="color:#888; font-size:0.85rem;">(${r.rating}점)</span>${deleteBtn}</div>
+                    <p style="margin:6px 0 0 0; color:#444; font-size:0.95rem;">${r.content}</p>
+                </div>`;
+            }).join('');
+        } catch (e) {
+            console.log('리뷰 목록 로드 실패:', e);
+        }
+    }
+
+    async function submitReview(perfId) {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+        const content = document.getElementById('reviewContent').value.trim();
+        const rating = parseInt(document.getElementById('reviewRating').value);
+        if (!content) {
+            alert('리뷰 내용을 입력해주세요.');
+            return;
+        }
+        try {
+            const res = await fetch(`/api/performances/${perfId}/reviews`, {
+                method: 'POST',
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ content, rating })
+            });
+            if (res.ok) {
+                document.getElementById('reviewContent').value = '';
+                loadReviews(perfId);
+                loadReviewInfo(perfId);
+            } else {
+                const msg = await res.text();
+                alert(`리뷰 등록 실패: ${msg}`);
+            }
+        } catch (e) {
+            alert(`에러: ${e.message}`);
+        }
+    }
+
+    async function deleteReview(reviewId, perfId) {
+        if (!confirm('리뷰를 삭제하시겠습니까?')) return;
+        try {
+            const res = await fetch(`/api/performances/reviews/${reviewId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                loadReviews(perfId);
+                loadReviewInfo(perfId);
+            } else {
+                alert('삭제 실패');
+            }
+        } catch (e) {
+            alert(`에러: ${e.message}`);
+        }
+    }
+
+    async function addPerformanceToCart(scheduleId) {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') {
+            alert('로그인이 필요합니다.');
+            location.href = '/login.html';
+            return;
+        }
+
+        const params = new URLSearchParams();
+        params.append("performanceScheduleId", String(scheduleId));
+
+        try {
+            const res = await fetch('/api/cart/performances', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: params
+            });
+
+            if (res.ok) {
+                log(`[성공] 공연 회차 #${scheduleId} 장바구니 등록 완료`);
+                if (confirm('공연이 장바구니에 담겼습니다.\n장바구니 페이지로 이동하시겠습니까?')) {
+                    localStorage.setItem('openPerformanceCart', 'true');
+                    location.href = '/cart';
+                }
+            } else {
+                const msg = await res.text();
+                log(`[실패] 장바구니 등록 실패: ${msg}`);
+                alert(`장바구니 담기 실패: ${msg || '오류가 발생했습니다.'}`);
+            }
+        } catch (e) {
+            log(`장바구니 에러: ${e.message}`);
+            alert(`에러: ${e.message}`);
         }
     }
 
