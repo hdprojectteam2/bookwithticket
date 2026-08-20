@@ -30,18 +30,11 @@
     <div class="section">
         <div id="detailContent">로딩 중...</div>
     </div>
-
-    <!-- 결과확인용 로그 -->
-    <div class="section">
-        <h2>로그</h2>
-        <div id="logBox" class="log-box">로드 완료</div>
-    </div>
 </div>
 
 <script>
     function log(msg) {
-        const logBox = document.getElementById('logBox');
-        logBox.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}<br>` + logBox.innerHTML;
+        console.log(`[${new Date().toLocaleTimeString()}] ${msg}`);
     }
 
     async function loadDetail() {
