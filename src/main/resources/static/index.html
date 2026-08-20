@@ -32,12 +32,14 @@
 <body>
 
 <div class="container">
+    <div style="margin-bottom: 15px;">
+        <a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+    </div>
     <h1>🎭 공연 예매 및 실시간 좌석 선점</h1>
 
     <!-- 계정 스왑 및 관리자 툴바 -->
     <div style="background:#f8f9fa; border:1px solid #ddd; padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <div style="display:flex; align-items:center; gap:10px;">
-            <button onclick="location.href='/mainpage.html'" style="background:#34495e; color:#fff; border:none; padding:6px 12px; font-size:0.85rem; cursor:pointer; font-weight:bold;">메인페이지로 이동</button>
             <span style="font-weight:bold;">테스트 계정 스왑:</span>
             <button onclick="switchAccount('USER')" style="background:#27ae60; padding:6px 12px; font-size:0.85rem;">일반 사용자 모드 (USER)</button>
             <button onclick="switchAccount('ADMIN')" style="background:#8e44ad; padding:6px 12px; font-size:0.85rem;">관리자 모드 (ADMIN)</button>
@@ -866,8 +868,9 @@
                     body: JSON.stringify({ scheduleId: currentScheduleId, seatId: seat.id })
                 });
                 if (res.status === 401) {
-                    await switchAccount('USER');
-                    return handleSeatClick(seat);
+                    alert('로그인이 필요한 서비스입니다.\n로그인 페이지로 이동합니다.');
+                    location.href = '/login.html';
+                    return;
                 }
                 const data = await res.json();
                 if (res.ok && data.success) {
@@ -1029,15 +1032,18 @@
     async function initPage() {
         let token = localStorage.getItem('token') || localStorage.getItem('accessToken');
         if (!token || token === 'undefined') {
-            await switchAccount('ADMIN');
+            currentRole = 'GUEST';
+            updateRoleUI('GUEST', '비로그인');
         } else {
             const decoded = parseJwtToken(token);
             if (decoded) {
-                currentRole = decoded.role || 'ADMIN';
-                const email = decoded.sub || '';
+                currentRole = decoded.role || 'USER';
+                const email = decoded.sub || decoded.email || '';
                 updateRoleUI(currentRole, email);
+                await fetchMyReservationIds();
             } else {
-                await switchAccount('ADMIN');
+                currentRole = 'GUEST';
+                updateRoleUI('GUEST', '비로그인');
             }
         }
         await loadPerformances();
