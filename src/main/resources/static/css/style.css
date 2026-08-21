@@ -1684,3 +1684,15 @@ button, input, select, textarea {
     }
 
 }
+
+/* =====================================================
+   MAIN PAGE TYPING
+===================================================== */
+
+.hero-description {
+    min-height: 55px;
+    margin: 0 0 30px;
+    color: #64748b;
+    font-size: 16px;
+    line-height: 1.7;
+}
