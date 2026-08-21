@@ -1,3 +1,14 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #f5f5f5;
+    color: #111;
+}
+
 .detail-section{
     background: white;
     border-radius: 12px;
@@ -26,5 +37,20 @@
 .detail-section div,
 .payment-box div {
     margin: 8px 0;
+}
+
+.tracking-button {
+    padding: 10px 20px;
+    background-color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    border: 1px solid oklch(70.4% 0.04 256.788);
+    color: oklch(70.4% 0.04 256.788);
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.tracking-button:hover {
+    background-color: #f5f5f5;
 }
 

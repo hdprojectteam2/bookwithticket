@@ -1,13 +1,18 @@
 window.onload = function() {
-	const token = localStorage.getItem("token");
-	if (!token) {
-		alert("로그인이 필요합니다.");
-		location.href = "/login.html";
-		return;
-	}
-	loadBookHistory();
-	loadPerformanceHistory();
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("로그인이 필요합니다.");
+        location.href = "/login.html";
+        return;
+    }
+    loadBookHistory();
+    loadPerformanceHistory();
+
+    historyTab("bookHistory");
 };
+
+let bookHistoryVisibleCount = 3;
+let performanceHistoryVisibleCount = 3;
 
 
 
@@ -18,6 +23,9 @@ function historyTab(tabId) {
     const bookSubTitle = document.getElementById("book_sub_title");
     const ticketSubTitle = document.getElementById("ticket_sub_title");
 
+    const bookTab = document.getElementById("bookTab");
+    const ticketTab = document.getElementById("ticketTab");
+
     const isBookTab = tabId === "bookHistory";
 
     bookHistory.hidden = !isBookTab;
@@ -25,6 +33,9 @@ function historyTab(tabId) {
 
     ticketHistory.hidden = isBookTab;
     ticketSubTitle.hidden = isBookTab;
+
+    bookTab.classList.toggle("active", isBookTab);
+    ticketTab.classList.toggle("active", !isBookTab);
 }
 
 
@@ -32,13 +43,13 @@ async function loadBookHistory() {
     const box = document.getElementById("bookHistory");
 
     try {
-        const response = 		
-			await fetch(
-		        "/api/history/books",
-		        {
-		            headers: getAuthHeaders()
-		        }
-		    );
+        const response =
+            await fetch(
+                "/api/history/books",
+                {
+                    headers: getAuthHeaders()
+                }
+            );
 
         if (!response.ok) {
             throw new Error("도서 구매내역 조회에 실패했습니다.");
@@ -55,9 +66,27 @@ async function loadBookHistory() {
             return;
         }
 
-        box.innerHTML = histories
-            .map(history => createBookHistory(history))
-            .join("");
+        const visibleHistories = histories.slice(0, bookHistoryVisibleCount);
+
+        let html =
+            visibleHistories
+                .map(history => createBookHistory(history))
+                .join("");
+
+        if (histories.length > bookHistoryVisibleCount) {
+
+            html += `
+		        <button
+		            type="button"
+		            class="history-more-button"
+		            onclick="showMoreBookHistory()"
+		        >
+		            더보기
+		        </button>
+		    `;
+        }
+
+        box.innerHTML = html;
 
     } catch (error) {
         console.error("도서 구매내역 조회 오류:", error);
@@ -168,13 +197,13 @@ async function loadPerformanceHistory() {
     const box = document.getElementById("ticketHistory");
 
     try {
-        const response = 
-			await fetch(
-			     "/api/history/performances",
-			     {
-			         headers: getAuthHeaders()
-			     }
-			 );
+        const response =
+            await fetch(
+                "/api/history/performances",
+                {
+                    headers: getAuthHeaders()
+                }
+            );
 
         if (!response.ok) {
             throw new Error("티켓 구매내역 조회에 실패했습니다.");
@@ -191,9 +220,27 @@ async function loadPerformanceHistory() {
             return;
         }
 
-        box.innerHTML = histories
-            .map(history => createPerformanceHistory(history))
-            .join("");
+		const visibleHistories = histories.slice(0, performanceHistoryVisibleCount);
+
+		let html =
+		    visibleHistories
+		        .map(history => createPerformanceHistory(history))
+		        .join("");
+
+		if (histories.length > performanceHistoryVisibleCount) {
+
+		    html += `
+		        <button
+		            type="button"
+		            class="history-more-button"
+		            onclick="showMorePerformanceHistory()"
+		        >
+		            더보기
+		        </button>
+		    `;
+		}
+
+		box.innerHTML = html;
 
     } catch (error) {
         console.error("티켓 구매내역 조회 오류:", error);
@@ -204,6 +251,17 @@ async function loadPerformanceHistory() {
             </div>
         `;
     }
+}
+
+function showMoreBookHistory() {
+    bookHistoryVisibleCount += 3;
+    loadBookHistory();
+}
+
+
+function showMorePerformanceHistory() {
+    performanceHistoryVisibleCount += 3;
+    loadPerformanceHistory();
 }
 
 
@@ -396,7 +454,7 @@ async function requestRefund(orderNumber) {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-					...getAuthHeaders()
+                    ...getAuthHeaders()
                 },
                 body: JSON.stringify({
                     reason: trimmedReason
@@ -447,7 +505,12 @@ function formatDateTime(dateTime) {
 }
 
 function moveToDetail(type, id) {
-    location.href = "/history/detail?type=" + encodeURIComponent(type) + "&id=" + encodeURIComponent(id);
+    const url = "/history/detail?type=" + encodeURIComponent(type) + "&id=" + encodeURIComponent(id);
+
+    const width = 900;
+    const height = 800;
+
+    window.open(url, "_blank", `width=${width},height=${height}`);
 }
 
 function getAuthHeaders() {

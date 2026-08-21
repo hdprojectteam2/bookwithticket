@@ -392,32 +392,55 @@ async function cart() {
             );
 
 
-        const message =
-            await response.text();
+			let result = null;
+
+			try {
+			    result = await response.json();
+			} catch (error) {
+			    result = null;
+			}
 
 
         if (!response.ok) {
 
             throw new Error(
-                message ||
+                result?.message ||
                 "장바구니 추가에 실패했습니다."
             );
 
         }
 
 
-        alert(
-            message ||
-            "장바구니에 담았습니다."
-        );
+        showToast("장바구니에 추가했니다.");
 
 
     } catch (error) {
 
-        alert(error.message);
+        showToast(error.message);
 
     }
 
+}
+
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast-message";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("show");
+    }, 10);
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+
+    }, 2000);
 }
 
 

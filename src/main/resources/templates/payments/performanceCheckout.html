@@ -1,60 +1,41 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-    <meta charset="utf-8" />
-
-    <script src="https://js.tosspayments.com/v2/standard"></script>
-    <script src="/js/payments/checkout.js" defer></script>
-
-    <link
-        rel="stylesheet"
-        href="/css/payments/payment.css"
-    >
+<meta charset="utf-8" />
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<script src="/js/payments/checkout.js" defer></script>
+<link rel="stylesheet" href="/css/payments/payment.css">
 </head>
 
 <body>
 
-    <h1>결제하기</h1>
+	<h1>결제하기</h1>
 
-    <div
-        id="payment-data"
-        th:data-order-number="${orderNumber}">
-    </div>
+	<div id="payment-data" th:data-order-number="${orderNumber}"></div>
 
 
-    <div>
-        주문번호:
-        <span id="order-number"></span>
-    </div>
+	<div>
+		주문번호: <span id="order-number"></span>
+	</div>
 
 
-    <div>
-        주문상품:
-        <span id="order-name"></span>
-    </div>
+	<div>
+		주문상품: <span id="order-name"></span>
+	</div>
 
 
-    <div>
-        좌석:
-        <span id="seat-number"></span>
-    </div>
+	<div>
+		좌석: <span id="seat-number"></span>
+	</div>
 
 
-    <div>
-        결제금액:
-        <span id="total-price"></span>원
-    </div>
+	<div>
+		결제금액: <span id="total-price"></span>원
+	</div>
 
 
-    <button
-        class="button"
-        id="payment-button"
-        type="button"
-        style="margin-top: 30px"
-        disabled>
-        결제하기
-    </button>
+	<button class="button" id="payment-button" type="button" style="margin-top: 30px" disabled>
+		결제하기</button>
 
 </body>
 
