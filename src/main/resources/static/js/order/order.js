@@ -528,5 +528,5 @@ async function fillMemberInfo() {
 }
 
 function back() {
-    location.href = "/cart";
+    window.history.back()
 }
