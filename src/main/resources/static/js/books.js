@@ -44,6 +44,8 @@ function bindBookEvents() {
     const resetButton =
         document.getElementById("resetBooksButton");
 
+    const closeSearchButton =
+        document.getElementById("closeSearchButton");
 
     searchButton?.addEventListener(
         "click",
@@ -83,6 +85,10 @@ function bindBookEvents() {
         }
     );
 
+    closeSearchButton?.addEventListener(
+        "click",
+        closeSearchResult
+    );
 
     let timer;
 
@@ -131,6 +137,30 @@ function bindBookEvents() {
 
         }
     );
+
+}
+
+function closeSearchResult() {
+
+    const section =
+        document.getElementById(
+            "searchResultSection"
+        );
+
+
+    const input =
+        document.getElementById(
+            "searchInput"
+        );
+
+
+    section.hidden = true;
+
+
+    input.value = "";
+
+
+    clearSuggestions();
 
 }
 
@@ -240,31 +270,26 @@ async function loadCategories() {
 function selectCategory(button) {
 
     document
-        .querySelectorAll(
-            "#categoryBox button"
-        )
+        .querySelectorAll("#categoryBox button")
         .forEach(item => {
-
-            item.classList.remove(
-                "active"
-            );
-
+            item.classList.remove("active");
         });
 
 
-    button.classList.add(
-        "active"
-    );
+    button.classList.add("active");
 
 
     currentCategory =
         button.dataset.category || "";
 
+
     currentPage = 0;
 
 
-    loadAllBooks();
+    updateCategoryView();
 
+
+    loadAllBooks();
 }
 
 
@@ -297,7 +322,71 @@ async function loadNewBooks() {
 
 }
 
+function updateCategoryView() {
 
+    const popularSection =
+        document.getElementById("popularSection");
+
+    const newSection =
+        document.getElementById("newSection");
+
+    const allBooksTitle =
+        document.getElementById("allBooksTitle");
+
+
+    const isAll =
+        !currentCategory;
+
+
+    if (popularSection) {
+        popularSection.style.display =
+            isAll ? "" : "none";
+    }
+
+
+    if (newSection) {
+        newSection.style.display =
+            isAll ? "" : "none";
+    }
+
+
+    const categoryLabels = {
+        NOVEL: "소설",
+        POETRY_ESSAY: "시/에세이",
+        HUMANITIES: "인문",
+        ECONOMY_BUSINESS: "경제/경영",
+        SELF_DEVELOPMENT: "자기계발",
+        POLITICS_SOCIETY: "정치/사회",
+        HISTORY_CULTURE: "역사/문화",
+        SCIENCE: "과학",
+        IT: "컴퓨터/IT",
+        TRAVEL: "여행",
+        CHILDREN: "어린이",
+        COMIC: "만화",
+        FOREIGN_LANGUAGE: "외국어",
+        EXAM: "수험서",
+        ETC: "기타"
+    };
+
+
+    if (allBooksTitle) {
+
+        if (isAll) {
+
+            allBooksTitle.textContent =
+                "전체 도서";
+
+        } else {
+
+            const label =
+                categoryLabels[currentCategory]
+                || currentCategory;
+
+            allBooksTitle.textContent =
+                label + " 도서";
+        }
+    }
+}
 /* =====================================================
    POPULAR / NEW COMMON
 ===================================================== */
@@ -402,15 +491,6 @@ async function loadAllBooks() {
             size: PAGE_SIZE
         });
 
-
-    if (currentKeyword) {
-
-        params.set(
-            "keyword",
-            currentKeyword
-        );
-
-    }
 
 
     if (currentCategory) {
@@ -530,36 +610,21 @@ async function loadAllBooks() {
    RESULT TEXT
 ===================================================== */
 
-function updateResultText(
-    totalElements
-) {
+function updateResultText(totalElements) {
 
     const resultText =
         document.getElementById(
             "bookResultText"
         );
 
-
     if (!resultText) {
         return;
     }
 
-
-    if (currentKeyword) {
-
-        resultText.textContent =
-            `'${currentKeyword}' 검색 결과 ` +
-            `${totalElements.toLocaleString()}권`;
-
-        return;
-
-    }
-
-
     resultText.textContent =
         `총 ${totalElements.toLocaleString()}권`;
-
 }
+
 
 
 /* =====================================================
@@ -727,27 +792,172 @@ function createBookCard(book) {
 async function searchBook() {
 
     const input =
-        document.getElementById("searchInput");
+        document.getElementById(
+            "searchInput"
+        );
 
-    currentKeyword =
+
+    const keyword =
         input.value.trim();
 
-    currentPage = 0;
+
+    if (!keyword) {
+
+        alert(
+            "검색어를 입력해주세요."
+        );
+
+        input.focus();
+
+        return;
+
+    }
+
 
     clearSuggestions();
 
-    // 검색 결과 로딩
-    await loadAllBooks();
 
-    // 검색 결과 영역으로 이동
+    await loadSearchBooks(
+        keyword
+    );
+
+
     document
-        .querySelector(".bk-all-books")
+        .getElementById(
+            "searchResultSection"
+        )
         ?.scrollIntoView({
+
             behavior: "smooth",
             block: "start"
+
         });
+
 }
 
+async function loadSearchBooks(
+    keyword
+) {
+
+    const section =
+        document.getElementById(
+            "searchResultSection"
+        );
+
+
+    const container =
+        document.getElementById(
+            "searchResults"
+        );
+
+
+    const title =
+        document.getElementById(
+            "searchResultTitle"
+        );
+
+
+    section.hidden = false;
+
+
+    title.textContent =
+        `'${keyword}' 검색 결과`;
+
+
+    container.innerHTML =
+        createSkeletons(4);
+
+
+    const params =
+        new URLSearchParams({
+            keyword: keyword,
+            sort: currentSort,
+            page: 0,
+            size: 20
+        });
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/books?" +
+                params.toString()
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "검색 결과 조회 실패"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const books =
+            Array.isArray(data)
+                ? data
+                : data.content || [];
+
+
+        if (books.length === 0) {
+
+            container.innerHTML = `
+
+                <div class="bk-empty-state">
+
+                    <strong>
+                        검색 결과가 없습니다.
+                    </strong>
+
+                    <p>
+                        다른 검색어로 찾아보세요.
+                    </p>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML =
+            books
+                .map(createBookCard)
+                .join("");
+
+
+    } catch (error) {
+
+        console.error(error);
+
+
+        container.innerHTML = `
+
+            <div class="bk-empty-state">
+
+                <strong>
+                    검색 결과를 불러오지 못했습니다.
+                </strong>
+
+                <p>
+                    잠시 후 다시 시도해주세요.
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+}
 
 /* =====================================================
    AUTOCOMPLETE
@@ -846,26 +1056,27 @@ async function loadAutocomplete(
 }
 
 
-function selectSuggestion(title) {
+async function selectSuggestion(title) {
 
     const input =
         document.getElementById(
             "searchInput"
         );
 
-
     input.value = title;
-
-
-    currentKeyword = title;
-
-    currentPage = 0;
-
 
     clearSuggestions();
 
-    loadAllBooks();
+    await loadSearchBooks(title);
 
+    document
+        .getElementById(
+            "searchResultSection"
+        )
+        ?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
 }
 
 
@@ -1077,6 +1288,7 @@ function resetBooks() {
         });
 
 
+    updateCategoryView();
     loadAllBooks();
 
 }
