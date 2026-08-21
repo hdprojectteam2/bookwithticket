@@ -141,7 +141,7 @@ public class RefundEntity {
 	}
 	
 	public void approve(Long approverId) {
-		if(this.status != RefundStatus.REQUESTED) {
+		if(this.status != RefundStatus.REQUESTED && this.status != RefundStatus.REJECTED) {
 			throw new IllegalStateException("환불 요청 상태에서만 승인할 수 있습니다.");
 		}
 		this.approverId = approverId;

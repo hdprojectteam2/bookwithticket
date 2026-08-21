@@ -1,14 +1,13 @@
 package com.example.bookwithticket.member.dto;
 
 public class LoginResponseDto {
+    private final String tokenType = "Bearer";
+    private final String accessToken;
 
-    private String token;
-
-    public LoginResponseDto(String token) {
-        this.token = token;
+    public LoginResponseDto(String accessToken) {
+        this.accessToken = accessToken;
     }
 
-    public String getToken() {
-        return token;
-    }
+    public String getTokenType() { return tokenType; }
+    public String getAccessToken() { return accessToken; }
 }

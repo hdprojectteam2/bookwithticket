@@ -1,30 +1,46 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>결제 실패</title>
-
-  <script src="/js/payments/fail.js" defer></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>결제 실패</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/payments/fail.css">
+<script src="/js/payments/fail.js" defer></script>
 </head>
-
 <body>
-  <div class="box_section" style="width: 600px">
-    <h2>결제에 실패했습니다.</h2>
+	<main class="fail-page">
 
-    <div style="margin-top: 30px">
-      <strong>오류 코드</strong>
-      <span id="code"></span>
-    </div>
+		<section class="fail-card">
 
-    <div style="margin-top: 10px">
-      <strong>실패 사유</strong>
-      <span id="message"></span>
-    </div>
+			<h1 class="fail-title">결제에 실패했습니다.</h1>
 
-    <button id="retry-button" type="button" style="margin-top: 30px">
-      다시 결제하기
-    </button>
-  </div>
+			<p class="fail-description">결제 처리 중 문제가 발생했습니다. 아래 내용을 확인해주세요.</p>
+
+			<div class="fail-summary">
+
+				<div class="summary-row">
+
+					<span class="summary-label"> 오류 코드 </span> <strong class="summary-value error-code"
+						id="error-code"
+					> - </strong>
+				</div>
+
+				<div class="summary-row">
+					<span class="summary-label"> 실패 사유 </span> <strong class="summary-value" id="error-message">
+						- </strong>
+				</div>
+			</div>
+
+			<div class="button-group">
+
+				<button id="retry-button" type="button" class="retry-button">다시 결제하기</button>
+
+				<button id="home-button" type="button" class="home-button">홈으로 이동</button>
+
+			</div>
+
+		</section>
+	</main>
 </body>
 </html>

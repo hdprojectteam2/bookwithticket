@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.security.core.Authentication;
-import com.example.bookwithticket.member.entity.Member;
 
 @RestController
 @RequestMapping
@@ -96,6 +94,43 @@ public class ReviewController {
 
 
 
+    // 리뷰 수정
+    @PutMapping("/reviews/{reviewId}")
+    public ReviewResponseDto update(
+
+            @PathVariable Long reviewId,
+
+            @RequestBody ReviewRequestDto requestDto,
+
+            Authentication authentication
+
+    ) {
+
+        if (authentication == null) {
+
+            throw new RuntimeException(
+                    "로그인이 필요합니다."
+            );
+
+        }
+
+
+        Member member =
+                memberService.findMyInfo(
+                        authentication.getName()
+                );
+
+
+        Review review =
+                reviewService.update(
+                        reviewId,
+                        member,
+                        requestDto
+                );
+
+
+        return new ReviewResponseDto(review);
+    }
 
 
 

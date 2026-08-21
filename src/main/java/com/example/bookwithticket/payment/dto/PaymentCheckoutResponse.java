@@ -4,12 +4,22 @@ public class PaymentCheckoutResponse {
 
     private final String orderNumber;
     private final String orderName;
-    private final int amount;
+    private final int totalPrice;
+    private final String clientKey;
+    private final String seatNumber;
 
-    public PaymentCheckoutResponse(String orderNumber, String orderName, int amount) {
+    public PaymentCheckoutResponse(
+            String orderNumber,
+            String orderName,
+            int totalPrice,
+            String clientKey,
+            String seatNumber
+    ) {
         this.orderNumber = orderNumber;
         this.orderName = orderName;
-        this.amount = amount;
+        this.totalPrice = totalPrice;
+        this.clientKey = clientKey;
+        this.seatNumber = seatNumber;
     }
 
     public String getOrderNumber() {
@@ -20,7 +30,15 @@ public class PaymentCheckoutResponse {
         return orderName;
     }
 
-    public int getAmount() {
-        return amount;
+    public int getTotalPrice() {
+        return totalPrice;
+    }
+
+    public String getClientKey() {
+        return clientKey;
+    }
+
+    public String getSeatNumber() {
+        return seatNumber;
     }
 }

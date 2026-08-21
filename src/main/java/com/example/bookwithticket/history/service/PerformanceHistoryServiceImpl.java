@@ -1,5 +1,6 @@
 package com.example.bookwithticket.history.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,125 +22,100 @@ import com.example.bookwithticket.refund.repository.RefundRepository;
 
 @Service
 @Transactional(readOnly = true)
-public class PerformanceHistoryServiceImpl
-        implements PerformanceHistoryService {
+public class PerformanceHistoryServiceImpl implements PerformanceHistoryService {
 
-    private final ReservationRepository reservationRepository;
-    private final PaymentRepository paymentRepository;
-    private final RefundRepository refundRepository;
+	private final ReservationRepository reservationRepository;
+	private final PaymentRepository paymentRepository;
+	private final RefundRepository refundRepository;
 
-    public PerformanceHistoryServiceImpl(
-            ReservationRepository reservationRepository,
-            PaymentRepository paymentRepository,
-            RefundRepository refundRepository
-    ) {
-        this.reservationRepository = reservationRepository;
-        this.paymentRepository = paymentRepository;
-        this.refundRepository = refundRepository;
-    }
+	public PerformanceHistoryServiceImpl(ReservationRepository reservationRepository,
+			PaymentRepository paymentRepository, RefundRepository refundRepository) {
+		this.reservationRepository = reservationRepository;
+		this.paymentRepository = paymentRepository;
+		this.refundRepository = refundRepository;
+	}
 
-    @Override
-    public List<PerformanceHistoryDto>
-    findPerformanceHistory(Long memberId) {
+	@Override
+	public List<PerformanceHistoryDto> findPerformanceHistory(Long memberId) {
 
-        return reservationRepository
-                .findByMemberIdOrderByIdDesc(memberId)
-                .stream()
-                .filter(reservation ->
-                        reservation.getStatus()
-                                == ReservationStatus.CONFIRMED
-                        ||
-                        reservation.getStatus()
-                                == ReservationStatus.CANCELLED
-                )
-                .map(this::toDto)
-                .toList();
-    }
+		return reservationRepository.findByMemberIdOrderByIdDesc(memberId).stream()
+				.filter(reservation -> reservation.getStatus() == ReservationStatus.CONFIRMED
+						|| reservation.getStatus() == ReservationStatus.CANCELLED)
+				.map(this::toDto).toList();
+	}
 
-    private PerformanceHistoryDto toDto(
-            Reservation reservation
-    ) {
+	private PerformanceHistoryDto toDto(Reservation reservation) {
 
-        PerformanceSchedule schedule =
-                reservation.getSchedule();
+		PerformanceSchedule schedule = reservation.getSchedule();
 
-        Performance performance =
-                schedule.getPerformance();
+		Performance performance = schedule.getPerformance();
 
-        String refundStatus = null;
-        String refundStatusCode = null;
+		String refundStatus = null;
+		String refundStatusCode = null;
+		
+		String paymentMethod = null;
+        LocalDateTime paidAt = null;
 
-        Optional<PaymentEntity> paymentOptional =
-                paymentRepository
-                        .findFirstByReservationIdAndStatusInOrderByCreatedAtDesc(
-                                reservation.getId(),
-                                List.of(
-                                        PaymentStatus.DONE,
-                                        PaymentStatus.CANCELED
-                                )
-                        );
+		Optional<PaymentEntity> paymentOptional = paymentRepository
+				.findFirstByReservationIdAndStatusInOrderByCreatedAtDesc(reservation.getId(),
+						List.of(PaymentStatus.DONE, PaymentStatus.CANCELED));
 
-        if (paymentOptional.isPresent()) {
+		if (paymentOptional.isPresent()) {
 
-            PaymentEntity payment =
-                    paymentOptional.get();
-
-            Optional<RefundEntity> refundOptional =
-                    refundRepository
-                            .findByPaymentId(
-                                    payment.getId()
-                            );
-
-            if (refundOptional.isPresent()) {
-
-                RefundEntity refund =
-                        refundOptional.get();
-
-                refundStatus =
-                        convertRefundStatus(
-                                refund.getStatus()
-                        );
-
-                refundStatusCode =
-                        refund.getStatus().name();
+			PaymentEntity payment = paymentOptional.get();
+			
+            if (payment.getMethod() != null) {
+                paymentMethod = payment.getMethod().toString();
             }
-        }
+            paidAt = payment.getApprovedAt();
 
-        return new PerformanceHistoryDto(
-                "R" + reservation.getId(),
-                performance.getTitle(),
-                schedule.getPerformanceTime(),
-                performance.getPosterUrl(),
-                performance.getVenue(),
-                reservation.getSeat().getSeatNumber(),
-                reservation.getTotalPrice(),
-                convertReservationStatus(reservation.getStatus()),
-                reservation.getStatus().name(),
-                refundStatus,
-                refundStatusCode
-        );
-    }
+			Optional<RefundEntity> refundOptional = refundRepository.findByPaymentId(payment.getId());
 
-    private String convertReservationStatus(
-            ReservationStatus status
-    ) {
+			if (refundOptional.isPresent()) {
 
-        return switch (status) {
-            case HELD -> "좌석 선점";
-            case CONFIRMED -> "예매 완료";
-            case CANCELLED -> "예매 취소";
-            case EXPIRED -> "선점 만료";
-        };
-    }
+				RefundEntity refund = refundOptional.get();
 
-    private String convertRefundStatus(RefundStatus status) {
+				refundStatus = convertRefundStatus(refund.getStatus());
 
-        return switch (status) {
-            case REQUESTED -> "환불 요청 중";
-            case APPROVED -> "환불 처리 중";
-            case REJECTED -> "환불 거절";
-            case COMPLETED -> "환불 완료";
-            case FAILED -> "환불 처리 실패";
-        };
-    }
+				refundStatusCode = refund.getStatus().name();
+			}
+		}
+
+		return new PerformanceHistoryDto("PERF_" + reservation.getId(), performance.getTitle(),
+				schedule.getPerformanceTime(), performance.getPosterUrl(), performance.getVenue(),
+				reservation.getSeat().getSeatNumber(), reservation.getTotalPrice(),
+				convertReservationStatus(reservation.getStatus()), reservation.getStatus().name(), refundStatus,
+				refundStatusCode, paymentMethod, paidAt);
+	}
+
+	private String convertReservationStatus(ReservationStatus status) {
+
+		return switch (status) {
+		case HELD -> "좌석 선점";
+		case CONFIRMED -> "예매 완료";
+		case CANCELLED -> "예매 취소";
+		case EXPIRED -> "선점 만료";
+		};
+	}
+
+	private String convertRefundStatus(RefundStatus status) {
+
+		return switch (status) {
+		case REQUESTED -> "환불 요청 중";
+		case APPROVED -> "환불 처리 중";
+		case REJECTED -> "환불 거절";
+		case COMPLETED -> "환불 완료";
+		case FAILED -> "환불 처리 실패";
+		};
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public PerformanceHistoryDto findReservationHistoryDetail(Long memberId, Long reservationId) {
+
+		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
+				.orElseThrow(() -> new IllegalArgumentException("예매 내역을 찾을 수 없습니다."));
+
+		return toDto(reservation);
+	}
 }

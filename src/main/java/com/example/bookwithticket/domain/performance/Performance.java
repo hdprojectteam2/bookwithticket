@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "performances")
 public class Performance extends BaseTimeEntity {
-	//1씩 자동 증가
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,6 +33,10 @@ public class Performance extends BaseTimeEntity {
     @Column(nullable = false)
     private boolean active = true;
 
+    // KOPIS API seatscale: 실제 공연장 수용 좌석 수 저장
+    @Column(nullable = false)
+    private int seatscale = 0;
+
     protected Performance() {}
 
     public Performance(String title, PerformanceCategory category, String venue, String posterUrl, int runtimeMinutes, String description) {
@@ -48,7 +51,6 @@ public class Performance extends BaseTimeEntity {
         this.runtimeMinutes = runtimeMinutes;
         this.description = description;
         this.originalBookId = originalBookId;
-        
     }
 
     public Long getId() { return id; }
@@ -59,13 +61,19 @@ public class Performance extends BaseTimeEntity {
     public int getRuntimeMinutes() { return runtimeMinutes; }
     public String getDescription() { return description; }
     public Long getOriginalBookId() { return originalBookId; }
-   
+    public boolean isActive() { return active; }
+    public int getSeatscale() { return seatscale; }
+    public void setSeatscale(int seatscale) { this.seatscale = seatscale; }
+    public void deactivate() { this.active = false; }
+    public void activate() { this.active = true; }
 
-    
-    
-    //업데이트용 지금사용 안함
-    public void updateOriginalBookId(Long originalBookId) {
-        this.originalBookId = originalBookId;
+    public void update(String title, PerformanceCategory category, String venue, String posterUrl, int runtimeMinutes, String description, Long originalBookId) {
+        if (title != null && !title.isBlank()) this.title = title;
+        if (category != null) this.category = category;
+        if (venue != null && !venue.isBlank()) this.venue = venue;
+        if (posterUrl != null) this.posterUrl = posterUrl;
+        if (runtimeMinutes > 0) this.runtimeMinutes = runtimeMinutes;
+        if (description != null) this.description = description;
+        if (originalBookId != null) this.originalBookId = originalBookId;
     }
-    
 }

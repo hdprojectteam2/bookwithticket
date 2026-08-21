@@ -1,18 +1,33 @@
 server:
-  port: 8080
+  port: 8787
 spring:
   application:
     name: bookwithticket
   datasource:
-    url: jdbc:mysql://localhost:3306/bookwithticket?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/bookwithticket?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&rewriteBatchedStatements=true
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: multi
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
     database-platform: org.hibernate.dialect.MySQLDialect
+
+aladin:
+  book:
+    api-key: ttbsw01pp1612001
+
+jwt:
+  secret: bookwithticket-local-jwt-secret-key-2026-development
+  expiration-ms: 3600000
+
+toss: 
+  payments:
+    secret-key: test_sk_5OWRapdA8dJgo5p5yDJ9Vo1zEqZK
+    client-key: test_ck_eqRGgYO1r5AYGgZOlNJ2rQnN2Eya
+
+

@@ -1,0 +1,295 @@
+#back-area{
+	display: flex;
+	gap: 15px;
+	align-items: center;
+	max-width: 1400px;
+	margin: 0 auto;
+	padding: 30px 0;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+#back-area > div {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+	font-size: 30px;
+    color: oklch(70.4% 0.04 256.788);
+    cursor: pointer;
+}
+
+#backBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+	font-size: 30px;
+	line-height: 1;
+}
+
+#backText {
+    font-size: 30px;
+    line-height: 1;
+}
+
+#back-area > div:hover {
+    color: black;
+}
+
+.order-page {
+	display: flex;
+	gap: 30px;
+	align-items: flex-start;
+	max-width: 1400px;
+	margin: 0 auto;
+	padding: 30px;
+}
+
+.card {
+	background-color: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+}
+
+.order-left {
+	flex: 1;
+	min-width: 350px;
+	padding: 28px;
+}
+
+.section-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding-bottom: 20px;
+}
+
+.section-header h1 {
+	margin: 0;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.section-subtitle {
+	margin-left: 5px;
+	font-size: 14px;
+	font-weight: normal;
+	color: oklch(70.4% 0.04 256.788);
+}
+
+.divider {
+	width: 100%;
+	height: 1px;
+	margin: 25px 0;
+	background-color: #edf0f5;
+}
+
+.content-block {
+	width: 100%;
+}
+
+.block-title {
+	margin: 0 0 24px;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.form-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 18px;
+}
+
+.form-group label {
+	font-size: 14px;
+	font-weight: 500;
+	color: #374151;
+}
+
+.form-group input {
+	width: 80%;
+	height: 48px;
+	padding: 0 14px;
+	border: 1px solid #dbe2ea;
+	border-radius: 10px;
+	background-color: white;
+	font-size: 15px;
+	color: #111827;
+	outline: none;
+}
+
+.form-group input::placeholder {
+	color: oklch(70.4% 0.04 256.788);
+}
+
+.form-group input {
+	background-color: #fafbfc;
+}
+
+.postcode-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.postcode-row input {
+	flex: 1;
+}
+
+.outline-btn {
+	flex-shrink: 0;
+	height: 48px;
+	padding: 0 15px;
+	background-color: white;
+	border: 1px solid oklch(70.4% 0.04 256.788);
+	border-radius: 10px;
+	color: oklch(70.4% 0.04 256.788);
+	font-size: 14px;
+	cursor: pointer;
+}
+
+.outline-btn:hover {
+	background-color: #f8fafc;
+}
+
+#orderItems {
+	display: flex;
+	flex-direction: column;
+}
+
+.order-item-card {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	min-height: 150px;
+	padding: 25px 28px;
+	border-bottom: 1px solid #edf0f5;
+}
+
+.order-item-card:last-child {
+	border-bottom: none;
+}
+
+.item-image-wrap {
+	flex-shrink: 0;
+}
+
+.item-image {
+	width: 120px;
+	height: 160px;
+	flex-shrink: 0;
+	object-fit: cover;
+	border-radius: 12px;
+}
+
+.item-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.item-title {
+	margin: 0;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.item-meta {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin-top: 7px;
+	color: oklch(70.4% 0.04 256.788);
+	font-size: 14px;
+}
+
+.item-quantity {
+	margin-top: 18px;
+	color: #64748b;
+	font-size: 14px;
+}
+
+.item-quantity strong {
+	color: #1f2937;
+}
+
+.item-price {
+	margin-top: 15px;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.empty-order-item {
+	padding: 80px 20px;
+	background-color: white;
+	border-radius: 16px;
+	color: #94a3b8;
+	text-align: center;
+	font-size: 16px;
+}
+
+.order-right {
+	width: 320px;
+	flex-shrink: 0;
+	padding: 28px;
+	background-color: white;
+	border: 1px solid #e5e7eb;
+	border-radius: 16px;
+	position: sticky;
+	top: 20px;
+}
+
+.summary-title {
+	margin: 0 0 25px 0;
+	font-size: 20px;
+}
+
+.summary-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+	color: #64748b;
+}
+
+.summary-row strong {
+	color: #64748b;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.summary-total {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 25px;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.summary-total strong {
+	color: #315efb;
+	font-size: 24px;
+}
+
+.primary-btn {
+	width: 100%;
+	padding: 16px;
+	background-color: #315efb;
+	border: none;
+	border-radius: 12px;
+	color: white;
+	font-size: 17px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.primary-btn:hover {
+	background-color: #242fff;
+}
+
+.summary-notice {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.6;
+	color: oklch(70.4% 0.04 256.788);
+}

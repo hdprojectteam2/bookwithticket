@@ -1,9 +1,9 @@
 package com.example.bookwithticket.history.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public class PerformanceHistoryDto {
+
 	private final String reservationNumber;
 	private final String performanceTitle;
 	private final LocalDateTime performanceStartAt;
@@ -12,15 +12,16 @@ public class PerformanceHistoryDto {
 	private final String seatNumber;
 	private final int totalPrice;
 	private final String reservationStatus;
-    private final String reservationStatusCode;
-    private String refundStatus;
-    private String refundStatusCode;
-    
-	
+	private final String reservationStatusCode;
+	private final String refundStatus;
+	private final String refundStatusCode;
+	private final String paymentMethod;
+	private final LocalDateTime paidAt;
 
 	public PerformanceHistoryDto(String reservationNumber, String performanceTitle, LocalDateTime performanceStartAt,
 			String posterUrl, String venue, String seatNumber, int totalPrice, String reservationStatus,
-			String reservationStatusCode, String refundStatus, String refundStatusCode) {
+			String reservationStatusCode, String refundStatus, String refundStatusCode, String paymentMethod,
+			LocalDateTime paidAt) {
 		this.reservationNumber = reservationNumber;
 		this.performanceTitle = performanceTitle;
 		this.performanceStartAt = performanceStartAt;
@@ -32,6 +33,8 @@ public class PerformanceHistoryDto {
 		this.reservationStatusCode = reservationStatusCode;
 		this.refundStatus = refundStatus;
 		this.refundStatusCode = refundStatusCode;
+		this.paymentMethod = paymentMethod;
+		this.paidAt = paidAt;
 	}
 
 	public String getReservationNumber() {
@@ -54,6 +57,10 @@ public class PerformanceHistoryDto {
 		return venue;
 	}
 
+	public String getSeatNumber() {
+		return seatNumber;
+	}
+
 	public int getTotalPrice() {
 		return totalPrice;
 	}
@@ -73,9 +80,12 @@ public class PerformanceHistoryDto {
 	public String getRefundStatusCode() {
 		return refundStatusCode;
 	}
-	
-	
-	public String getSeatNumber() {
-	    return seatNumber;
+
+	public String getPaymentMethod() {
+		return paymentMethod;
+	}
+
+	public LocalDateTime getPaidAt() {
+		return paidAt;
 	}
 }

@@ -3,8 +3,8 @@ package com.example.bookwithticket.cart.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -17,171 +17,161 @@ import com.example.bookwithticket.cart.dto.CartItemDto;
 import com.example.bookwithticket.cart.dto.PerformanceCartItemDto;
 import com.example.bookwithticket.cart.service.CartService;
 import com.example.bookwithticket.cart.service.PerformanceCartService;
+import com.example.bookwithticket.member.entity.Member;
+import com.example.bookwithticket.member.service.MemberService;
 
 @Controller
 public class CartController {
 
-    private final CartService cartService;
-    private final PerformanceCartService performanceCartService;
+	private final CartService cartService;
+	private final PerformanceCartService performanceCartService;
+	private final MemberService memberService;
 
-    public CartController(CartService cartService, PerformanceCartService performanceCartService) {
-        this.cartService = cartService;
-        this.performanceCartService = performanceCartService;
-    }
+	public CartController(CartService cartService, PerformanceCartService performanceCartService,
+			MemberService memberService) {
+		this.cartService = cartService;
+		this.performanceCartService = performanceCartService;
+		this.memberService = memberService;
+	}
 
-    // 임시 ID 1
-    private Long getCurrentMemberId() {
-        return 1L;
-    }
+	private Long getCurrentMemberId(Authentication authentication) {
 
-    /*장바구니 이동 */
-    @GetMapping("/cart")
-    public String cartPage(Model model) {
+		if (authentication == null || !authentication.isAuthenticated()) {
 
-        Long memberId = getCurrentMemberId();
+			throw new IllegalArgumentException("로그인이 필요합니다.");
+		}
 
-        /* 도서 장바구니 */
-        List<CartItemDto> cartItems = cartService.findCartItems(memberId);
+		String email = authentication.getName();
 
-        int totalPrice = cartItems.stream()
-                .mapToInt(CartItemDto::getTotalPrice)
-                .sum();
-        
-        int totalQuantity = cartItems.stream()
-        		.mapToInt(CartItemDto::getQuantity)
-        		.sum();
+		Member member = memberService.findMyInfo(email);
 
-        model.addAttribute("cartItems", cartItems);
-        model.addAttribute("totalPrice", totalPrice);
-        model.addAttribute("totalQuantity", totalQuantity);
+		return member.getId();
+	}
 
-        /* 공연 장바구니 */
-        List<PerformanceCartItemDto> performanceCartItems = performanceCartService.getCartItems(memberId);
+	/* 장바구니 페이지 */
+	@GetMapping("/cart")
+	public String cartPage(Authentication authentication) {
+		
+		return "cart/cartList";
+	}
 
-        model.addAttribute("cartItems", cartItems);
+	/* 도서 장바구니 조회 */
+	@ResponseBody
+	@GetMapping("/api/cart")
+	public ResponseEntity<List<CartItemDto>> findCartItems(Authentication authentication) {
 
-        model.addAttribute("totalPrice", totalPrice);
+		Long memberId = getCurrentMemberId(authentication);
 
-        model.addAttribute("totalQuantity", totalQuantity);
+		List<CartItemDto> cartItems = cartService.findCartItems(memberId);
 
-        model.addAttribute("performanceCartItems", performanceCartItems);
-        
-        return "cart/cartList";
-    }
+		return ResponseEntity.ok(cartItems);
+	}
 
-    /*장바구니 목록 조회 */
-    @ResponseBody
-    @GetMapping("/api/cart")
-    public ResponseEntity<List<CartItemDto>> findCartItems() {
+	/* 공연 장바구니 조회 */
+	@ResponseBody
+	@GetMapping("/api/cart/performances")
+	public ResponseEntity<List<PerformanceCartItemDto>> findPerformanceCartItems(Authentication authentication) {
 
-        Long memberId = getCurrentMemberId();
+		Long memberId = getCurrentMemberId(authentication);
 
-        List<CartItemDto> cartItems = cartService.findCartItems(memberId);
+		List<PerformanceCartItemDto> performanceCartItems = performanceCartService.getCartItems(memberId);
 
-        return ResponseEntity.ok(cartItems);
-    }
+		return ResponseEntity.ok(performanceCartItems);
+	}
 
-    /*장바구니 상품 추가 */
-    @ResponseBody
-    @PostMapping("/api/cart/items")
-    public ResponseEntity<String> addCartItem(
-            @RequestParam(
-                    name = "memberId",
-                    defaultValue = "1"
-            ) Long memberId,
-            @RequestParam(name = "bookId") Long bookId,
-            @RequestParam(
-                    name = "quantity",
-                    defaultValue = "1"
-            ) int quantity
-    ) {
-        cartService.addCartItem(memberId, bookId, quantity);
+	/* 도서 장바구니 추가 */
+	@ResponseBody
+	@PostMapping("/api/cart/items")
+	public ResponseEntity<String> addCartItem(@RequestParam(name = "bookId") Long bookId,
+			@RequestParam(name = "quantity", defaultValue = "1") int quantity, Authentication authentication) {
+		Long memberId = getCurrentMemberId(authentication);
 
-        return ResponseEntity.ok("장바구니 등록 완료");
-    }
-    
-    /*장바구니 상품 삭제 */
-    @ResponseBody
-    @DeleteMapping("/api/cart/items/{cartItemId}")
-    public ResponseEntity<String> deleteCartItem(
-    		@PathVariable(name = "cartItemId") Long cartItemId
-    		){
-    	Long memberId = getCurrentMemberId();
-    	
-    	cartService.deleteCartItem(memberId, cartItemId);
-    	
-    	return ResponseEntity.ok("장바구니 상품 삭제 완료");
-    }
-    
-    /*장바구니 수량 변경 */
-    @ResponseBody
-    @PatchMapping("/api/cart/items/{cartItemId}")
-    public ResponseEntity<String> updateQuantity(
-    		@PathVariable(name = "cartItemId") Long cartItemId,
-    		@RequestParam(name = "quantity") int quantity
-    		){
-    	Long memberId = getCurrentMemberId();
-    	
-    	cartService.updateQuantity(memberId, cartItemId, quantity);
-    	return ResponseEntity.ok("장바구니 상품 수량 변경 완료");
-    }
+		cartService.addCartItem(memberId, bookId, quantity);
 
-    /* 장바구니 전체 삭제 */
-    @ResponseBody
-    @DeleteMapping("/api/cart/items")
-    public ResponseEntity<String> deleteAllCartItems() {
-        Long memberId = getCurrentMemberId();
+		return ResponseEntity.ok("장바구니 등록 완료");
+	}
 
-        cartService.deleteAllItems(memberId);
+	/* 도서 장바구니 삭제 */
+	@ResponseBody
+	@DeleteMapping("/api/cart/items/{cartItemId}")
+	public ResponseEntity<String> deleteCartItem(@PathVariable(name = "cartItemId") Long cartItemId,
+			Authentication authentication) {
 
-        return ResponseEntity.ok("장바구니 상품을 모두 삭제했습니다.");
-    }
-   
-    /* 공연 장바구니 추가 */
-    @ResponseBody
-    @PostMapping("/api/cart/performances")
-    public ResponseEntity<String> addPerformanceCartItem(
-            @RequestParam(
-                    name = "memberId",
-                    defaultValue = "1"
-            )
-            Long memberId,
+		Long memberId = getCurrentMemberId(authentication);
 
-            @RequestParam(name = "performanceScheduleId")
-            Long performanceScheduleId
-    ) {
-        performanceCartService.addCartItem(memberId, performanceScheduleId);
+		cartService.deleteCartItem(memberId, cartItemId);
 
-        return ResponseEntity.ok("공연 장바구니 등록 완료");
-    }
-    
-    /* 공연 장바구니 삭제 */
-    @ResponseBody
-    @DeleteMapping("/api/cart/performances/{performanceCartItemId}")
-    public ResponseEntity<String>
-    deletePerformanceCartItem(
-            @PathVariable(
-                    name = "performanceCartItemId"
-            )
-            Long performanceCartItemId
-    ) {
-        Long memberId = getCurrentMemberId();
+		return ResponseEntity.ok("장바구니 상품 삭제 완료");
+	}
 
-        performanceCartService.deleteCartItem(memberId, performanceCartItemId);
+	/* 도서 수량 변경 */
+	@ResponseBody
+	@PatchMapping("/api/cart/items/{cartItemId}")
+	public ResponseEntity<String> updateQuantity(@PathVariable(name = "cartItemId") Long cartItemId,
 
-        return ResponseEntity.ok("공연 장바구니 상품 삭제 완료");
-    }
-    
-    /* 공연 장바구니 전체 삭제 */
-    @ResponseBody
-    @DeleteMapping("/api/cart/performances")
-    public ResponseEntity<String>
-    deleteAllPerformanceCartItems() {
+			@RequestParam(name = "quantity") int quantity, Authentication authentication) {
 
-        Long memberId = getCurrentMemberId();
+		Long memberId = getCurrentMemberId(authentication);
 
-        performanceCartService.deleteAllItems(memberId);
+		cartService.updateQuantity(memberId, cartItemId, quantity);
 
-        return ResponseEntity.ok("공연 장바구니를 모두 삭제했습니다.");
-    }
+		return ResponseEntity.ok("장바구니 상품 수량 변경 완료");
+	}
+
+	/* 도서 전체 삭제 */
+	@ResponseBody
+	@DeleteMapping("/api/cart/items")
+	public ResponseEntity<String> deleteAllCartItems(Authentication authentication) {
+
+		Long memberId = getCurrentMemberId(authentication);
+
+		cartService.deleteAllItems(memberId);
+
+		return ResponseEntity.ok("장바구니 상품을 모두 삭제했습니다.");
+	}
+
+	/* 공연 장바구니 추가 */
+	@ResponseBody
+	@PostMapping("/api/cart/performances")
+	public ResponseEntity<String> addPerformanceCartItem(
+			@RequestParam(name = "performanceScheduleId") Long performanceScheduleId, Authentication authentication) {
+
+		Long memberId = getCurrentMemberId(authentication);
+
+		performanceCartService.addCartItem(memberId, performanceScheduleId);
+
+		return ResponseEntity.ok("공연 장바구니 등록 완료");
+	}
+
+	/* 공연 장바구니 삭제 */
+	@ResponseBody
+	@DeleteMapping("/api/cart/performances/{performanceCartItemId}")
+	public ResponseEntity<String> deletePerformanceCartItem(
+			@PathVariable(name = "performanceCartItemId") Long performanceCartItemId, Authentication authentication) {
+
+		Long memberId = getCurrentMemberId(authentication);
+
+		performanceCartService.deleteCartItem(memberId, performanceCartItemId);
+
+		return ResponseEntity.ok("공연 장바구니 상품 삭제 완료");
+	}
+
+	/* 공연 전체 삭제 */
+	@ResponseBody
+	@DeleteMapping("/api/cart/performances")
+	public ResponseEntity<String> deleteAllPerformanceCartItems(Authentication authentication) {
+
+		Long memberId = getCurrentMemberId(authentication);
+
+		performanceCartService.deleteAllItems(memberId);
+
+		return ResponseEntity.ok("공연 장바구니를 모두 삭제했습니다.");
+	}
+
+	/* 장바구니 테스트 */
+	@GetMapping("/cartTest")
+	public String cartTestPage() {
+
+		return "cartTest";
+	}
 }
