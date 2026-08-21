@@ -1,10 +1,65 @@
+#back-area {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+    padding: 30px 0;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.cart-tabs {
+    display: flex;
+    width: 100%;
+    padding-bottom: 10px;
+}
+
+.cart-tabs button {
+    position: relative;
+    border-radius: 12px;
+    padding: 10px 15px;
+    border: 1px solid oklch(70.4% 0.04 256.788);
+    background: none;
+    cursor: pointer;
+    color: oklch(70.4% 0.04 256.788);
+    font-size: 16px;
+}
+
+.cart-tabs button.active {
+    color: white;
+    background-color: oklch(48.8% 0.243 264.376);
+    font-weight: 600;
+}
+
+#back-area{
+	display: flex;
+	gap: 15px;
+	align-items: center;
+	width: 100%;
+	margin: 0 auto;
+	padding: 30px 0;
+	font-size: 30px;
+	font-weight: bold;
+}
+
+#backBtn{
+	font-size: 20px;
+	font-weight: bold;
+	color: oklch(70.4% 0.04 256.788);
+}
+
+#backBtn:hover{
+	color: black;
+	cursor: pointer;
+}
+
 .cart-layout {
 	display: flex;
 	gap: 30px;
 	align-items: flex-start;
-	max-width: 1400px;
+	width: 100%;
 	margin: 0 auto;
-	padding: 30px;
 }
 
 .cart-left {
@@ -13,7 +68,17 @@
 	border: 1px solid #e5e7eb;
 	border-radius: 12px;
 	overflow: hidden;
-	min-width: 600px;
+	width: 100%;
+    max-width: 1000px;
+    min-width: 500px;
+}
+
+#ticketCart .cart-layout {
+    width: 100%;
+}
+
+#ticketCart .cart-left {
+    width: 100%;
 }
 
 .cart-header {
@@ -97,6 +162,10 @@
 	border-radius: 12px;
 }
 
+.cart-book-image:hover{
+	cursor: pointer;
+}
+
 .cart-item-info {
 	flex: 1;
 }
@@ -105,6 +174,10 @@
 	margin: 0;
 	font-size: 18px;
 	font-weight: bold;
+}
+
+.cart-book-title:hover{
+	cursor: pointer;
 }
 
 .cart-book-detail {
@@ -129,6 +202,9 @@
 }
 
 .quantityBox button {
+	display: flex;
+    align-items: center;
+    justify-content: center;
 	width: 36px;
 	height: 36px;
 	background-color: white;
@@ -153,8 +229,13 @@
 	border-bottom: 1px solid #dbe2ea;
 	border-left: none;
 	border-right: none;
-	text-align: center;
 	font-size: 15px;
+	text-align: center;
+}
+.quantityBox input::-webkit-outer-spin-button,
+.quantityBox input::-webkit-inner-spin-button{
+	-webkit-appearance: none;
+	margin: 0;
 }
 
 .stock-text {
@@ -187,6 +268,21 @@
 	font-weight: bold;
 }
 
+.original-price {
+    margin-right: 8px;
+
+    color: #999;
+    font-size: 14px;
+
+    text-decoration: line-through;
+}
+
+.sale-price {
+    color: #111;
+    font-size: 17px;
+    font-weight: 700;
+}
+
 .cart-delete-button {
 	width: 32px;
 	height: 32px;
@@ -203,7 +299,7 @@
 }
 
 .cart-summary {
-	width: 320px;
+	width: 340px;
 	flex-shrink: 0;
 	padding: 28px;
 	background-color: white;

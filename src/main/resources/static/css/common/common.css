@@ -1,0 +1,28 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f5f5f5;
+    color: #111;
+}
+
+.container{
+	width: min(1180px, calc(100% - 40px));
+	margin: 0 auto;
+	padding: 20px 0;
+}
+
+.site-header {
+	width: min(1180px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.site-logo {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #2c3e50;
+    text-decoration: none;
+}

@@ -59,6 +59,11 @@ public class MemberController {
         );
     }
 
+    @GetMapping("/count")
+    public ResponseEntity<Long> countMembers() {
+        return ResponseEntity.ok(memberService.countActiveMembers());
+    }
+
     @GetMapping("/me")
     public ResponseEntity<MemberResponseDto> myInfo(Authentication authentication) {
         Member member = memberService.findMyInfo(authentication.getName());

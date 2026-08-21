@@ -4,33 +4,35 @@
 <meta charset="UTF-8">
 <title>구매내역</title>
 <script src="/js/history/order-history.js" defer></script>
-<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/common/common.css">
 <link rel="stylesheet" href="/css/history/order-history.css">
 </head>
 <body>
+	<div class="container">
 
-	<div style="margin-bottom: 15px;">
-		<a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+		<div style="margin-bottom: 15px;">
+			<a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+		</div>
+	
+		<h1>구매내역</h1>
+	
+		<div class="history-tabs">
+			<button type="button" id="bookTab" onclick="historyTab('bookHistory')">도서</button>
+	
+			<button type="button" id="ticketTab" onclick="historyTab('ticketHistory')">티켓</button>
+		</div>
+	
+		<hr>
+	
+		<div class="bookHistoryItems" id="book_sub_title">주문 내역</div>
+	
+		<div class="ticketHistoryItems" id="ticket_sub_title" hidden>예매 내역</div>
+	
+		<div class="bookHistoryItems" id="bookHistory"></div>
+	
+		<div class="ticketHistoryItems" id="ticketHistory" hidden></div>
+
 	</div>
-
-	<h1>구매내역</h1>
-
-	<div>
-		<button type="button" onclick="historyTab('bookHistory')">도서</button>
-
-		<button type="button" onclick="historyTab('ticketHistory')">티켓</button>
-	</div>
-
-	<hr>
-
-	<div class="bookHistoryItems" id="book_sub_title">주문 내역</div>
-
-	<div class="ticketHistoryItems" id="ticket_sub_title" hidden>예매 내역</div>
-
-	<div class="bookHistoryItems" id="bookHistory"></div>
-
-	<div class="ticketHistoryItems" id="ticketHistory" hidden></div>
-
 </body>
 
 </html>

@@ -25,9 +25,17 @@ function cartTab(tabId) {
 
     const ticketCart = document.getElementById("ticketCart");
 
+    const bookCartTab = document.getElementById("bookTab");
+
+    const ticketTab = document.getElementById("ticketTab");
+
     bookCart.hidden = tabId !== "bookCart";
 
     ticketCart.hidden = tabId !== "ticketCart";
+
+    bookTab.classList.toggle("active", tabId === "bookCart");
+
+    ticketTab.classList.toggle("active", tabId === "ticketCart");
 }
 
 
@@ -50,8 +58,8 @@ async function loadBookCart() {
         const items =
             await response.json();
 
-			if (items.length === 0) {
-				box.innerHTML = `
+        if (items.length === 0) {
+            box.innerHTML = `
 					<section class="cart-panel">
 						<div class="cart-header">
 							<div class="cart-title">
@@ -60,13 +68,13 @@ async function loadBookCart() {
 						    </div>
 						</div>
 						<div class="empty-cart">
-							공연 장바구니가 비어있습니다.
+							도서 장바구니가 비어있습니다.
 						</div>
 					</section>
 					`;
 
-			    return;
-			}
+            return;
+        }
 
         box.innerHTML = `
             <div class="cart-layout">
@@ -150,10 +158,12 @@ function createBookCartItem(item) {
     const purchasable = item.purchasable === true;
 
     return `
-        <div
-            class="cart-item
-                ${purchasable ? "" : "unavailable"}"
-            data-price="${item.price}">
+			<div
+			    class="cart-item
+			        ${purchasable ? "" : "unavailable"}"
+			    data-price="${item.salePrice}"
+			    data-original-price="${item.price}"
+			>
 
             <input
                 type="checkbox"
@@ -173,12 +183,16 @@ function createBookCartItem(item) {
                 class="cart-book-image"
                 src="${item.thumbnail}"
                 alt="${item.bookTitle}"
+				onclick="goBookDetail(${item.bookId})"
             >
 
 
             <div class="cart-item-info">
 
-                <h3 class="cart-book-title">
+                <h3 
+					class="cart-book-title"
+					onclick="goBookDetail(${item.bookId})"
+				>
                     ${item.bookTitle}
                 </h3>
 
@@ -204,9 +218,23 @@ function createBookCartItem(item) {
         }
 
 
-                <div class="cart-unit-price">
-                    ${formatPrice(item.price)}원
-                </div>
+			<div class="cart-unit-price">
+	
+			    ${
+			        item.price !== item.salePrice
+			            ? `
+			                <span class="original-price">
+			                    ${formatPrice(item.price)}원
+			                </span>
+			            `
+			            : ""
+			    }
+	
+			    <span class="sale-price">
+			        ${formatPrice(item.salePrice)}원
+			    </span>
+	
+			</div>
 
             </div>
 
@@ -214,7 +242,7 @@ function createBookCartItem(item) {
             <div class="cart-item-price">
 
                 ${formatPrice(
-            item.price * item.quantity
+            item.salePrice * item.quantity
         )}원
 
             </div>
@@ -339,18 +367,32 @@ function createBookCartSummary() {
 
             <div class="summary-row">
 
-                <span>
-                    상품 금액
-                </span>
+			    <span>
+			        정가
+			    </span>
 
-                <span>
-                    <strong
-                        id="selectTotalPrice">
-                        0
-                    </strong>원
-                </span>
+			    <span>
+			        <strong id="selectOriginalPrice">
+			            0
+			        </strong>원
+			    </span>
 
-            </div>
+			</div>
+
+
+			<div class="summary-row">
+
+			    <span>
+			        할인 금액
+			    </span>
+
+			    <span>
+			        -<strong id="selectDiscountPrice">
+			            0
+			        </strong>원
+			    </span>
+
+			</div>
 
 
             <hr>
@@ -421,6 +463,7 @@ function updateSelectedSummary() {
 
     let selectedItemCount = 0;
     let selectedTotalQuantity = 0;
+	let selectedOriginalPrice = 0;
     let selectedTotalPrice = 0;
 
 
@@ -428,18 +471,13 @@ function updateSelectedSummary() {
 
         const checkbox = cartItem.querySelector(".item-checkbox");
 
-        if (!checkbox ||
-            checkbox.disabled ||
-            !checkbox.checked
+        if (!checkbox || checkbox.disabled || !checkbox.checked
         ) {
             return;
         }
 
 
-        const quantityInput =
-            cartItem.querySelector(
-                ".quantityBox input"
-            );
+        const quantityInput = cartItem.querySelector(".quantityBox input");
 
         if (!quantityInput) {
             return;
@@ -450,18 +488,24 @@ function updateSelectedSummary() {
 
         const price = Number(cartItem.dataset.price);
 
+		const originalPrice = Number(cartItem.dataset.originalPrice);
 
         selectedItemCount++;
 
         selectedTotalQuantity += quantity;
+		
+		selectedOriginalPrice += originalPrice * quantity;
 
         selectedTotalPrice += price * quantity;
     });
 
+	const selectedDiscountPrice = selectedOriginalPrice - selectedTotalPrice;
 
     const quantityElement = document.getElementById("selectTotalQuantity");
 
-    const priceElement = document.getElementById("selectTotalPrice");
+	const originalPriceElement = document.getElementById("selectOriginalPrice");
+
+	const discountPriceElement = document.getElementById("selectDiscountPrice");
 
     const finalPriceElement = document.getElementById("finalTotalPrice");
 
@@ -473,9 +517,14 @@ function updateSelectedSummary() {
     }
 
 
-    if (priceElement) {
-        priceElement.textContent = formatPrice(selectedTotalPrice);
-    }
+	if (originalPriceElement) {
+	    originalPriceElement.textContent = formatPrice(selectedOriginalPrice);
+	}
+
+
+	if (discountPriceElement) {
+	    discountPriceElement.textContent = formatPrice(selectedDiscountPrice);
+	}
 
 
     if (finalPriceElement) {
@@ -545,7 +594,7 @@ function changeQuantity(button, amount) {
 
     if (newQuantity < 1) {
 
-        alert("수량은 1개 이상이어야 합니다.");
+        showToast("수량은 1개 이상이어야 합니다.");
 
         return;
     }
@@ -553,7 +602,7 @@ function changeQuantity(button, amount) {
 
     if (newQuantity > stockQuantity) {
 
-        alert("현재 재고는 " + stockQuantity + "개입니다.");
+        showToast("재고보다 많이 담을 수 없습니다.");
 
         return;
     }
@@ -561,8 +610,7 @@ function changeQuantity(button, amount) {
 
     if (newQuantity > maxQuantity) {
 
-        alert("최대 " + maxQuantity + "개까지 구매할 수 있습니다."
-        );
+        showToast("최대 " + maxQuantity + "개까지 구매할 수 있습니다.");
 
         return;
     }
@@ -587,7 +635,7 @@ async function updateQuantity(input) {
 
     if (!Number.isInteger(quantity) || quantity < 1) {
 
-        alert("수량은 1 이상의 정수만 입력할 수 있습니다.");
+        showToast("수량은 1 이상의 정수만 입력할 수 있습니다.");
 
         await loadBookCart();
 
@@ -597,7 +645,7 @@ async function updateQuantity(input) {
 
     if (quantity > stockQuantity) {
 
-        alert("현재 재고는 " + stockQuantity + "개입니다.");
+        showToast("재고보다 많이 담을 수 없습니다.");
 
         await loadBookCart();
 
@@ -607,7 +655,7 @@ async function updateQuantity(input) {
 
     if (quantity > maxQuantity) {
 
-        alert("최대 " + maxQuantity + "개까지 구매할 수 있습니다.");
+        showToast("최대 " + maxQuantity + "개까지 구매할 수 있습니다.");
 
         await loadBookCart();
 
@@ -654,7 +702,7 @@ async function updateQuantity(input) {
 
         console.error("수량 변경 오류:", error);
 
-        alert(error.message);
+        showToast(error.message);
 
         await loadBookCart();
     }
@@ -691,7 +739,7 @@ async function deleteCartItem(cartItemId) {
 
         console.error("장바구니 삭제 오류:", error);
 
-        alert(error.message);
+        showToast(error.message);
     }
 }
 
@@ -746,9 +794,7 @@ function orderDelivery() {
 
     if (checkedItems.length === 0) {
 
-        alert(
-            "주문할 상품을 선택해주세요."
-        );
+        showToast("주문할 상품을 선택해주세요.");
 
         return;
     }
@@ -801,8 +847,8 @@ async function loadPerformanceCart() {
         const items = await response.json();
 
 
-		if (items.length === 0) {
-		    box.innerHTML = `
+        if (items.length === 0) {
+            box.innerHTML = `
 		        <section class="cart-panel">
 		            <div class="cart-header">
 		                <div class="cart-title">
@@ -816,49 +862,52 @@ async function loadPerformanceCart() {
 		        </section>
 		    `;
 
-		    return;
-		}
+            return;
+        }
 
 
         box.innerHTML = `
-            <section class="cart-left card">
-
-                <div class="cart-header">
-
-                    <div class="cart-title">
-                        티켓 장바구니
-                        <span>
-                            (${items.length}개)
-                        </span>
-                    </div>
-
-                    <button
-                        type="button"
-                        onclick="
-                            deleteAllPerformanceItems()
-                        "
-                    >
-                        전체 삭제
-                    </button>
-
-                </div>
-
-
-                <div
-                    class="performance-cart-list"
-                >
-
-                    ${items
-                .map(item =>
-                    createPerformanceCartItem(
-                        item
-                    )
-                )
-                .join("")}
-
-                </div>
-
-            </section>
+			<div class="cart-layout">
+	            <section class="cart-left card">
+	
+	                <div class="cart-header">
+	
+	                    <div class="cart-title">
+	                        티켓 장바구니
+	                        <span>
+	                            (${items.length}개)
+	                        </span>
+	                    </div>
+	
+	                    <button
+	                        type="button"
+							class="delete-selected-button""
+	                        onclick="
+	                            deleteAllPerformanceItems()
+	                        "
+	                    >
+	                        전체 삭제
+	                    </button>
+	
+	                </div>
+	
+	
+	                <div
+	                    class="performance-cart-list"
+	                >
+	
+	                    ${items
+	                .map(item =>
+	                    createPerformanceCartItem(
+	                        item
+	                    )
+	                )
+	                .join("")}
+	
+	                </div>
+	
+	            </section>
+			</div>
         `;
 
 
@@ -1162,4 +1211,34 @@ function getAuthHeaders() {
         "Authorization":
             `Bearer ${token}`
     };
+}
+
+function goBookDetail(bookId) {
+    location.href = `/book-detail.html?id=${encodeURIComponent(bookId)}`;
+}
+
+function back() {
+    window.history.back();
+}
+
+
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast-message";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("show");
+    }, 10);
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+
+    }, 2000);
 }

@@ -109,15 +109,15 @@ async function loadOrderPreview(cartItemIds) {
 }
 
 function renderOrderPreview(preview) {
+	const discountPrice = preview.originalPrice - preview.totalPrice;
 
     setText("summary-quantity", `${preview.totalQuantity}개`);
+	
+	setText("summary-original-price",`${formatPrice(preview.originalPrice)}원`);
 
-
-    setText("summary-product-price", `${formatPrice(preview.totalPrice)}원`);
-
-
+	setText("summary-discount-price", `-${formatPrice(discountPrice)}원`);
+	
     setText("summary-total-price", `${formatPrice(preview.totalPrice)}원`);
-
 
     setText("totalPrice", formatPrice(preview.totalPrice));
 }
@@ -307,7 +307,7 @@ async function requestTossPayment(orderNumber) {
 
     const checkout = await response.json();
     const paymentOrderNumber = checkout.orderNumber;
-    const orderName = checkout.orderName;
+    const orderName = String(checkout.orderName || "도서 주문").slice(0, 90);
     const totalPrice = Number(checkout.totalPrice);
     const clientKey = checkout.clientKey;
 
@@ -525,4 +525,8 @@ async function fillMemberInfo() {
 	} catch (error) {
 		alert(error.message);
 	}
+}
+
+function back() {
+    location.href = "/cart";
 }

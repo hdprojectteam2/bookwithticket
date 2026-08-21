@@ -77,6 +77,10 @@ public class MemberService {
         return !memberRepository.existsByEmail(normalizeEmail(email));
     }
 
+    public long countActiveMembers() {
+        return memberRepository.countActiveMembers();
+    }
+
     public Member findById(Long id) {
         return memberRepository.findById(id)
                 .filter(Member::isActive)

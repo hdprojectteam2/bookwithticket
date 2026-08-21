@@ -1,836 +1,1171 @@
-const params =
-    new URLSearchParams(
-        location.search
-    );
-
-
-console.log("book-detail.js 실행됨");
-
-
-const id =
-    params.get("id");
-
-
+const params = new URLSearchParams(location.search);
+const id = params.get("id");
 
 let favoriteStatus = false;
 
-window.onload = function(){
+
+/* =====================================================
+   INIT
+===================================================== */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    if (!id) {
+        location.href = "/books.html";
+        return;
+    }
+
     loadBook();
     loadReviews();
     loadReviewInfo();
-    loadLinkedPerformance();
-};
+    loadFavoriteStatus();
 
-async function loadLinkedPerformance() {
-    try {
-        const res = await fetch('/api/performances');
-        const data = await res.json();
-        if (res.ok && data && Array.isArray(data.data)) {
-            const matchedPerf = data.data.find(p => p.originalBookId == id);
-            if (matchedPerf) {
-                const box = document.getElementById('linkedPerformanceBox');
-                const btn = document.getElementById('linkedPerfBtn');
-                if (box && btn) {
-                    btn.href = `/detail.html?id=${matchedPerf.id}`;
-                    btn.innerText = `🎭 '${matchedPerf.title}' 공연 예매하러 가기 ➔`;
-                    box.style.display = 'block';
-                }
-            }
-        }
-    } catch (e) {
-        console.error('원작 공연 연동 조회 에러:', e);
-    }
+});
+
+
+/* =====================================================
+   TOKEN
+===================================================== */
+
+function getToken() {
+    return localStorage.getItem("token");
 }
 
 
+/* =====================================================
+   BOOK DETAIL
+===================================================== */
 
+async function loadBook() {
 
+    try {
 
+        const headers = {};
 
-
-
-
-function loadBook(){
-
-    const token =
-        localStorage.getItem("token");
-
-    const headers = {};
-
-    if(token){
-        headers["Authorization"] =
-            "Bearer " + token;
-    }
-
-    fetch(
-        "/books/" + id,
-        {
-            headers: headers
+        if (getToken()) {
+            headers.Authorization =
+                "Bearer " + getToken();
         }
-    )
-
-        .then(response =>
-            response.json()
-        )
-
-        .then(book=>{
 
 
+        const response =
+            await fetch(
+                "/books/" + id,
+                { headers }
+            );
+
+
+        if (!response.ok) {
+            throw new Error(
+                "도서 정보를 불러오지 못했습니다."
+            );
+        }
+
+
+        const book =
+            await response.json();
+
+
+        setText("title", book.title);
+        setText("breadcrumbTitle", book.title);
+
+        setText(
+            "author",
+            book.author || "-"
+        );
+
+        setText(
+            "publisher",
+            book.publisher || "-"
+        );
+
+        setText(
+            "category",
+            book.category || "BOOK"
+        );
+
+        setText(
+            "categoryText",
+            book.category || "-"
+        );
+
+        setText(
+            "stock",
+            book.stock ?? 0
+        );
+
+        setText(
+            "description",
+            book.description ||
+            "도서 소개가 없습니다."
+        );
+
+        setText(
+            "isbn",
+            book.isbn || "-"
+        );
+
+        setText(
+            "publishedDate",
+            book.publishedDate || "-"
+        );
+
+
+        const price =
+            Number(book.price ?? 0);
+
+        const salePrice =
+            Number(
+                book.salePrice ??
+                book.price ??
+                0
+            );
+
+        const discountRate =
+            Number(
+                book.discountRate || 0
+            );
+
+
+        setText(
+            "salePrice",
+            salePrice.toLocaleString()
+        );
+
+        setText(
+            "discountRate",
+            discountRate > 0
+                ? discountRate + "%"
+                : ""
+        );
+
+        setText(
+            "originalPrice",
+            discountRate > 0
+                ? price.toLocaleString() + "원"
+                : ""
+        );
+
+
+        const image =
             document.getElementById(
                 "thumbnail"
-            ).src =
-                book.thumbnail ?? "";
+            );
 
 
+        if (image) {
 
+            image.src =
+                book.thumbnail || "";
+
+            image.onerror = () => {
+
+                image.style.display =
+                    "none";
+
+            };
+
+        }
+
+
+        const cartButton =
             document.getElementById(
-                "title"
-            ).innerText =
-                book.title;
+                "cartButton"
+            );
 
-
-
+        const buyButton =
             document.getElementById(
-                "author"
-            ).innerText =
-                book.author;
+                "buyButton"
+            );
 
 
+        if (
+            Number(book.stock || 0) <= 0
+        ) {
 
-            document.getElementById(
-                "publisher"
-            ).innerText =
-                book.publisher;
+            if (cartButton) {
+                cartButton.disabled = true;
+                cartButton.textContent = "품절";
+            }
 
+            if (buyButton) {
+                buyButton.disabled = true;
+                buyButton.textContent = "품절";
+            }
 
-
-            document.getElementById(
-                "price"
-            ).innerText =
-                book.price.toLocaleString();
-
-
-
-            document.getElementById(
-                "category"
-            ).innerText =
-                book.category ?? "-";
+        }
 
 
+    } catch (error) {
 
-            document.getElementById(
-                "stock"
-            ).innerText =
-                book.stock;
+        setText(
+            "title",
+            "도서 정보를 불러오지 못했습니다."
+        );
 
+        console.error(error);
 
-
-            document.getElementById(
-                "description"
-            ).innerText =
-                book.description ?? "";
-
-
-        });
-
+    }
 
 }
 
 
+/* =====================================================
+   FAVORITE
+===================================================== */
+
+async function loadFavoriteStatus() {
+
+    if (!getToken()) {
+        return;
+    }
 
 
+    try {
+
+        const response =
+            await fetch(
+                "/members/favorites",
+                {
+                    headers: {
+                        Authorization:
+                            "Bearer " +
+                            getToken()
+                    }
+                }
+            );
 
 
+        if (!response.ok) {
+            return;
+        }
 
 
-
-// 관심 도서
-
-function favorite(){
+        const favorites =
+            await response.json();
 
 
-    const token =
-        localStorage.getItem("token");
+        favoriteStatus =
+            favorites.some(
+                book =>
+                    String(book.id) ===
+                    String(id)
+            );
 
-    if(!token){
 
+        updateFavoriteButton();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+
+async function favorite() {
+
+    if (!getToken()) {
 
         alert(
             "로그인이 필요합니다."
         );
 
-        location.href = "/login.html";
+        location.href =
+            "/login.html";
 
         return;
 
     }
 
 
+    try {
+
+        const method =
+            favoriteStatus
+                ? "DELETE"
+                : "POST";
 
 
-
-    if(!favoriteStatus){
-
-
-
-        fetch(
-            "/members/favorites/" + id,
-            {
-
-
-                method:"POST",
-
-
-                headers:{
-
-
-                    "Authorization":
-                        "Bearer " + token
-
-
+        const response =
+            await fetch(
+                "/members/favorites/" + id,
+                {
+                    method,
+                    headers: {
+                        Authorization:
+                            "Bearer " +
+                            getToken()
+                    }
                 }
+            );
 
 
-            }
+        if (!response.ok) {
 
-        )
+            throw new Error(
+                "관심 도서 처리에 실패했습니다."
+            );
 
-
-            .then(response=>{
-
-
-                if(!response.ok){
-
-                    throw new Error(
-                        "관심 도서 등록 실패"
-                    );
-
-                }
+        }
 
 
-                return response.json();
+        favoriteStatus =
+            !favoriteStatus;
 
 
-            })
+        updateFavoriteButton();
 
 
+    } catch (error) {
 
-            .then(()=>{
-
-
-                favoriteStatus = true;
-
-
-                alert(
-                    "❤️ 관심 도서 추가"
-                );
-
-
-            });
-
+        alert(error.message);
 
     }
-
-
-
-    else {
-
-
-        fetch(
-            "/members/favorites/" + id,
-            {
-
-
-                method:"DELETE",
-
-
-                headers:{
-
-
-                    "Authorization":
-                        "Bearer " + token
-
-
-                }
-
-
-            }
-
-        )
-
-
-            .then(()=>{
-
-
-                favoriteStatus=false;
-
-
-                alert(
-                    "관심 도서 삭제"
-                );
-
-
-            });
-
-
-    }
-
 
 }
 
 
+function updateFavoriteButton() {
+
+    const button =
+        document.getElementById(
+            "favoriteButton"
+        );
 
 
+    if (!button) {
+        return;
+    }
 
 
+    button.textContent =
+        favoriteStatus
+            ? "♥ 관심 도서"
+            : "♡ 관심 도서";
 
 
-
-async function cart(){
-	
-	const token =
-	        localStorage.getItem("token");
-
-	    if(!token){
-
-
-	        alert(
-	            "로그인이 필요합니다."
-	        );
-
-	        location.href = "/login.html";
-
-	        return;
-
-	    }
-		
-
-		    try {
-
-		        const response =
-		            await fetch(
-		                "/api/cart/items",
-		                {
-		                    method: "POST",
-
-		                    headers: {
-		                        "Content-Type":
-		                            "application/x-www-form-urlencoded",
-
-		                        "Authorization":
-		                            "Bearer " + token
-		                    },
-
-		                    body: 
-								"bookId=" + encodeURIComponent(id) + "&quantity=1"
-		                }
-		            );
-
-		        const message = await response.text();
-
-		        if (!response.ok) {
-
-		            console.error("서버 오류:", message);
-
-		            alert(message || "도서 장바구니 추가에 실패했습니다.");
-
-		            return;
-		        }
-				
-		        alert(message);
-				
-		    } catch (error) {
-		        
-				console.error(error);
-		        
-				alert("요청 중 오류가 발생했습니다.");
-		    }
+    button.classList.toggle(
+        "active",
+        favoriteStatus
+    );
 
 }
 
 
+/* =====================================================
+   CART
+===================================================== */
+
+async function cart() {
+
+    if (!getToken()) {
+
+        alert("로그인이 필요합니다.");
+        location.href = "/login.html";
+        return;
+    }
 
 
+    try {
+
+        const response =
+            await fetch(
+                "/api/cart/items",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/x-www-form-urlencoded",
+
+                        Authorization:
+                            "Bearer " + getToken()
+                    },
+
+                    body:
+                        "bookId=" +
+                        encodeURIComponent(id) +
+                        "&quantity=1"
+                }
+            );
 
 
+        const message =
+            await response.text();
 
 
+        if (!response.ok) {
+
+            throw new Error(
+                message ||
+                "장바구니 추가에 실패했습니다."
+            );
+        }
 
 
+        const goCart =
+            confirm(
+                "장바구니에 담았습니다.\n장바구니로 이동하시겠습니까?"
+            );
 
-// 내 회원 id 가져오기
 
-function getMyEmail(){
+        if (goCart) {
 
+            location.href = "/cart";
+
+        }
+
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+}
+
+
+/* =====================================================
+   JWT EMAIL
+===================================================== */
+
+function getMyEmail() {
 
     const token =
-        localStorage.getItem("token");
+        getToken();
 
 
-    if(!token){
+    if (!token) {
+        return null;
+    }
+
+
+    try {
+
+        const payload =
+            token.split(".")[1];
+
+
+        const normalized =
+            payload
+                .replace(/-/g, "+")
+                .replace(/_/g, "/");
+
+
+        const decoded =
+            JSON.parse(
+                atob(normalized)
+            );
+
+
+        return decoded.sub || null;
+
+
+    } catch (error) {
 
         return null;
 
     }
 
+}
 
-    const payload =
-        JSON.parse(
-            atob(
-                token.split(".")[1]
-            )
+
+/* =====================================================
+   REVIEWS
+===================================================== */
+
+async function loadReviews() {
+
+    const container =
+        document.getElementById(
+            "reviewList"
         );
 
 
-    return payload.sub;
+    try {
+
+        const response =
+            await fetch(
+                `/books/${id}/reviews`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "리뷰 조회 실패"
+            );
+
+        }
+
+
+        const reviews =
+            await response.json();
+
+
+        if (
+            !Array.isArray(reviews) ||
+            reviews.length === 0
+        ) {
+
+            container.innerHTML = `
+                <div class="bk-empty-state compact">
+                    <p>
+                        아직 작성된 리뷰가 없습니다.
+                    </p>
+                </div>
+            `;
+
+            return;
+
+        }
+
+
+        const myEmail =
+            getMyEmail();
+
+
+        container.innerHTML =
+            reviews
+                .map(review =>
+                    createReviewHtml(
+                        review,
+                        myEmail
+                    )
+                )
+                .join("");
+
+
+    } catch (error) {
+
+        container.innerHTML = `
+            <p class="bk-error-text">
+                리뷰를 불러오지 못했습니다.
+            </p>
+        `;
+
+        console.error(error);
+
+    }
 
 }
 
 
+function createReviewHtml(
+    review,
+    myEmail
+) {
+
+    const rating =
+        Number(review.rating || 0);
 
 
-
-
-
-
-
-
-
-// 리뷰 조회
-
-function loadReviews(){
-
-
-
-    fetch(
-        "/books/" + id + "/reviews"
-    )
-
-
-        .then(response =>
-            response.json()
-        )
-
-
-        .then(reviews=>{
-
-
-            const box =
-                document.getElementById(
-                    "reviewList"
-                );
-
-
-
-            box.innerHTML = "";
-
-
-
-            if(reviews.length === 0){
-
-
-                box.innerHTML =
-                    "<p>작성된 리뷰가 없습니다.</p>";
-
-
-                return;
-
-
-            }
-
-
-
-
-
-            const myEmail =
-                getMyEmail();
-
-
-
-
-
-
-            reviews.forEach(review=>{
-
-
-
-                let deleteButton = "";
-
-                console.log(
-                    "내 이메일 : ",
-                    myEmail
-                );
-
-
-                console.log(
-                    "리뷰 이메일 : ",
-                    review.email
-                );
-
-
-                if(
-                    myEmail != null &&
-                    myEmail === review.email
-                ){
-
-
-                    deleteButton = `
-
-
-                <button onclick="deleteReview(${review.id})">
-
+    const deleteButton =
+        myEmail &&
+        myEmail === review.email
+            ? `
+                <button
+                    class="bk-danger-link"
+                    onclick="deleteReview(${review.id})"
+                >
                     삭제
-
                 </button>
+            `
+            : "";
 
 
-                `;
+    return `
 
+        <article class="bk-review-item">
 
-                }
+            <div class="bk-review-item-head">
 
+                <div>
 
+                    <strong>
+                        ${escapeHtml(
+        review.name ||
+        "회원"
+    )}
+                    </strong>
 
+                    <span class="bk-stars">
 
+                        ${"★".repeat(rating)}
+                        ${"☆".repeat(5 - rating)}
 
+                    </span>
 
-                box.innerHTML += `
-
-
-            <div class="review-card">
-
-
-                <h4>
-                    ${review.name}
-                </h4>
-
-
-
-                <p>
-                    ${"⭐".repeat(review.rating)}
-                </p>
-
-
-
-                <p>
-                    ${review.content}
-                </p>
-
-
-
-                <small>
-                    ${review.createdAt}
-                </small>
-
-
-
-                <br>
-
+                </div>
 
                 ${deleteButton}
-
 
             </div>
 
 
-            `;
+            <p>
+                ${escapeHtml(
+        review.content || ""
+    )}
+            </p>
 
 
+            <time>
+                ${formatDate(
+        review.createdAt
+    )}
+            </time>
 
-            });
+        </article>
 
-
-
-        });
-
-
+    `;
 
 }
 
 
+/* =====================================================
+   SAVE REVIEW
+===================================================== */
 
+async function saveReview() {
 
-
-
-
-
-
-
-
-// 리뷰 작성
-
-function saveReview(){
-
-
-
-    const token =
-        localStorage.getItem("token");
-
-
-
-    if(!token){
-
+    if (!getToken()) {
 
         alert(
             "로그인이 필요합니다."
         );
 
+        location.href =
+            "/login.html";
 
         return;
-
 
     }
 
 
-
-
-
-
-    const data = {
-
-
-        content:
-        document.getElementById(
-            "reviewContent"
-        ).value,
-
-
-
-        rating:
-            Number(
-                document.getElementById(
-                    "rating"
-                ).value
-            )
-
-
-    };
-
-
-
-
-
-
-    fetch(
-        "/books/" + id + "/reviews",
-        {
-
-
-            method:"POST",
-
-
-            headers:{
-
-
-                "Content-Type":
-                    "application/json",
-
-
-                "Authorization":
-                    "Bearer " + token
-
-
-            },
-
-
-            body:
-                JSON.stringify(data)
-
-
-        }
-
-    )
-
-
-
-        .then(response=>{
-
-
-            if(!response.ok){
-
-
-                throw new Error(
-                    "리뷰 등록 실패"
-                );
-
-
-            }
-
-
-            return response.json();
-
-
-        })
-
-
-        .then(()=>{
-
-
-            alert(
-                "리뷰 등록 완료"
-            );
-
-
-
-            document.getElementById(
+    const content =
+        document
+            .getElementById(
                 "reviewContent"
-            ).value="";
+            )
+            .value
+            .trim();
 
 
-
-            loadReviews();
-
-
-            loadReviewInfo();
-
-
-
-        });
-
+    const rating =
+        Number(
+            document
+                .getElementById(
+                    "rating"
+                )
+                .value
+        );
 
 
-}
+    if (!content) {
 
-
-
-
-
-
-
-
-
-
-
-// 리뷰 삭제
-
-function deleteReview(reviewId){
-
-
-
-    const token =
-        localStorage.getItem("token");
-
-
-
-    if(!confirm(
-        "리뷰를 삭제하시겠습니까?"
-    )){
+        alert(
+            "리뷰 내용을 입력해주세요."
+        );
 
         return;
 
     }
 
 
+    const button =
+        document.getElementById(
+            "reviewSubmitButton"
+        );
 
 
+    if (button) {
 
-    fetch(
-        "/reviews/" + reviewId,
-        {
+        button.disabled = true;
+        button.textContent =
+            "등록 중...";
 
-
-            method:"DELETE",
-
-
-            headers:{
+    }
 
 
-                "Authorization":
-                    "Bearer " + token
+    try {
 
+        const response =
+            await fetch(
+                `/books/${id}/reviews`,
+                {
+                    method: "POST",
 
-            }
+                    headers: {
 
+                        "Content-Type":
+                            "application/json",
 
-        }
+                        Authorization:
+                            "Bearer " +
+                            getToken()
 
-    )
+                    },
 
+                    body:
+                        JSON.stringify({
+                            content,
+                            rating
+                        })
 
-
-        .then(response=>{
-
-
-            if(!response.ok){
-
-
-                throw new Error(
-                    "삭제 실패"
-                );
-
-
-            }
-
-
-            return response.text();
-
-
-        })
-
-
-        .then(()=>{
-
-
-            alert(
-                "리뷰 삭제 완료"
+                }
             );
 
 
-
-            loadReviews();
-
-
-            loadReviewInfo();
-
-
-        });
+        const data =
+            await response
+                .json()
+                .catch(() => ({}));
 
 
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "리뷰 등록에 실패했습니다."
+            );
+
+        }
+
+
+        document
+            .getElementById(
+                "reviewContent"
+            )
+            .value = "";
+
+
+        await Promise.all([
+            loadReviews(),
+            loadReviewInfo()
+        ]);
+
+
+    } catch (error) {
+
+        alert(error.message);
+
+
+    } finally {
+
+        if (button) {
+
+            button.disabled = false;
+            button.textContent =
+                "리뷰 등록";
+
+        }
+
+    }
 
 }
 
 
+/* =====================================================
+   DELETE REVIEW
+===================================================== */
 
+async function deleteReview(
+    reviewId
+) {
 
-
-
-
-
-
-
-
-// 평균 평점
-
-function loadReviewInfo(){
-
-
-
-    fetch(
-        "/books/" + id + "/reviews/info"
-    )
-
-
-        .then(response =>
-            response.json()
+    if (
+        !confirm(
+            "리뷰를 삭제하시겠습니까?"
         )
+    ) {
+        return;
+    }
 
 
-        .then(info=>{
+    try {
+
+        const response =
+            await fetch(
+                "/reviews/" + reviewId,
+                {
+                    method: "DELETE",
+
+                    headers: {
+                        Authorization:
+                            "Bearer " +
+                            getToken()
+                    }
+                }
+            );
 
 
+        if (!response.ok) {
+
+            throw new Error(
+                "리뷰 삭제에 실패했습니다."
+            );
+
+        }
+
+
+        await Promise.all([
+            loadReviews(),
+            loadReviewInfo()
+        ]);
+
+
+    } catch (error) {
+
+        alert(error.message);
+
+    }
+
+}
+
+
+/* =====================================================
+   REVIEW INFO
+===================================================== */
+
+async function loadReviewInfo() {
+
+    try {
+
+        const response =
+            await fetch(
+                `/books/${id}/reviews/info`
+            );
+
+
+        if (!response.ok) {
+            throw new Error();
+        }
+
+
+        const info =
+            await response.json();
+
+
+        const average =
+            Number(
+                info.averageRating || 0
+            ).toFixed(1);
+
+
+        const count =
+            Number(
+                info.reviewCount || 0
+            );
+
+
+        setText(
+            "averageRating",
+            average
+        );
+
+
+        setText(
+            "reviewCount",
+            `리뷰 ${count}개`
+        );
+
+
+        const reviewInfo =
             document.getElementById(
                 "reviewInfo"
-            ).innerText =
+            );
 
 
-                "⭐ "
-                + info.averageRating
-                + " / 5  ("
-                + info.reviewCount
-                + "개 리뷰)";
+        if (reviewInfo) {
+
+            reviewInfo.textContent =
+                `★ ${average} · ${count}개 리뷰`;
+
+        }
 
 
-        });
+    } catch (error) {
 
+        console.error(error);
+
+    }
+
+}
+
+
+/* =====================================================
+   UTIL
+===================================================== */
+
+function setText(
+    elementId,
+    value
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            value ?? "";
+
+    }
+
+}
+
+
+function formatDate(value) {
+
+    if (!value) {
+        return "";
+    }
+
+
+    const date =
+        new Date(value);
+
+
+    return Number.isNaN(
+        date.getTime()
+    )
+        ? value
+        : date.toLocaleDateString(
+            "ko-KR"
+        );
+
+}
+
+
+function escapeHtml(value) {
+
+    return String(
+        value ?? ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+
+}
+
+async function buyNow() {
+
+    if (!getToken()) {
+
+        alert("로그인이 필요합니다.");
+
+        location.href = "/login.html";
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById("buyButton");
+
+
+    if (button) {
+        button.disabled = true;
+        button.textContent = "주문 준비 중...";
+    }
+
+
+    try {
+
+        /* =============================================
+           1. 먼저 현재 장바구니 조회
+        ============================================= */
+
+        let cartResponse =
+            await fetch(
+                "/api/cart",
+                {
+                    headers: {
+                        Authorization:
+                            "Bearer " + getToken()
+                    }
+                }
+            );
+
+
+        if (!cartResponse.ok) {
+
+            throw new Error(
+                "장바구니 정보를 불러오지 못했습니다."
+            );
+
+        }
+
+
+        let cartItems =
+            await cartResponse.json();
+
+
+        /* =============================================
+           2. 현재 책이 이미 장바구니에 있는지 확인
+        ============================================= */
+
+        let targetItem =
+            cartItems.find(
+                item =>
+                    String(item.bookId) ===
+                    String(id)
+            );
+
+
+        /* =============================================
+           3. 없는 경우에만 장바구니 추가
+        ============================================= */
+
+        if (!targetItem) {
+
+            const addResponse =
+                await fetch(
+                    "/api/cart/items",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/x-www-form-urlencoded",
+
+                            Authorization:
+                                "Bearer " + getToken()
+                        },
+
+                        body:
+                            "bookId=" +
+                            encodeURIComponent(id) +
+                            "&quantity=1"
+                    }
+                );
+
+
+            const addMessage =
+                await addResponse.text();
+
+
+            if (!addResponse.ok) {
+
+                throw new Error(
+                    addMessage ||
+                    "구매 준비에 실패했습니다."
+                );
+
+            }
+
+
+            /* 추가 후 다시 장바구니 조회 */
+
+            cartResponse =
+                await fetch(
+                    "/api/cart",
+                    {
+                        headers: {
+                            Authorization:
+                                "Bearer " + getToken()
+                        }
+                    }
+                );
+
+
+            if (!cartResponse.ok) {
+
+                throw new Error(
+                    "장바구니 정보를 불러오지 못했습니다."
+                );
+
+            }
+
+
+            cartItems =
+                await cartResponse.json();
+
+
+            targetItem =
+                cartItems.find(
+                    item =>
+                        String(item.bookId) ===
+                        String(id)
+                );
+
+        }
+
+
+        /* =============================================
+           4. 해당 상품 확인
+        ============================================= */
+
+        if (!targetItem) {
+
+            throw new Error(
+                "주문할 도서를 찾지 못했습니다."
+            );
+
+        }
+
+
+        /* =============================================
+           5. 이 책만 주문 대상으로 지정
+        ============================================= */
+
+        sessionStorage.setItem(
+            "orderCartItemIds",
+            JSON.stringify([
+                targetItem.cartItemId
+            ])
+        );
+
+
+        /* =============================================
+           6. 주문 페이지 이동
+        ============================================= */
+
+        location.href = "/order";
+
+
+    } catch (error) {
+
+        console.error(
+            "바로 구매 오류:",
+            error
+        );
+
+
+        alert(
+            error.message ||
+            "구매 처리 중 오류가 발생했습니다."
+        );
+
+
+        if (button) {
+            button.disabled = false;
+            button.textContent = "구매하기";
+        }
+
+    }
 
 }

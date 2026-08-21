@@ -3,24 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <title>장바구니</title>
-<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/common/common.css">
+<link rel="stylesheet" href="/css/common/toast.css">
 <link rel="stylesheet" href="/css/cart/cart.css">
 <script src="/js/cart/cart.js"></script>
 </head>
 <body>
-	<div style="margin-bottom: 15px;">
-		<a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+
+	<div class="container">
+		<div style="margin-bottom: 15px;">
+			<a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
+		</div>
+	
+		<div id="back-area"> <span id="backBtn" onclick="back()"><</span> <span>장바구니</span></div>
+	
+		<div class="cart-tabs">
+			<button type="button" id="bookTab" onclick="cartTab('bookCart')">도서</button>
+	
+			<button type="button" id="ticketTab" onclick="cartTab('ticketCart')">티켓</button>
+		</div>
+	
+		<div id="bookCart"></div>
+	
+		<div id="ticketCart" hidden></div>
+		
 	</div>
-	<h1>장바구니</h1>
-
-	<div class="cart-tabs">
-		<button type="button" onclick="cartTab('bookCart')">도서</button>
-
-		<button type="button" onclick="cartTab('ticketCart')">티켓</button>
-	</div>
-
-	<div id="bookCart"></div>
-
-	<div id="ticketCart" hidden></div>
 </body>
 </html>
