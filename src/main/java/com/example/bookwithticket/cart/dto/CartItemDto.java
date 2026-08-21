@@ -13,7 +13,8 @@ public class CartItemDto {
     private final String publisher;
     private final String thumbnail;
 
-    private final int price;
+    private final int price;    
+    private final int salePrice;  
     private final int quantity;
     private final int stock;
     private final int totalPrice;
@@ -33,6 +34,7 @@ public class CartItemDto {
         this.thumbnail = book.getThumbnail();
 
         this.price = book.getPrice();
+        this.salePrice = book.getSalePrice();
         this.quantity = cartItem.getQuantity();
         this.stock = book.getStock();
         this.totalPrice = price * quantity;
@@ -78,6 +80,10 @@ public class CartItemDto {
 
     public int getPrice() {
         return price;
+    }
+    
+    public int getSalePrice() {
+        return salePrice;
     }
 
     public int getQuantity() {

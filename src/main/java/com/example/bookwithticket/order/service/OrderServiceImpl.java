@@ -330,6 +330,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		int totalQuantity = 0;
+		int originalPrice = 0;
 		int totalPrice = 0;
 
 		for (CartItemEntity cartItem : cartItems) {
@@ -337,10 +338,11 @@ public class OrderServiceImpl implements OrderService {
 			int quantity = cartItem.getQuantity();
 			validateBook(book, quantity);
 			totalQuantity += quantity;
-			totalPrice += book.getPrice() * quantity;
+			originalPrice += book.getPrice() * quantity;
+			totalPrice += book.getSalePrice() * quantity;
 		}
 
-		return new OrderPreviewResponse(totalQuantity, totalPrice);
+		return new OrderPreviewResponse(totalQuantity, originalPrice, totalPrice);
 	}
 
 	@Override
@@ -388,7 +390,7 @@ public class OrderServiceImpl implements OrderService {
 			Book book = cartItem.getBook();
 			int quantity = cartItem.getQuantity();
 			validateBook(book, quantity);
-			calculatedTotalPrice += book.getPrice() * quantity;
+			calculatedTotalPrice += book.getSalePrice() * quantity;
 		}
 
 		for (CartItemEntity cartItem : cartItems) {
