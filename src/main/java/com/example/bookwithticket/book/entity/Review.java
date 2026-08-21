@@ -118,6 +118,16 @@ public class Review {
 
     }
 
+    // 리뷰 수정
+    public void update(
+            String content,
+            int rating
+    ) {
+        this.content = content;
+        this.rating = rating;
+    }
+
+
 
 
     public LocalDateTime getCreatedAt(){

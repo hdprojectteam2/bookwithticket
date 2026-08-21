@@ -307,7 +307,7 @@ async function requestTossPayment(orderNumber) {
 
     const checkout = await response.json();
     const paymentOrderNumber = checkout.orderNumber;
-    const orderName = checkout.orderName;
+    const orderName = String(checkout.orderName || "도서 주문").slice(0, 90);
     const totalPrice = Number(checkout.totalPrice);
     const clientKey = checkout.clientKey;
 

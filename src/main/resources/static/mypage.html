@@ -19,59 +19,215 @@
     </header>
 
     <main class="bk-mypage-main">
+
         <div class="bk-page-heading">
             <span class="bk-eyebrow">MY BOOKETING</span>
             <h1><span id="memberName"></span>님의 마이페이지</h1>
             <p>회원정보와 나의 도서 활동, 예매 내역을 한곳에서 확인해보세요.</p>
         </div>
 
+
         <div class="bk-mypage-layout">
+
+            <!-- =========================
+                 왼쪽 회원 정보
+            ========================== -->
             <aside class="bk-card bk-profile-card">
+
                 <div class="bk-avatar">B</div>
+
                 <h2 id="name">-</h2>
                 <p id="email">-</p>
+
                 <dl class="bk-profile-list">
-                    <div><dt>전화번호</dt><dd id="phone">-</dd></div>
-                    <div><dt>주소</dt><dd id="address">-</dd></div>
+
+                    <div>
+                        <dt>전화번호</dt>
+                        <dd id="phone">-</dd>
+                    </div>
+
+                    <div>
+                        <dt>주소</dt>
+                        <dd id="address">-</dd>
+                    </div>
+
                 </dl>
+
+
                 <div class="bk-profile-actions">
-                    <button class="bk-primary" type="button" onclick="goUpdate()">회원정보 수정</button>
-                    <button class="bk-secondary" type="button" onclick="logout()">로그아웃</button>
-                    <button class="bk-danger-link" type="button" onclick="deleteMember()">회원 탈퇴</button>
+
+                    <button
+                            class="bk-primary"
+                            type="button"
+                            onclick="goUpdate()"
+                    >
+                        회원정보 수정
+                    </button>
+
+                    <button
+                            class="bk-secondary"
+                            type="button"
+                            onclick="logout()"
+                    >
+                        로그아웃
+                    </button>
+
+                    <button
+                            class="bk-danger-link"
+                            type="button"
+                            onclick="deleteMember()"
+                    >
+                        회원 탈퇴
+                    </button>
+
                 </div>
+
             </aside>
 
+
+            <!-- =========================
+                 오른쪽 마이페이지 내용
+            ========================== -->
             <div class="bk-mypage-content">
+
+
+                <!-- =========================
+                     장바구니
+                ========================== -->
                 <section class="bk-card">
+
                     <div class="bk-section-head">
-                        <div><span class="bk-eyebrow">BOOK ACTIVITY</span><h2>나의 도서 활동</h2></div>
-                        <a href="/books.html" class="bk-text-link">도서 둘러보기 →</a>
+
+                        <div>
+                            <span class="bk-eyebrow">CART</span>
+                            <h2>장바구니</h2>
+                        </div>
+
+                        <a
+                                href="/cart"
+                                class="bk-text-link"
+                        >
+                            전체보기 →
+                        </a>
+
                     </div>
 
+
+                    <div
+                            id="cartBooks"
+                            class="bk-mini-book-grid"
+                    ></div>
+
+                </section>
+
+
+                <!-- =========================
+                     나의 도서 활동
+                ========================== -->
+                <section class="bk-card">
+
+                    <div class="bk-section-head">
+
+                        <div>
+                            <span class="bk-eyebrow">BOOK ACTIVITY</span>
+                            <h2>나의 도서 활동</h2>
+                        </div>
+
+                        <a
+                                href="/books.html"
+                                class="bk-text-link"
+                        >
+                            도서 둘러보기 →
+                        </a>
+
+                    </div>
+
+
+                    <!-- 최근 본 도서 -->
                     <div class="bk-activity-block">
+
                         <h3>최근 본 도서</h3>
-                        <div id="recentBooks" class="bk-mini-book-grid"></div>
+
+                        <div
+                                id="recentBooks"
+                                class="bk-mini-book-grid"
+                        ></div>
+
                     </div>
+
+
+                    <!-- 관심 도서 -->
                     <div class="bk-activity-block">
+
                         <h3>관심 도서</h3>
-                        <div id="favoriteBooks" class="bk-mini-book-grid"></div>
+
+                        <div
+                                id="favoriteBooks"
+                                class="bk-mini-book-grid"
+                        ></div>
+
                     </div>
+
+
+                    <!-- 작성한 리뷰 -->
                     <div class="bk-activity-block">
+
                         <h3>내가 작성한 리뷰</h3>
-                        <div id="myReviews" class="bk-review-list"></div>
+
+                        <div
+                                id="myReviews"
+                                class="bk-review-list"
+                        ></div>
+
                     </div>
+
                 </section>
 
+
+                <!-- =========================
+                     공연 예매 내역
+                ========================== -->
                 <section class="bk-card">
+
                     <div class="bk-section-head">
-                        <div><span class="bk-eyebrow">RESERVATION</span><h2>나의 공연 예매 내역</h2></div>
-                        <label class="bk-check bk-compact-check"><input type="checkbox" id="showAllHistoryToggle" onchange="loadMyPerformanceReservations()"><span>취소 내역 포함</span></label>
+
+                        <div>
+                            <span class="bk-eyebrow">RESERVATION</span>
+                            <h2>나의 공연 예매 내역</h2>
+                        </div>
+
+
+                        <label class="bk-check bk-compact-check">
+
+                            <input
+                                    type="checkbox"
+                                    id="showAllHistoryToggle"
+                                    onchange="loadMyPerformanceReservations()"
+                            >
+
+                            <span>취소 내역 포함</span>
+
+                        </label>
+
                     </div>
-                    <div id="myPerformanceReservations"><p class="bk-empty-text">예매 내역을 불러오는 중입니다.</p></div>
+
+
+                    <div id="myPerformanceReservations">
+
+                        <p class="bk-empty-text">
+                            예매 내역을 불러오는 중입니다.
+                        </p>
+
+                    </div>
+
                 </section>
+
             </div>
+
         </div>
+
     </main>
+
 </div>
 <script src="/js/member.js"></script>
 <script>

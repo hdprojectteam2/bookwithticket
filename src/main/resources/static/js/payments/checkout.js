@@ -47,8 +47,9 @@ async function main() {
 
         const orderNumber = checkout.orderNumber;
 
-        const orderName = checkout.orderName;
-		
+        const orderName =  String(checkout.orderName || "도서 주문").slice(0, 90);
+
+
 		const seatNumber = checkout.seatNumber;
 
         const totalPrice = Number(checkout.totalPrice);
