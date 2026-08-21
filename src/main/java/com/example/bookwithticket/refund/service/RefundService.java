@@ -3,7 +3,7 @@ package com.example.bookwithticket.refund.service;
 import com.example.bookwithticket.refund.dto.RefundResponse;
 
 public interface RefundService {
-	RefundResponse requestBookRefund(Long memberId, String orderNumber, String reason);
+	RefundResponse requestBookRefund(Long memberId, String orderNumber, String reason, String returnMethod);
 
 	RefundResponse approveBookRefund(Long adminId, Long refundId);
 

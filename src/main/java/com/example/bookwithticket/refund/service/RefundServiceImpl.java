@@ -19,6 +19,7 @@ import com.example.bookwithticket.payment.repository.PaymentRepository;
 import com.example.bookwithticket.refund.dto.RefundResponse;
 import com.example.bookwithticket.refund.entity.RefundEntity;
 import com.example.bookwithticket.refund.entity.RefundStatus;
+import com.example.bookwithticket.refund.entity.ReturnMethod;
 import com.example.bookwithticket.refund.repository.RefundRepository;
 
 @Service
@@ -46,8 +47,9 @@ public class RefundServiceImpl implements RefundService {
 	}
 
 	@Override
-	public RefundResponse requestBookRefund(Long memberId, String orderNumber, String reason) {
+	public RefundResponse requestBookRefund(Long memberId, String orderNumber, String reason, String returnMethod) {
 		validateReason(reason);
+
 		BookOrderEntity order = bookOrderRepository
 				.findByOrderNumberAndMemberIdAndOrderStatus(orderNumber, memberId, OrderStatus.PAID)
 				.orElseThrow(() -> new IllegalArgumentException("환불할 수 있는 주문이 없습니다."));
@@ -60,15 +62,30 @@ public class RefundServiceImpl implements RefundService {
 		}
 
 		RefundEntity refund = new RefundEntity(memberId, payment, payment.getAmount(), reason);
-		refundRepository.save(refund);
 
-		/* 배송 준비 중이면 즉시 환불 */
 		if (order.isBeforeShipping()) {
+
+			refundRepository.save(refund);
+
 			CompleteRefund(order, payment, refund);
+
 			return new RefundResponse(refund.getId(), refund.getStatus().name(), "환불이 완료되었습니다.");
 		}
 
-		/* 배송중이거나 배송 완료될 경우 */
+		if (returnMethod == null || returnMethod.isBlank()) {
+			throw new IllegalArgumentException("반품 방법을 선택해주세요.");
+		}
+
+		ReturnMethod method;
+		try {
+			method = ReturnMethod.valueOf(returnMethod);
+
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("올바르지 않은 반품 방법입니다.");
+		}
+
+		refund.setReturnMethod(method);
+		refundRepository.save(refund);
 		return new RefundResponse(refund.getId(), refund.getStatus().name(), "환불이 접수되었습니다.");
 	}
 
