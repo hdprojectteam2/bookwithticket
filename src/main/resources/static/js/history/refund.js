@@ -6,7 +6,7 @@ const id = params.get("id");
 
 const deliveryStatus = params.get("deliveryStatus");
 
-window.onload = function () {
+window.onload = function() {
 
     const token = localStorage.getItem("token");
 
@@ -33,7 +33,7 @@ window.onload = function () {
 
     const refundButton = document.getElementById("refundButton");
 
-    refundButton.addEventListener("click",submitRefund);
+    refundButton.addEventListener("click", submitRefund);
 };
 
 
@@ -141,7 +141,7 @@ function renderRefundPage() {
 
 function handleReasonChange() {
 
-    const selectedReason =document.querySelector('input[name="refundReason"]:checked');
+    const selectedReason = document.querySelector('input[name="refundReason"]:checked');
 
     const etcReasonBox = document.getElementById("etcReasonBox");
 
@@ -210,7 +210,7 @@ async function submitRefund() {
 
 
 
-    if (!confirm(needReturn ? "환불을 신청하시겠습니까?": "환불을 진행하시겠습니까?")) {
+    if (!confirm(needReturn ? "환불을 신청하시겠습니까?" : "환불을 진행하시겠습니까?")) {
         return;
     }
 
@@ -236,7 +236,7 @@ async function submitRefund() {
                     body:
                         JSON.stringify({
                             reason: reason,
-							returnMethod: returnMethod
+                            returnMethod: returnMethod
                         })
                 }
             );
@@ -262,7 +262,7 @@ async function submitRefund() {
         }
 
 
-        alert(result?.message || (needReturn ? "환불 신청이 완료되었습니다.": "환불 처리가 완료되었습니다."));
+        alert(result?.message || (needReturn ? "환불 신청이 완료되었습니다." : "환불 처리가 완료되었습니다."));
 
         updateParentHistory();
 
@@ -285,13 +285,26 @@ function updateParentHistory() {
         return;
     }
 
+    if (type === "book") {
+        if (typeof window.opener.loadBookHistory === "function") {
+            window.opener.loadBookHistory();
+        }
 
-    if (type === "book" && typeof window.opener.loadBookHistory === "function") {
-        window.opener.loadBookHistory();
+        if (typeof window.opener.loadMyBookHistory === "function") {
+            window.opener.loadMyBookHistory();
+        }
+
     }
 
-    if (type === "performance" && typeof window.opener.loadPerformanceHistory === "function") {
-        window.opener.loadPerformanceHistory();
+    if (type === "performance") {
+        if (typeof window.opener.loadPerformanceHistory === "function") {
+            window.opener.loadPerformanceHistory();
+        }
+
+        if (typeof window.opener.loadMyPerformanceReservations === "function") {
+            window.opener.loadMyPerformanceReservations();
+        }
+
     }
 }
 

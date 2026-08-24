@@ -24,6 +24,7 @@ import com.example.bookwithticket.domain.reservation.ReservationRepository;
 import com.example.bookwithticket.domain.reservation.ReservationService;
 import com.example.bookwithticket.domain.reservation.ReservationStatus;
 import com.example.bookwithticket.order.entity.BookOrderEntity;
+import com.example.bookwithticket.order.entity.BookOrderItemEntity;
 import com.example.bookwithticket.order.entity.OrderStatus;
 import com.example.bookwithticket.order.repository.BookOrderRepository;
 import com.example.bookwithticket.payment.dto.PaymentConfirmRequest;
@@ -168,13 +169,14 @@ public class PaymentServiceImpl implements PaymentService {
 
 			order.completePayment();
 
-			cartItemRepository.deleteByCartMemberId(memberId);
+			for (BookOrderItemEntity orderItem : order.getOrderItems()) {
+				cartItemRepository.deleteByCartMemberIdAndBookId(memberId, orderItem.getBook().getId());
+			}
 
 			paymentRepository.flush();
 
 			return new PaymentConfirmResponse(savedPayment.getId(), order.getOrderNumber(), savedPayment.getAmount(),
 					savedPayment.getMethod().name(), savedPayment.getStatus().name());
-
 		} catch (Exception dbException) {
 
 			try {

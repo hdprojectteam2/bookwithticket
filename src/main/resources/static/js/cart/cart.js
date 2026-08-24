@@ -33,7 +33,7 @@ function cartTab(tabId) {
 
     ticketCart.hidden = tabId !== "ticketCart";
 
-    bookTab.classList.toggle("active", tabId === "bookCart");
+    bookCartTab.classList.toggle("active", tabId === "bookCart");
 
     ticketTab.classList.toggle("active", tabId === "ticketCart");
 }
@@ -881,7 +881,7 @@ async function loadPerformanceCart() {
 	
 	                    <button
 	                        type="button"
-							class="delete-selected-button""
+							class="delete-selected-button"
 	                        onclick="
 	                            deleteAllPerformanceItems()
 	                        "

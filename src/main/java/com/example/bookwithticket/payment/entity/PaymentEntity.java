@@ -209,6 +209,10 @@ public class PaymentEntity {
 		payment.failCode = "PAYMENT_EXPIRED";
 		payment.failMessage = "결제 제한 시간이 만료되었습니다.";
 
+		payment.paymentKey = "EXPIRED_" + order.getOrderNumber();
+		payment.idempotencyKey = "EXPIRED_" + order.getOrderNumber();
+		payment.method = PaymentMethod.UNKNOWN;
+		
 		return payment;
 	}
 

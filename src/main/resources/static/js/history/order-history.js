@@ -428,61 +428,6 @@ function getPerformanceRefundButton(history) {
     `;
 }
 
-/* 기존 환불 */
-async function requestRefund(orderNumber) {
-    const reason = prompt("환불 사유를 입력해 주세요.");
-
-    if (reason === null) {
-        return;
-    }
-
-    const trimmedReason = reason.trim();
-
-    if (!trimmedReason) {
-        alert("환불 사유를 입력해 주세요.");
-        return;
-    }
-
-    if (!confirm("해당 주문을 환불하시겠습니까?")) {
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            `/api/payments/${orderNumber}/refund`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    ...getAuthHeaders()
-                },
-                body: JSON.stringify({
-                    reason: trimmedReason
-                })
-            }
-        );
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(
-                result.message || "환불 요청 처리에 실패했습니다."
-            );
-        }
-
-        alert(result.message || "환불 요청이 처리되었습니다.");
-
-        await Promise.all([
-            loadBookHistory(),
-            loadPerformanceHistory()
-        ]);
-
-    } catch (error) {
-        console.error("환불 처리 오류:", error);
-        alert(error.message);
-    }
-}
-
 function moveToRefundPage(type, id, deliveryStatus) {
     const url = "/refund.html?type=" + encodeURIComponent(type) + "&id=" + encodeURIComponent(id) 	+ "&deliveryStatus=" + encodeURIComponent(deliveryStatus || "");;
 
@@ -491,8 +436,6 @@ function moveToRefundPage(type, id, deliveryStatus) {
 
     window.open(url, "_blank", `width=${width},height=${height}`);
 }
-
-
 
 
 function formatPrice(price) {

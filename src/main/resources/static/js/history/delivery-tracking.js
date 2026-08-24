@@ -46,7 +46,7 @@ async function loadTrackingInfo() {
         console.log("스마트택배 응답:",data);
 
 
-        renderTrackingInfo(data);
+        renderTrackingInfo(data, courier, invoice);
 
 
     } catch (error) {
@@ -74,14 +74,8 @@ function getAuthHeaders() {
     };
 }
 
-function renderTrackingInfo(data) {
-	const params = new URLSearchParams(window.location.search);
-
+function renderTrackingInfo(data, courier, invoice) {
     const loading = document.getElementById("tracking-loading");
-			
-	const courier = params.get("courier");
-	
-	const invoice = params.get("invoice");
 
     const content = document.getElementById("tracking-content");
 
