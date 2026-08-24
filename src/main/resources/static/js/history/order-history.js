@@ -461,8 +461,8 @@ function formatDateTime(dateTime) {
 function moveToDetail(type, id) {
     const url = "/history/detail?type=" + encodeURIComponent(type) + "&id=" + encodeURIComponent(id);
 
-    const width = 900;
-    const height = 800;
+    const width = 600;
+    const height = 500;
 
     window.open(url, "_blank", `width=${width},height=${height}`);
 }

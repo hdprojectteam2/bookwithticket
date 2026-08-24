@@ -134,20 +134,26 @@
 	flex: 1;
 }
 
+#member-info-button{
+	margin-bottom: 20px;	
+}
+
 .outline-btn {
-	flex-shrink: 0;
-	height: 48px;
-	padding: 0 15px;
-	background-color: white;
-	border: 1px solid oklch(70.4% 0.04 256.788);
-	border-radius: 10px;
-	color: oklch(70.4% 0.04 256.788);
-	font-size: 14px;
-	cursor: pointer;
+	position: relative;
+    border-radius: 10px;
+    padding: 14px 20px;
+    border: 1px solid #cbd5e1;
+	background: white;
+    cursor: pointer;
+	color: #334155;
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .outline-btn:hover {
-	background-color: #f8fafc;
+    border-color:#93c5fd;
+    background:var(--bk-blue-soft);
+    color:var(--bk-blue)
 }
 
 #orderItems {
@@ -265,24 +271,25 @@
 }
 
 .summary-total strong {
-	color: #315efb;
+	color: var(--bk-blue);;
 	font-size: 24px;
 }
 
 .primary-btn {
 	width: 100%;
 	padding: 16px;
-	background-color: #315efb;
-	border: none;
-	border-radius: 12px;
-	color: white;
+	border: 1px solid var(--bk-blue);
+    background: var(--bk-blue);
+    color: white;
+	border-radius: 10px;
+    font-weight: 800;
 	font-size: 17px;
-	font-weight: bold;
 	cursor: pointer;
 }
 
 .primary-btn:hover {
-	background-color: #242fff;
+	border-color:var(--bk-blue-dark);
+    background:var(--bk-blue-dark);
 }
 
 .summary-notice {

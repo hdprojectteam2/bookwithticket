@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>주문자 정보 입력</title>
+<title>주문자 정보 입력 | Booketing</title>
 <script src="//t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script src="/js/kakao/kakao-address.js" defer></script>
 <script src="https://js.tosspayments.com/v2/standard"></script>
@@ -10,13 +10,15 @@
 <link rel="stylesheet" href="/css/common/common.css">
 <link rel="stylesheet" href="/css/order/order.css">
 </head>
-<body>
+<body class="bk-page bk-soft-page">
 	<div class="container">
-		<div style="margin-bottom: 15px;">
-			<a href="/mainpage.html"
-				style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;"
-			>BookWithTicket</a>
-		</div>
+		<header class="bk-topbar">
+			<a href="/mainpage.html" class="bk-brand"><span class="bk-logo">B</span><span>Booketing</span></a>
+			<nav class="bk-nav">
+				<a href="/books.html">도서</a> <a href="/index.html">공연</a> <a href="/cart" class="active">장바구니</a>
+				<a href="/mypage.html">마이페이지</a>
+			</nav>
+		</header>
 
 		<div id="back-area">
 			<div onclick="back()">

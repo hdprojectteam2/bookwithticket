@@ -111,9 +111,9 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 주문 정보
-            </h2>
+            </div>
 			
 			<div class="detail-item-list">
 			
@@ -213,9 +213,9 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 주문상품
-            </h2>
+            </div>
 
 
             <div class="detail-item-list">
@@ -228,9 +228,9 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 수신자정보
-            </h2>
+            </div>
 
 
 			<div class="receiver-box">
@@ -265,9 +265,9 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 결제정보
-            </h2>
+            </div>
 
 
             <div class="payment-box">
@@ -469,9 +469,9 @@ function renderPerformanceDetail(reservation) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 예매 정보
-            </h2>
+            </div>
 
 
             <div class="detail-row">
@@ -506,9 +506,9 @@ function renderPerformanceDetail(reservation) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 공연 정보
-            </h2>
+            </div>
 
 
             <div class="detail-performance">
@@ -565,9 +565,9 @@ function renderPerformanceDetail(reservation) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 결제정보
-            </h2>
+            </div>
 
 
             <div class="payment-box">
