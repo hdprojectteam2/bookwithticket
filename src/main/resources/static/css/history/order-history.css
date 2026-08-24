@@ -7,25 +7,27 @@
 
 .history-tabs {
     display: flex;
-    width: 100%;
-    margin: 0 auto;
+    gap: 8px;
+    margin-bottom: 20px;
 }
 
 .history-tabs button {
-    position: relative;
-    border-radius: 12px;
-    padding: 14px 24px;
-    border: 1px solid oklch(70.4% 0.04 256.788);
-    background: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
     cursor: pointer;
-    color: oklch(70.4% 0.04 256.788);
-    font-size: 16px;
+    color: #475569;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: all 0.15s ease;
 }
 
 .history-tabs button.active {
-    color: white;
-    background-color: oklch(48.8% 0.243 264.376);
-    font-weight: 600;
+    color: #ffffff;
+    background-color: #2563eb;
+    border-color: #2563eb;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.2);
 }
 
 #bookHistory img, #ticketHistory img {
@@ -222,16 +224,18 @@
 }
 
 .history-actions button {
-    padding: 10px 20px;
-    background-color: white;
-    border-radius: 10px;
+    padding: 8px 16px;
+    background-color: #f8fafc;
+    border-radius: 8px;
     cursor: pointer;
-    border: 1px solid oklch(70.4% 0.04 256.788);
-    color: oklch(70.4% 0.04 256.788);
-    font-size: 16px;
-    font-weight: bold;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    font-size: 0.88rem;
+    font-weight: 700;
+    transition: all 0.15s ease;
 }
 
 .history-actions button:hover {
-    background-color: #f5f5f5;
+    background-color: #e2e8f0;
+    color: #0f172a;
 }

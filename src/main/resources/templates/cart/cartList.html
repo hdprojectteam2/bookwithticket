@@ -2,18 +2,29 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>장바구니</title>
+<title>장바구니 | Booketing</title>
+<link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/common/common.css">
 <link rel="stylesheet" href="/css/common/toast.css">
 <link rel="stylesheet" href="/css/cart/cart.css">
 <script src="/js/cart/cart.js"></script>
 </head>
-<body>
-
-	<div class="container">
-		<div style="margin-bottom: 15px;">
-			<a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
-		</div>
+<body class="bk-page bk-soft-page">
+<div class="bk-wide-shell" style="padding-top:16px;">
+    <header class="bk-topbar" style="margin-bottom:24px;">
+        <a href="/mainpage.html" class="bk-brand">
+            <span class="bk-logo">B</span>
+            <span>Booketing</span>
+        </a>
+        <nav class="bk-nav">
+            <a href="/mainpage.html">홈</a>
+            <a href="/books.html">도서</a>
+            <a href="/index.html">공연</a>
+            <a href="/cart" class="active">장바구니</a>
+            <a href="/history">구매내역</a>
+            <a href="/mypage.html">마이페이지</a>
+        </nav>
+    </header>
 	
 		<div id="back-area"> <span id="backBtn" onclick="back()"><</span> <span>장바구니</span></div>
 	
