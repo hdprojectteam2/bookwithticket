@@ -195,6 +195,8 @@ async function loadBook() {
 
         }
 
+        // 연관 공연 조회 연동
+        loadLinkedPerformance(book.id, book.title);
 
     } catch (error) {
 
@@ -207,6 +209,45 @@ async function loadBook() {
 
     }
 
+}
+
+/* =====================================================
+   LINKED PERFORMANCE (연관 공연 연동)
+===================================================== */
+
+async function loadLinkedPerformance(bookId, bookTitle) {
+    try {
+        const res = await fetch('/api/performances');
+        if (!res.ok) return;
+        const result = await res.json();
+        const performances = (result && Array.isArray(result.data)) ? result.data : [];
+
+        // 1. 도서 ID와 직접 연결된 공연 또는 2. 제목 키워드가 매칭되는 공연 탐색
+        const linkedPerf = performances.find(p => 
+            (p.originalBookId && p.originalBookId == bookId) || 
+            (bookTitle && p.title && (
+                (bookTitle.includes('오페라') && p.title.includes('오페라')) ||
+                (bookTitle.includes('팬텀') && p.title.includes('팬텀')) ||
+                (bookTitle.includes('레미제라블') && p.title.includes('레미제라블')) ||
+                (bookTitle.includes('지킬') && p.title.includes('지킬'))
+            ))
+        );
+
+        if (linkedPerf) {
+            const box = document.getElementById('linkedPerformanceBox');
+            const titleEl = document.getElementById('linkedPerfTitle');
+            const venueEl = document.getElementById('linkedPerfVenue');
+            const btnEl = document.getElementById('linkedPerfBtn');
+            if (box && titleEl && venueEl && btnEl) {
+                titleEl.textContent = linkedPerf.title;
+                venueEl.textContent = `공연장: ${linkedPerf.venue} (${linkedPerf.runtimeMinutes || 150}분)`;
+                btnEl.onclick = () => location.href = `/detail.html?id=${linkedPerf.id}`;
+                box.style.display = 'block';
+            }
+        }
+    } catch (e) {
+        console.error('연관 공연 조회 실패:', e);
+    }
 }
 
 

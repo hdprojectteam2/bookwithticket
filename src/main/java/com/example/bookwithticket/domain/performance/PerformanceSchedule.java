@@ -35,4 +35,10 @@ public class PerformanceSchedule extends BaseTimeEntity {
     public Performance getPerformance() { return performance; }
     public LocalDateTime getPerformanceTime() { return performanceTime; }
     public LocalDateTime getTicketOpenTime() { return ticketOpenTime; }
+
+    public void update(Performance performance, LocalDateTime performanceTime, LocalDateTime ticketOpenTime) {
+        if (performance != null) this.performance = performance;
+        if (performanceTime != null) this.performanceTime = performanceTime;
+        if (ticketOpenTime != null) this.ticketOpenTime = ticketOpenTime;
+    }
 }
