@@ -97,9 +97,13 @@ public class ReservationService {
             PerformanceSchedule schedule = scheduleRepository.findById(request.scheduleId())
                     .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "공연 회차를 찾을 수 없습니다."));
 
-            // 3. 티켓 오픈 시간 검사
-            if (LocalDateTime.now().isBefore(schedule.getTicketOpenTime())) {
+            // 3. 티켓 오픈 시간 및 공연 시작 시간 검사
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isBefore(schedule.getTicketOpenTime())) {
                 throw new BusinessException(HttpStatus.BAD_REQUEST, "티켓 오픈 시간 전입니다.");
+            }
+            if (now.isAfter(schedule.getPerformanceTime())) {
+                throw new BusinessException(HttpStatus.BAD_REQUEST, "이미 시작되었거나 종료된 공연 회차는 예매할 수 없습니다.");
             }
 
             // 4. DB 좌석 조회 및 상태 검사
@@ -155,6 +159,11 @@ public class ReservationService {
     public ReservationResponse cancelReservation(Long memberId, Long reservationId) {
         Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "예매 내역을 찾을 수 없습니다."));
+
+        // 공연 시작 시간 이후 취소/환불 차단
+        if (LocalDateTime.now().isAfter(reservation.getSchedule().getPerformanceTime())) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, "공연 시작 시간 이후에는 예매를 취소하거나 환불할 수 없습니다.");
+        }
 
         if (reservation.getStatus() == ReservationStatus.HELD) {
             // 1. 선점 중 취소: 즉시 선점 해제 및 Redis 락 삭제

@@ -221,4 +221,39 @@ class ReservationServiceTest {
         assertThat(cancelRes.status()).isEqualTo("CANCELLED");
         assertThat(seatOpen1.getStatus()).isEqualTo(SeatStatus.AVAILABLE);
     }
+
+    @Test
+    @DisplayName("11. 예외 검증 - 이미 시작/종료된 과거 공연 회차 예매 시도 시 400 Bad Request 차단")
+    void holdSeat_PastPerformance_ThrowsBadRequest() {
+        // 이미 2시간 전 시작된 과거 회차 및 좌석 생성
+        PerformanceSchedule pastSchedule = scheduleRepository.save(
+                new PerformanceSchedule(scheduleOpen.getPerformance(), LocalDateTime.now().minusHours(2), LocalDateTime.now().minusDays(1))
+        );
+        Seat pastSeat = seatRepository.save(new Seat(pastSchedule, "[1섹터] VIP-과거", 100000));
+
+        ReservationHoldRequest request = new ReservationHoldRequest(pastSchedule.getId(), pastSeat.getId());
+
+        assertThatThrownBy(() -> reservationService.holdSeat(testMember.getId(), request))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST)
+                .hasMessageContaining("이미 시작되었거나 종료된 공연 회차는 예매할 수 없습니다.");
+    }
+
+    @Test
+    @DisplayName("12. 예외 검증 - 공연 시작 시간 이후 취소/환불 시도 시 400 Bad Request 차단")
+    void cancelReservation_AfterPerformanceStarts_ThrowsBadRequest() {
+        ReservationHoldRequest request = new ReservationHoldRequest(scheduleOpen.getId(), seatOpen1.getId());
+        ReservationResponse holdRes = reservationService.holdSeat(testMember.getId(), request);
+        ReservationResponse confirmRes = reservationService.confirmReservation(testMember.getId(), holdRes.id());
+
+        // 회차 공연 시작 시간을 과거로 변경하여 공연 시작 상태 시뮬레이션
+        PerformanceSchedule schedule = scheduleRepository.findById(scheduleOpen.getId()).orElseThrow();
+        schedule.update(schedule.getPerformance(), LocalDateTime.now().minusMinutes(10), schedule.getTicketOpenTime());
+        scheduleRepository.save(schedule);
+
+        assertThatThrownBy(() -> reservationService.cancelReservation(testMember.getId(), confirmRes.id()))
+                .isInstanceOf(BusinessException.class)
+                .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST)
+                .hasMessageContaining("공연 시작 시간 이후에는 예매를 취소하거나 환불할 수 없습니다.");
+    }
 }

@@ -103,6 +103,15 @@ public class PerformanceDataInitializer implements CommandLineRunner {
         System.out.println("관리자 계정 (ADMIN): " + adminMember.getEmail() + " | Token: " + adminToken);
         System.out.println("==================================================");
 
+        // 동시성 테스트용 더미 공연이 DB에 있다면 비활성화(deactivate)하여 일반 사용자에게 숨김 처리 (관리자에게만 노출)
+        performanceRepository.findByTitleContainingOrderByIdDesc("동시성 검증 뮤지컬")
+                .forEach(p -> {
+                    if (p.isActive()) {
+                        p.deactivate();
+                        performanceRepository.save(p);
+                    }
+                });
+
         // 3. 테스트용 샘플 도서 생성 (원작 도서: 오페라의 유령)
         String sampleIsbn = "9788932909000";
         Book sampleBook = bookRepository.findByIsbn(sampleIsbn)

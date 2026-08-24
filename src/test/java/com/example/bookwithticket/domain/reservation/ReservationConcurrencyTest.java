@@ -68,9 +68,9 @@ class ReservationConcurrencyTest {
             testMembers.add(member);
         }
 
-        Performance perf = performanceRepository.save(
-                new Performance("동시성 검증 뮤지컬", PerformanceCategory.MUSICAL, "블루스퀘어", "poster.jpg", 150, "동시성 테스트용 공연", null)
-        );
+        Performance perf = new Performance("동시성 검증 뮤지컬", PerformanceCategory.MUSICAL, "블루스퀘어", "poster.jpg", 150, "동시성 테스트용 공연", null);
+        perf.deactivate(); // 비활성화 처리하여 일반 사용자 목록에 노출 방지 (관리자에게만 노출)
+        perf = performanceRepository.save(perf);
 
         testSchedule = scheduleRepository.save(
                 new PerformanceSchedule(perf, LocalDateTime.now().plusDays(1), LocalDateTime.now().minusHours(1))
