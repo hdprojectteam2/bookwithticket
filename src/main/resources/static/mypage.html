@@ -122,19 +122,8 @@
         try{
         	let response;
             if (currentStatus === 'CONFIRMED') {
-                response = await fetch(
-                    `/api/payments/PERF_${reservationId}/refund`,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            reason: "공연 예매 취소"
-                        })
-                    }
-                );
+            	window.open(`/refund.html?type=performance&id=${encodeURIComponent(`PERF_${reservationId}`)}`, "_blank", "width=500,height=650");
+            	return;
             } else {
             	response = await fetch(
                     `/api/reservations/${reservationId}/cancel`,

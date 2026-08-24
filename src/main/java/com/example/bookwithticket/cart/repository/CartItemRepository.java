@@ -7,16 +7,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.bookwithticket.cart.entity.CartItemEntity;
 
-public interface CartItemRepository
-        extends JpaRepository<CartItemEntity, Long> {
+public interface CartItemRepository extends JpaRepository<CartItemEntity, Long> {
 
-    List<CartItemEntity> findByCartId(Long cartId);
+	List<CartItemEntity> findByCartId(Long cartId);
 
-    Optional<CartItemEntity> findByCartIdAndBookId(Long cartId, Long bookId);
+	Optional<CartItemEntity> findByCartIdAndBookId(Long cartId, Long bookId);
 
-    void deleteByCartId(Long cartId);
-    
-    List<CartItemEntity> findByIdInAndCartMemberId(List<Long> cartItemIds, Long memberId);
-    
-    void deleteByCartMemberId(Long memberId);
+	void deleteByCartId(Long cartId);
+
+	List<CartItemEntity> findByIdInAndCartMemberId(List<Long> cartItemIds, Long memberId);
+
+	void deleteByCartMemberIdAndBookId(Long memberId, Long bookId);
 }

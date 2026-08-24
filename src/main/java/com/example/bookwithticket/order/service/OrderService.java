@@ -3,7 +3,6 @@ package com.example.bookwithticket.order.service;
 import java.util.List;
 
 import com.example.bookwithticket.order.dto.AdminOrderResponse;
-import com.example.bookwithticket.order.dto.DeliveryRequest;
 import com.example.bookwithticket.order.dto.DeliveryStatusRequest;
 import com.example.bookwithticket.order.dto.OrderCreateRequest;
 import com.example.bookwithticket.order.dto.OrderPageDto;
@@ -15,8 +14,6 @@ import com.example.bookwithticket.order.dto.ShippingRequest;
 public interface OrderService {
 
 	OrderPageDto findPendingOrder(Long memberId, String orderNumber);
-
-	void saveDelivery(Long memberId, String orderNumber, DeliveryRequest request);
 
 	void cancelExpiredOrders();
 

@@ -9,131 +9,104 @@ import com.example.bookwithticket.domain.performance.PerformanceSchedule;
 
 public class PerformanceCartItemDto {
 
-    private Long cartItemId;
+	private Long cartItemId;
 
-    private Long performanceId;
+	private Long performanceId;
 
-    private Long scheduleId;
+	private Long scheduleId;
 
-    private String title;
+	private String title;
 
-    private LocalDateTime performanceTime;
+	private LocalDateTime performanceTime;
 
-    private LocalDateTime ticketOpenTime;
+	private LocalDateTime ticketOpenTime;
 
-    private PerformanceCartStatus status;
+	private PerformanceCartStatus status;
 
-    private boolean clickable;
+	private String posterUrl;
 
-    private String posterUrl;
+	private String venue;
 
-    private String venue;
+	public PerformanceCartItemDto(PerformanceCartItemEntity cartItem) {
 
-    public PerformanceCartItemDto(
-            PerformanceCartItemEntity cartItem
-    ) {
+		PerformanceSchedule schedule = cartItem.getPerformanceSchedule();
 
-        PerformanceSchedule schedule =
-                cartItem.getPerformanceSchedule();
+		Performance performance = schedule.getPerformance();
 
-        Performance performance =
-                schedule.getPerformance();
+		this.cartItemId = cartItem.getId();
 
-        this.cartItemId =
-                cartItem.getId();
+		this.performanceId = performance.getId();
 
-        this.performanceId =
-                performance.getId();
+		this.scheduleId = schedule.getId();
 
-        this.scheduleId =
-                schedule.getId();
+		this.title = performance.getTitle();
 
-        this.title =
-                performance.getTitle();
+		this.performanceTime = schedule.getPerformanceTime();
 
-        this.performanceTime =
-                schedule.getPerformanceTime();
+		this.ticketOpenTime = schedule.getTicketOpenTime();
 
-        this.ticketOpenTime =
-                schedule.getTicketOpenTime();
+		this.posterUrl = performance.getPosterUrl();
 
-        this.posterUrl =
-                performance.getPosterUrl();
+		this.venue = performance.getVenue();
 
-        this.venue =
-                performance.getVenue();
+		calculateStatus();
+	}
 
-        calculateStatus();
-    }
+	private void calculateStatus() {
 
-    private void calculateStatus() {
+		LocalDateTime now = LocalDateTime.now();
 
-        LocalDateTime now =
-                LocalDateTime.now();
+		if (now.isBefore(ticketOpenTime)) {
 
-        if (now.isBefore(ticketOpenTime)) {
+			this.status = PerformanceCartStatus.OPEN_SCHEDULED;
 
-            this.status =
-                    PerformanceCartStatus.OPEN_SCHEDULED;
+			return;
+		}
 
-            this.clickable = false;
+		if (!now.isBefore(performanceTime)) {
 
-            return;
-        }
+			this.status = PerformanceCartStatus.EXPIRED;
 
-        if (!now.isBefore(performanceTime)) {
+			return;
+		}
 
-            this.status =
-                    PerformanceCartStatus.EXPIRED;
+		this.status = PerformanceCartStatus.AVAILABLE;
 
-            this.clickable = false;
+	}
 
-            return;
-        }
+	public Long getCartItemId() {
+		return cartItemId;
+	}
 
-        this.status =
-                PerformanceCartStatus.AVAILABLE;
+	public Long getPerformanceId() {
+		return performanceId;
+	}
 
-        this.clickable = true;
-    }
+	public Long getScheduleId() {
+		return scheduleId;
+	}
 
-    public Long getCartItemId() {
-        return cartItemId;
-    }
+	public String getTitle() {
+		return title;
+	}
 
-    public Long getPerformanceId() {
-        return performanceId;
-    }
+	public LocalDateTime getPerformanceTime() {
+		return performanceTime;
+	}
 
-    public Long getScheduleId() {
-        return scheduleId;
-    }
+	public LocalDateTime getTicketOpenTime() {
+		return ticketOpenTime;
+	}
 
-    public String getTitle() {
-        return title;
-    }
+	public PerformanceCartStatus getStatus() {
+		return status;
+	}
 
-    public LocalDateTime getPerformanceTime() {
-        return performanceTime;
-    }
+	public String getPosterUrl() {
+		return posterUrl;
+	}
 
-    public LocalDateTime getTicketOpenTime() {
-        return ticketOpenTime;
-    }
-
-    public PerformanceCartStatus getStatus() {
-        return status;
-    }
-
-    public boolean isClickable() {
-        return clickable;
-    }
-
-    public String getPosterUrl() {
-        return posterUrl;
-    }
-
-    public String getVenue() {
-        return venue;
-    }
+	public String getVenue() {
+		return venue;
+	}
 }
