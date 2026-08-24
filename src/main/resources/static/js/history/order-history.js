@@ -402,7 +402,7 @@ function getBookRefundButton(history) {
         <button
             type="button"
             class="refund-button"
-            onclick="requestRefund('${history.orderNumber}')"
+            onclick="moveToRefundPage('book', '${history.orderNumber}', '${history.deliveryStatus}')"
         >
             환불 신청
         </button>
@@ -421,14 +421,14 @@ function getPerformanceRefundButton(history) {
         <button
             type="button"
             class="refund-button"
-            onclick="requestRefund('${history.reservationNumber}')"
+            onclick="moveToRefundPage('performance', '${history.reservationNumber}', '')"
         >
             환불 신청
         </button>
     `;
 }
 
-
+/* 기존 환불 */
 async function requestRefund(orderNumber) {
     const reason = prompt("환불 사유를 입력해 주세요.");
 
@@ -482,6 +482,17 @@ async function requestRefund(orderNumber) {
         alert(error.message);
     }
 }
+
+function moveToRefundPage(type, id, deliveryStatus) {
+    const url = "/refund.html?type=" + encodeURIComponent(type) + "&id=" + encodeURIComponent(id) 	+ "&deliveryStatus=" + encodeURIComponent(deliveryStatus || "");;
+
+    const width = 500;
+    const height = 650;
+
+    window.open(url, "_blank", `width=${width},height=${height}`);
+}
+
+
 
 
 function formatPrice(price) {

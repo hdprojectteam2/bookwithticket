@@ -51,7 +51,7 @@ public class RefundController {
 
 		if (orderNumber.startsWith("B")) {
 
-			response = refundService.requestBookRefund(memberId, orderNumber, request.getReason());
+			response = refundService.requestBookRefund(memberId, orderNumber, request.getReason(), request.getReturnMethod());
 
 		} else {
 
