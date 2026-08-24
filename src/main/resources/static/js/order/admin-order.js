@@ -596,6 +596,8 @@ async function saveDeliveryStatus(orderNumber) {
 }
 
 function createRefundControl(order) {
+	
+	const returnMethodText = getReturnMethodText(order.returnMethod);
 
     if (order.refundStatus === "REQUESTED" && order.refundId) {
 
@@ -611,7 +613,15 @@ function createRefundControl(order) {
         )}
 
             </div>
+			
+			<div class="refund-return-method">
 
+				반품 방법:
+			    ${escapeHtml(
+					returnMethodText
+				)}
+				
+			</div>
 
             <button
                 type="button"
@@ -653,6 +663,15 @@ function createRefundControl(order) {
         )}
 
 	            </div>
+				
+				<div class="refund-return-method">
+
+					반품 방법:
+				    ${escapeHtml(
+						returnMethodText
+					)}
+					
+				</div>
 
 
 	            <div>
@@ -685,6 +704,15 @@ function createRefundControl(order) {
         )}
 
 		        </div>
+				
+				<div class="refund-return-method">
+
+					반품 방법:
+				    ${escapeHtml(
+						returnMethodText
+					)}
+					
+				</div>
 
 
 		        <div>
@@ -709,6 +737,22 @@ function createRefundControl(order) {
     return "환불 불가";
 }
 
+function getReturnMethodText(returnMethod) {
+
+    if (!returnMethod) {
+        return "-";
+    }
+	
+    if (returnMethod === "PICKUP") {
+        return "택배 수거 요청";
+    }
+
+    if (returnMethod === "SELF_SHIP") {
+        return "직접 발송";
+    }
+
+    return returnMethod;
+}
 
 async function approveRefund(refundId) {
 

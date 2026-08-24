@@ -173,25 +173,14 @@ async function loadBook() {
                 "cartButton"
             );
 
-        const buyButton =
-            document.getElementById(
-                "buyButton"
-            );
-
 
         if (
+            cartButton &&
             Number(book.stock || 0) <= 0
         ) {
 
-            if (cartButton) {
-                cartButton.disabled = true;
-                cartButton.textContent = "품절";
-            }
-
-            if (buyButton) {
-                buyButton.disabled = true;
-                buyButton.textContent = "품절";
-            }
+            cartButton.disabled = true;
+            cartButton.textContent = "품절";
 
         }
 
@@ -404,9 +393,15 @@ async function cart() {
 
     if (!getToken()) {
 
-        alert("로그인이 필요합니다.");
-        location.href = "/login.html";
+        alert(
+            "로그인이 필요합니다."
+        );
+
+        location.href =
+            "/login.html";
+
         return;
+
     }
 
 
@@ -419,52 +414,74 @@ async function cart() {
                     method: "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/x-www-form-urlencoded",
 
                         Authorization:
-                            "Bearer " + getToken()
+                            "Bearer " +
+                            getToken()
+
                     },
 
                     body:
                         "bookId=" +
                         encodeURIComponent(id) +
                         "&quantity=1"
+
                 }
             );
 
 
-        const message =
-            await response.text();
+			let result = null;
+
+			try {
+			    result = await response.json();
+			} catch (error) {
+			    result = null;
+			}
 
 
         if (!response.ok) {
 
             throw new Error(
-                message ||
+                result?.message ||
                 "장바구니 추가에 실패했습니다."
             );
-        }
-
-
-        const goCart =
-            confirm(
-                "장바구니에 담았습니다.\n장바구니로 이동하시겠습니까?"
-            );
-
-
-        if (goCart) {
-
-            location.href = "/cart";
 
         }
+
+
+        showToast("장바구니에 추가했니다.");
 
 
     } catch (error) {
 
-        alert(error.message);
+        showToast(error.message);
 
     }
+
+}
+
+function showToast(message) {
+    const toast = document.createElement("div");
+    toast.className = "toast-message";
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add("show");
+    }, 10);
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+
+    }, 2000);
 }
 
 
@@ -1009,204 +1026,5 @@ function escapeHtml(value) {
             "'",
             "&#039;"
         );
-
-}
-
-async function buyNow() {
-
-    if (!getToken()) {
-
-        alert("로그인이 필요합니다.");
-
-        location.href = "/login.html";
-
-        return;
-    }
-
-
-    const button =
-        document.getElementById("buyButton");
-
-
-    if (button) {
-        button.disabled = true;
-        button.textContent = "주문 준비 중...";
-    }
-
-
-    try {
-
-        /* =============================================
-           1. 먼저 현재 장바구니 조회
-        ============================================= */
-
-        let cartResponse =
-            await fetch(
-                "/api/cart",
-                {
-                    headers: {
-                        Authorization:
-                            "Bearer " + getToken()
-                    }
-                }
-            );
-
-
-        if (!cartResponse.ok) {
-
-            throw new Error(
-                "장바구니 정보를 불러오지 못했습니다."
-            );
-
-        }
-
-
-        let cartItems =
-            await cartResponse.json();
-
-
-        /* =============================================
-           2. 현재 책이 이미 장바구니에 있는지 확인
-        ============================================= */
-
-        let targetItem =
-            cartItems.find(
-                item =>
-                    String(item.bookId) ===
-                    String(id)
-            );
-
-
-        /* =============================================
-           3. 없는 경우에만 장바구니 추가
-        ============================================= */
-
-        if (!targetItem) {
-
-            const addResponse =
-                await fetch(
-                    "/api/cart/items",
-                    {
-                        method: "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/x-www-form-urlencoded",
-
-                            Authorization:
-                                "Bearer " + getToken()
-                        },
-
-                        body:
-                            "bookId=" +
-                            encodeURIComponent(id) +
-                            "&quantity=1"
-                    }
-                );
-
-
-            const addMessage =
-                await addResponse.text();
-
-
-            if (!addResponse.ok) {
-
-                throw new Error(
-                    addMessage ||
-                    "구매 준비에 실패했습니다."
-                );
-
-            }
-
-
-            /* 추가 후 다시 장바구니 조회 */
-
-            cartResponse =
-                await fetch(
-                    "/api/cart",
-                    {
-                        headers: {
-                            Authorization:
-                                "Bearer " + getToken()
-                        }
-                    }
-                );
-
-
-            if (!cartResponse.ok) {
-
-                throw new Error(
-                    "장바구니 정보를 불러오지 못했습니다."
-                );
-
-            }
-
-
-            cartItems =
-                await cartResponse.json();
-
-
-            targetItem =
-                cartItems.find(
-                    item =>
-                        String(item.bookId) ===
-                        String(id)
-                );
-
-        }
-
-
-        /* =============================================
-           4. 해당 상품 확인
-        ============================================= */
-
-        if (!targetItem) {
-
-            throw new Error(
-                "주문할 도서를 찾지 못했습니다."
-            );
-
-        }
-
-
-        /* =============================================
-           5. 이 책만 주문 대상으로 지정
-        ============================================= */
-
-        sessionStorage.setItem(
-            "orderCartItemIds",
-            JSON.stringify([
-                targetItem.cartItemId
-            ])
-        );
-
-
-        /* =============================================
-           6. 주문 페이지 이동
-        ============================================= */
-
-        location.href = "/order";
-
-
-    } catch (error) {
-
-        console.error(
-            "바로 구매 오류:",
-            error
-        );
-
-
-        alert(
-            error.message ||
-            "구매 처리 중 오류가 발생했습니다."
-        );
-
-
-        if (button) {
-            button.disabled = false;
-            button.textContent = "구매하기";
-        }
-
-    }
 
 }

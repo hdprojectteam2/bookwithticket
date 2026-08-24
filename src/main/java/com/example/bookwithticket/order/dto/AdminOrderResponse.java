@@ -23,11 +23,13 @@ public class AdminOrderResponse {
 	private final Long refundId;
 	private final String refundStatus;
 	private final String refundReason;
+	private final String returnMethod;
 
 	public AdminOrderResponse(Long orderId, Long memberId, String orderNumber, LocalDateTime orderedAt, int totalPrice,
 			String orderStatus, String deliveryStatus, String receiverName, String phone, String zipCode,
 			String address, String detailAddress, String deliveryRequest, String courier, String trackingNumber,
-			List<AdminOrderItemResponse> items, Long refundId, String refundStatus, String refundReason) {
+			List<AdminOrderItemResponse> items, Long refundId, String refundStatus, String refundReason,
+			String returnMethod) {
 
 		this.orderId = orderId;
 		this.memberId = memberId;
@@ -52,6 +54,7 @@ public class AdminOrderResponse {
 		this.refundId = refundId;
 		this.refundStatus = refundStatus;
 		this.refundReason = refundReason;
+		this.returnMethod = returnMethod;
 	}
 
 	public Long getOrderId() {
@@ -128,5 +131,9 @@ public class AdminOrderResponse {
 
 	public String getRefundReason() {
 		return refundReason;
+	}
+
+	public String getReturnMethod() {
+		return returnMethod;
 	}
 }

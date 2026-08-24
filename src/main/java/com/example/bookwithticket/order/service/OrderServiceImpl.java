@@ -214,6 +214,7 @@ public class OrderServiceImpl implements OrderService {
 					Long refundId = null;
 					String refundStatus = null;
 					String refundReason = null;
+					String returnMethod = null;
 
 					PaymentEntity payment = paymentRepository
 							.findFirstByBookOrderIdAndStatusInOrderByCreatedAtDesc(order.getId(), paymentStatuses)
@@ -226,6 +227,7 @@ public class OrderServiceImpl implements OrderService {
 							refundId = refund.getId();
 							refundStatus = refund.getStatus().name();
 							refundReason = refund.getReason();
+							returnMethod = refund.getReturnMethod() != null ? refund.getReturnMethod().name() : null;
 						}
 					}
 
@@ -257,7 +259,7 @@ public class OrderServiceImpl implements OrderService {
 							order.getCreatedAt(), order.getTotalPrice(), order.getOrderStatus().name(),
 							order.getDeliveryStatus().name(), receiverName, phone, zipCode, address, detailAddress,
 							deliveryRequest, order.getCourier(), order.getTrackingNumber(), items, refundId,
-							refundStatus, refundReason);
+							refundStatus, refundReason, returnMethod);
 				})
 
 				.toList();

@@ -59,7 +59,7 @@ public class BookOrderItemEntity {
         this.bookOrder = bookOrder;
         this.book = book;
         this.bookTitleSnapshot = book.getTitle();
-        this.priceSnapshot = book.getPrice();
+        this.priceSnapshot = book.getSalePrice();
         this.quantity = quantity;
     }
 

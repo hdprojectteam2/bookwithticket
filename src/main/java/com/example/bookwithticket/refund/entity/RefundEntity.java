@@ -26,50 +26,50 @@ public class RefundEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "refund_id")
 	private Long id;
-	
+
 	@Column(name = "requester_id", nullable = false)
 	private Long requtserId;
-	
+
 	@Column(name = "approver_id")
 	private Long approverId;
-	
+
 	@Column(name = "amount", nullable = false)
 	private int amount;
-	
+
 	@Column(name = "reason", nullable = false, length = 255)
 	private String reason;
-	
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "return_method")
+	private ReturnMethod returnMethod;
+
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "payment_id", nullable = false, unique = true)
 	private PaymentEntity payment;
-	
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false)
 	private RefundStatus status;
-	
+
 	@Column(name = "requested_at", nullable = false)
 	private LocalDateTime requestedAt;
-	
+
 	@Column(name = "approved_at")
 	private LocalDateTime approvedAt;
-	
+
 	@Column(name = "completed_at")
 	private LocalDateTime completedAt;
-	
+
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
-	
+
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
-	
-	protected RefundEntity() {}
-	
-	public RefundEntity(
-			Long requesterId,
-			PaymentEntity payment,
-			int amount,
-			String reason
-	) {
+
+	protected RefundEntity() {
+	}
+
+	public RefundEntity(Long requesterId, PaymentEntity payment, int amount, String reason) {
 		this.requtserId = requesterId;
 		this.payment = payment;
 		this.amount = amount;
@@ -77,8 +77,7 @@ public class RefundEntity {
 		this.status = RefundStatus.REQUESTED;
 		this.requestedAt = LocalDateTime.now();
 	}
-	
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -97,6 +96,10 @@ public class RefundEntity {
 
 	public String getReason() {
 		return reason;
+	}
+
+	public ReturnMethod getReturnMethod() {
+		return returnMethod;
 	}
 
 	public PaymentEntity getPayment() {
@@ -130,45 +133,48 @@ public class RefundEntity {
 	@PrePersist
 	protected void prePersist() {
 		LocalDateTime now = LocalDateTime.now();
-		
+
 		this.createdAt = now;
 		this.updatedAt = now;
 	}
-	
+
 	@PreUpdate
 	protected void preUpdate() {
 		this.updatedAt = LocalDateTime.now();
 	}
-	
+
 	public void approve(Long approverId) {
-		if(this.status != RefundStatus.REQUESTED && this.status != RefundStatus.REJECTED) {
+		if (this.status != RefundStatus.REQUESTED && this.status != RefundStatus.REJECTED) {
 			throw new IllegalStateException("환불 요청 상태에서만 승인할 수 있습니다.");
 		}
 		this.approverId = approverId;
 		this.status = RefundStatus.APPROVED;
 		this.approvedAt = LocalDateTime.now();
 	}
-	
+
 	public void reject(Long approverId) {
-		if(this.status != RefundStatus.REQUESTED) {
+		if (this.status != RefundStatus.REQUESTED) {
 			throw new IllegalStateException("환불 요청 상태에서만 거절할 수 있습니다.");
 		}
 		this.approverId = approverId;
 		this.status = RefundStatus.REJECTED;
 		this.approvedAt = LocalDateTime.now();
 	}
-	
+
 	public void complete() {
-		if(this.status != RefundStatus.REQUESTED && this.status != RefundStatus.APPROVED) {
+		if (this.status != RefundStatus.REQUESTED && this.status != RefundStatus.APPROVED) {
 			throw new IllegalStateException("완료할 수 없는 상태입니다.");
 		}
 		this.status = RefundStatus.COMPLETED;
 		this.completedAt = LocalDateTime.now();
 	}
-	
+
 	public void fail() {
 		this.status = RefundStatus.FAILED;
 	}
-	
-	
+
+	public void setReturnMethod(ReturnMethod returnMethod) {
+		this.returnMethod = returnMethod;
+	}
+
 }
