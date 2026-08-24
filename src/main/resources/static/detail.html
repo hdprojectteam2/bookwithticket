@@ -87,12 +87,12 @@
                         <p style="margin:0 0 20px 0; font-size:1.05rem; color:var(--bk-sub);"><b>공연장:</b> ${p.venue} <span style="margin:0 8px; color:var(--bk-line);">|</span> <b>관람시간:</b> ${p.runtimeMinutes}분</p>
                         
                         ${p.originalBookId ? `
-                        <div style="margin:20px 0; padding:18px 24px; background:linear-gradient(135deg, #fffbeb, #ffffff); border:1px solid #fde68a; border-radius:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div style="margin:16px 0; padding:14px 20px; background:#fff3e0; border-left:4px solid #e67e22; border-radius:6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                             <div>
-                                <span style="display:inline-block; color:#d97706; font-size:0.78rem; font-weight:bold; margin-bottom:4px;">📖 LINKED BOOK</span>
-                                <div style="font-weight:bold; color:#92400e; font-size:1rem;">원작 도서와 연결된 공연입니다.</div>
+                                <span style="color:#d35400; font-weight:bold; font-size:0.95rem;">📖 연관 원작 도서: </span>
+                                <span id="detailLinkedBookTitle" style="color:#111; font-weight:bold; font-size:0.95rem;">도서 정보 로딩 중...</span>
                             </div>
-                            <button onclick="location.href='/book-detail.html?id=${p.originalBookId}'" style="background:#f59e0b; color:#fff; border:none; padding:10px 18px; border-radius:8px; font-weight:bold; font-size:0.88rem; cursor:pointer;">원작 도서 상세보기 ➔</button>
+                            <button onclick="location.href='/book-detail.html?id=${p.originalBookId}'" style="background:#e67e22; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:0.85rem; cursor:pointer;">원작 도서 상세 보기 ➔</button>
                         </div>` : ''}
 
                         <div style="margin-top:28px; padding-top:24px; border-top:1px solid var(--bk-line);">
@@ -109,7 +109,7 @@
 
                         <!-- 공연 리뷰 섹션 -->
                         <div style="margin-top:36px; padding-top:28px; border-top:1px solid var(--bk-line);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:gap:10px;">
                                 <div>
                                     <span class="bk-eyebrow" style="color:var(--bk-blue); margin-bottom:4px;">REVIEWS</span>
                                     <h3 style="margin:0; color:var(--bk-text); font-size:1.2rem;">관람 후기</h3>
@@ -139,6 +139,24 @@
                         </div>
                     </div>
                 `;
+
+                if (p.originalBookId) {
+                    fetch(`/books/${p.originalBookId}`)
+                        .then(r => r.json())
+                        .then(d => {
+                            const titleEl = document.getElementById('detailLinkedBookTitle');
+                            if (titleEl && d && d.title) {
+                                titleEl.innerText = d.title;
+                            } else if (titleEl) {
+                                titleEl.innerText = `도서 ID ${p.originalBookId}`;
+                            }
+                        })
+                        .catch(() => {
+                            const titleEl = document.getElementById('detailLinkedBookTitle');
+                            if (titleEl) titleEl.innerText = `도서 ID ${p.originalBookId}`;
+                        });
+                }
+
                 loadReviews(id);
                 loadReviewInfo(id);
             } else {

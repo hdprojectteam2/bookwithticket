@@ -3,162 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BookWithTicket - 공연 예매 및 좌석 선택</title>
+    <title>공연 예매 | Booketing</title>
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-        * { box-sizing: border-box; font-family: sans-serif; text-decoration: none !important; }
-        body { background-color: #f8f9fa; margin: 0; padding: 20px; color: #212529; }
-        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        h1 { margin-top: 0; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 15px; font-size: 1.6rem; }
-        .section { margin-bottom: 30px; }
-        h2 { color: #34495e; font-size: 1.2rem; margin-bottom: 12px; }
-        .search-bar { display: flex; gap: 10px; margin-bottom: 20px; }
-        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; font-size: 1rem; border-radius: 4px; }
-        button { background: #3498db; color: #fff; border: none; padding: 10px 18px; cursor: pointer; font-weight: bold; transition: 0.2s; border-radius: 4px; }
-        button:hover { background: #2980b9; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-        .card { border: 1px solid #e0e0e0; padding: 15px; background: #fafafa; cursor: pointer; transition: 0.2s; border-radius: 6px; }
-        .card:hover { border-color: #3498db; background: #f0f7fc; transform: translateY(-2px); }
-        .card h3 { margin: 0 0 8px 0; color: #2c3e50; }
-        .badge { display: inline-block; background: #e8f4fd; color: #3498db; padding: 3px 8px; border-radius: 3px; font-size: 0.8rem; font-weight: bold; }
         .seats-grid { width: 100%; max-width: 900px; margin: 15px auto 0 auto; }
-        .seat-btn { padding: 15px; text-align: center; cursor: pointer; font-weight: bold; color: #fff; border: none; border-radius: 4px; }
-        .seat-available { background: #2ecc71; }
-        .seat-held { background: #f39c12; }
-        .seat-reserved { background: #e74c3c; }
-        .log-box { background: #1e1e1e; color: #a9dfbf; padding: 15px; font-family: monospace; height: 160px; overflow-y: auto; font-size: 0.85rem; border-radius: 4px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .seat-btn { padding: 15px; text-align: center; cursor: pointer; font-weight: bold; color: #fff; border: none; border-radius: 8px; font-size: 0.9rem; transition: transform 0.15s, opacity 0.15s; }
+        .seat-btn:hover { transform: scale(1.04); opacity: 0.95; }
+        .seat-available { background: #10b981; }
+        .seat-held { background: #f59e0b; }
+        .seat-reserved { background: #ef4444; }
+        .log-box { background: #0f172a; color: #38bdf8; padding: 16px; font-family: monospace; height: 160px; overflow-y: auto; font-size: 0.85rem; border-radius: 10px; }
+
+        /* 세련된 버튼 스타일 */
+        .bk-chip-btn {
+            padding: 9px 20px;
+            border-radius: 30px;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            font-weight: 600;
+            font-size: 0.92rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #475569;
+        }
+        .bk-chip-btn:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+            background: #eff6ff;
+        }
+        .bk-chip-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .bk-swap-btn {
+            padding: 7px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .bk-swap-btn-user {
+            background: #ecfdf5;
+            color: #059669;
+            border-color: #a7f3d0;
+        }
+        .bk-swap-btn-user:hover {
+            background: #10b981;
+            color: #ffffff;
+        }
+        .bk-swap-btn-admin {
+            background: #f5f3ff;
+            color: #7c3aed;
+            border-color: #ddd6fe;
+        }
+        .bk-swap-btn-admin:hover {
+            background: #8b5cf6;
+            color: #ffffff;
+        }
+
+        .bk-modal-action-btn {
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .bk-modal-action-btn:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .bk-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; margin-top: 20px; }
+        .bk-perf-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; transition: all 0.2s ease; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .bk-perf-card:hover { border-color: #2563eb; transform: translateY(-4px); box-shadow: 0 14px 28px rgba(37,99,235,0.08); }
     </style>
 </head>
-<body>
+<body class="bk-page">
 
-<div class="container">
-    <div style="margin-bottom: 15px;">
-        <a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
-    </div>
-    <h1>🎭 공연 예매 및 실시간 좌석 선점</h1>
+<div class="bk-wide-shell">
+    <header class="bk-topbar">
+        <a href="/mainpage.html" class="bk-brand">
+            <span class="bk-logo">B</span>
+            <span>Booketing</span>
+        </a>
+        <nav class="bk-nav">
+            <a href="/mainpage.html">홈</a>
+            <a href="/books.html">도서</a>
+            <a href="/index.html" class="active">공연</a>
+            <a href="/cart" id="navCart">장바구니</a>
+            <a href="/history" id="navHistory">구매내역</a>
+            <a href="/mypage.html" id="navMypage">마이페이지</a>
+        </nav>
+    </header>
 
     <!-- 계정 스왑 및 관리자 툴바 -->
-    <div style="background:#f8f9fa; border:1px solid #ddd; padding:15px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px 22px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-weight:bold;">테스트 계정 스왑:</span>
-            <button onclick="switchAccount('USER')" style="background:#27ae60; padding:6px 12px; font-size:0.85rem;">일반 사용자 모드 (USER)</button>
-            <button onclick="switchAccount('ADMIN')" style="background:#8e44ad; padding:6px 12px; font-size:0.85rem;">관리자 모드 (ADMIN)</button>
+            <span style="font-weight:700; color:#334155; font-size:0.88rem;">테스트 계정 전환:</span>
+            <button onclick="switchAccount('USER')" class="bk-swap-btn bk-swap-btn-user">USER (일반회원)</button>
+            <button onclick="switchAccount('ADMIN')" class="bk-swap-btn bk-swap-btn-admin">ADMIN (관리자)</button>
         </div>
         <div>
-            <span id="userRoleBadge" style="padding:5px 12px; background:#2c3e50; color:#fff; font-weight:bold; font-size:0.85rem; border-radius:3px;">현재 권한: USER</span>
+            <span id="userRoleBadge" style="padding:6px 14px; background:#0f172a; color:#fff; font-weight:700; font-size:0.82rem; border-radius:20px; letter-spacing:0.5px;">ROLE : USER</span>
         </div>
     </div>
 
-    <!--검색-->
-    <div class="section">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <h2 style="margin:0;">공연 검색, 목록</h2>
+    <!-- 공연 검색 및 목록 섹션 -->
+    <div class="bk-detail-section" style="margin-top:22px; padding:28px; background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+            <div>
+                <span class="bk-eyebrow" style="color:#2563eb; font-size:0.75rem; font-weight:800; letter-spacing:1px;">PERFORMANCES</span>
+                <h2 style="margin:4px 0 0 0; font-size:1.4rem; color:#0f172a; font-weight:800;">공연 탐색 및 실시간 좌석 예매</h2>
+            </div>
             <div style="display:flex; gap:8px;">
-                <button id="adminImportBtn" onclick="importFromKopis()" style="background:#2980b9; display:none;">+ KOPIS 공연 수집 (관리자)</button>
-                <button id="adminCreateBtn" onclick="openAdminCreateModal()" style="background:#8e44ad; display:none;">+ 공연 신규 등록 (관리자)</button>
+                <button id="adminImportBtn" onclick="importFromKopis()" style="background:#2563eb; color:#fff; display:none; padding:9px 16px; font-weight:700; font-size:0.88rem; border-radius:8px; border:none; cursor:pointer; box-shadow: 0 2px 6px rgba(37,99,235,0.2);">+ KOPIS 공연 수집</button>
+                <button id="adminCreateBtn" onclick="openAdminCreateModal()" style="background:#7c3aed; color:#fff; display:none; padding:9px 16px; font-weight:700; font-size:0.88rem; border-radius:8px; border:none; cursor:pointer; box-shadow: 0 2px 6px rgba(124,58,237,0.2);">+ 공연 직접 등록</button>
             </div>
         </div>
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="제목입력" onkeyup="if(event.key === 'Enter') loadPerformances();">
-            <button onclick="loadPerformances()">검색</button>
-            <button onclick="document.getElementById('searchInput').value=''; currentCategory=null; setActiveCategory(null); loadPerformances();" style="background:#95a5a6;">전체보기</button>
+
+        <div style="display:flex; gap:10px; margin-bottom:22px;">
+            <input type="text" id="searchInput" placeholder="공연명, 장소 등을 검색해보세요..." onkeyup="if(event.key === 'Enter') loadPerformances();" style="flex:1; padding:13px 18px; border:1px solid #cbd5e1; border-radius:10px; font-size:0.95rem; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'">
+            <button onclick="loadPerformances()" style="background:#2563eb; color:#fff; padding:13px 26px; border-radius:10px; border:none; font-weight:700; font-size:0.95rem; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">검색</button>
+            <button onclick="document.getElementById('searchInput').value=''; currentCategory=null; setActiveCategory(null); loadPerformances();" style="background:#f1f5f9; color:#475569; padding:13px 18px; border-radius:10px; border:1px solid #e2e8f0; font-weight:600; font-size:0.92rem; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">전체보기</button>
         </div>
-        <!-- 카테고리 필터 -->
-        <div style="display:flex; gap:8px; margin-bottom:15px; flex-wrap:wrap;">
-            <button id="cat-MUSICAL"  onclick="selectCategory('MUSICAL')"  style="background:#8e44ad;">뮤지컬</button>
-            <button id="cat-CONCERT"  onclick="selectCategory('CONCERT')"  style="background:#c0392b;">콘서트</button>
-            <button id="cat-CLASSIC"  onclick="selectCategory('CLASSIC')"  style="background:#16a085;">클래식</button>
-            <button id="cat-EXHIBITION" onclick="selectCategory('EXHIBITION')" style="background:#d35400;">전시</button>
+
+        <!-- 카테고리 필터 칩 -->
+        <div style="display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
+            <button id="cat-ALL" onclick="selectCategory(null)" class="bk-chip-btn active">전체</button>
+            <button id="cat-MUSICAL" onclick="selectCategory('MUSICAL')" class="bk-chip-btn">뮤지컬</button>
+            <button id="cat-CONCERT" onclick="selectCategory('CONCERT')" class="bk-chip-btn">콘서트</button>
+            <button id="cat-CLASSIC" onclick="selectCategory('CLASSIC')" class="bk-chip-btn">클래식</button>
+            <button id="cat-EXHIBITION" onclick="selectCategory('EXHIBITION')" class="bk-chip-btn">전시</button>
         </div>
-        <div id="performanceList" class="grid">로딩</div>
+
+        <div id="performanceList" class="bk-card-grid">로딩 중...</div>
     </div>
 
-    <!-- 회차 좌석 선택, 밑에 loadPerformances 에서 실행됨  -->
-    <div class="section" id="seatSection" style="display:none;">
-        <h2> 회차 선택과 좌석 선점 (<span id="selectedPerfTitle" style="color:#3498db;"></span>)</h2>
-        <div id="scheduleList" style="margin-bottom:15px;"></div>
+    <!-- 회차 좌석 선택 섹션 -->
+    <div class="bk-detail-section" id="seatSection" style="display:none; margin-top:24px; padding:28px; background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+            <div>
+                <span class="bk-eyebrow" style="color:#2563eb; font-size:0.75rem; font-weight:800;">SELECT SEAT</span>
+                <h2 style="font-size:1.35rem; margin:4px 0 0 0; color:#0f172a; font-weight:800;">회차 선택 및 좌석 선점 (<span id="selectedPerfTitle" style="color:#2563eb;"></span>)</h2>
+            </div>
+            <button onclick="document.getElementById('seatSection').style.display='none';" style="background:#f1f5f9; border:1px solid #e2e8f0; color:#64748b; padding:8px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem; font-weight:600;">닫기 ✕</button>
+        </div>
+        <div id="scheduleList" style="margin-bottom:22px;"></div>
         <div id="seatArea" style="display:none;">
-            <h3>좌석 선택 (<span style="color:#2ecc71;">GREEN</span> 예매가능 | <span style="color:#f39c12;">YELLOW</span> 10분선점 | <span style="color:#e74c3c;">RED</span> 예매완료)</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+                <h3 style="margin:0; font-size:1.1rem; color:#1e293b; font-weight:700;">실시간 좌석 배치도</h3>
+                <div style="font-size:0.85rem; display:flex; gap:14px; align-items:center; font-weight:600; color:#475569;">
+                    <span><span style="display:inline-block; width:12px; height:12px; background:#10b981; border-radius:3px; vertical-align:middle; margin-right:5px;"></span>예매가능</span>
+                    <span><span style="display:inline-block; width:12px; height:12px; background:#f59e0b; border-radius:3px; vertical-align:middle; margin-right:5px;"></span>10분선점</span>
+                    <span><span style="display:inline-block; width:12px; height:12px; background:#ef4444; border-radius:3px; vertical-align:middle; margin-right:5px;"></span>예매완료</span>
+                </div>
+            </div>
             <div id="seatsGrid" class="seats-grid"></div>
         </div>
     </div>
-
 </div>
 
 <!-- 선점 좌석 & 결제 모달 -->
-<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#fff; padding:25px; width:400px; text-align:center; border:1px solid #ccc; border-radius:8px;">
-        <h3 id="modalTitle" style="margin-top:0; color:#2c3e50;">선점된 좌석 결제</h3>
-        <p id="modalDesc" style="color:#666; font-size:0.85rem; margin-bottom:10px;">10분간 선점된 좌석입니다. 결제 방식을 선택하세요.</p>
-		<p id="modalTimer" style="margin:10px 0; line-height:1.4; font-weight:bold; color:#e74c3c;"></p>
-        <div style="display:flex; flex-direction:column; gap:8px; margin-top:15px;">
-            <button id="btnTossPay" onclick="goToTossCheckout()" style="background:#0064FF; color:#fff; padding:10px; font-weight:bold; border-radius:4px;">Toss Payments 결제창 이동</button>
-            <button id="btnConfirm" onclick="handleModalAction('confirm')" style="background:#2ecc71; color:#fff; padding:10px; font-weight:bold; border-radius:4px;">테스트 간편 결제 (즉시 승인)</button>
-            <button id="btnCancel" onclick="handleModalAction('cancel')" style="background:#e74c3c; color:#fff; padding:8px; border-radius:4px;">선점 취소</button>
-            <button onclick="closeCustomModal()" style="background:#95a5a6; color:#fff; padding:8px; border-radius:4px;">닫기</button>
+<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+    <div style="background:#ffffff; padding:30px; width:420px; text-align:center; border:1px solid #e2e8f0; border-radius:18px; box-shadow:0 20px 40px rgba(0,0,0,0.15);">
+        <h3 id="modalTitle" style="margin-top:0; color:#0f172a; font-size:1.25rem; font-weight:800;">선점된 좌석 결제</h3>
+        <p id="modalDesc" style="color:#64748b; font-size:0.9rem; margin-bottom:12px;">10분간 선점된 좌석입니다. 결제 방식을 선택하세요.</p>
+        <p id="modalTimer" style="margin:12px 0; line-height:1.5; font-weight:bold;"></p>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+            <button id="btnTossPay" onclick="goToTossCheckout()" class="bk-modal-action-btn" style="background:#0064ff; color:#fff; box-shadow:0 4px 12px rgba(0,100,255,0.25);">Toss Payments 결제창 이동</button>
+            <button id="btnConfirm" onclick="handleModalAction('confirm')" class="bk-modal-action-btn" style="background:#10b981; color:#fff;">테스트 간편 결제 (즉시 승인)</button>
+            <button id="btnCancel" onclick="handleModalAction('cancel')" class="bk-modal-action-btn" style="background:#fee2e2; color:#ef4444; border:1px solid #fecaca;">선점 취소</button>
+            <button onclick="closeCustomModal()" class="bk-modal-action-btn" style="background:#f8fafc; color:#64748b; border:1px solid #e2e8f0;">닫기</button>
         </div>
     </div>
 </div>
 
 <!-- 관리자 공연 신규 등록 모달 -->
-<div id="adminCreateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#fff; padding:25px; width:450px; border:1px solid #ccc; max-height:90vh; overflow-y:auto;">
-        <h3 style="margin-top:0; color:#8e44ad; border-bottom:1px solid #eee; padding-bottom:10px;">+ 공연 신규 등록 (관리자)</h3>
-        <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
-            <label><b>공연 제목:</b> <input type="text" id="newTitle" placeholder="예: 뮤지컬 웃는남자" style="width:100%; padding:8px;"></label>
-            <label><b>카테고리:</b> 
-                <select id="newCategory" style="width:100%; padding:8px;">
+<div id="adminCreateModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+    <div style="background:#fff; padding:32px; width:480px; border-radius:18px; border:1px solid #e2e8f0; max-height:90vh; overflow-y:auto; box-shadow:0 20px 40px rgba(0,0,0,0.15);">
+        <h3 style="margin-top:0; color:#0f172a; border-bottom:1px solid #e2e8f0; padding-bottom:12px; font-size:1.25rem; font-weight:800;">+ 공연 신규 직접 등록</h3>
+        <div style="display:flex; flex-direction:column; gap:14px; text-align:left;">
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">공연 제목 <input type="text" id="newTitle" placeholder="예: 뮤지컬 웃는남자" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">카테고리 
+                <select id="newCategory" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;">
                     <option value="MUSICAL">MUSICAL (뮤지컬)</option>
                     <option value="CONCERT">CONCERT (콘서트)</option>
                     <option value="CLASSIC">CLASSIC (클래식)</option>
                     <option value="EXHIBITION">EXHIBITION (전시)</option>
                 </select>
             </label>
-            <label><b>공연장:</b> <input type="text" id="newVenue" placeholder="예: 예술의전당 오페라극장" style="width:100%; padding:8px;"></label>
-            <label><b>포스터 URL:</b> <input type="text" id="newPosterUrl" placeholder="https://example.com/poster.jpg" style="width:100%; padding:8px;"></label>
-            <label><b>러닝타임 (분):</b> <input type="number" id="newRuntime" value="150" style="width:100%; padding:8px;"></label>
-            <label><b>원작 도서 ID (선택):</b> <input type="number" id="newOriginalBookId" placeholder="예: 1" style="width:100%; padding:8px;"></label>
-            <label><b>상세 설명:</b> <textarea id="newDescription" placeholder="공연 정보를 입력하세요" style="width:100%; height:80px; padding:8px;"></textarea></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">공연장 <input type="text" id="newVenue" placeholder="예: 예술의전당 오페라극장" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">포스터 URL <input type="text" id="newPosterUrl" placeholder="https://example.com/poster.jpg" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">러닝타임 (분) <input type="number" id="newRuntime" value="150" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">원작 도서 ID (선택) <input type="number" id="newOriginalBookId" placeholder="예: 1" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">상세 설명 <textarea id="newDescription" placeholder="공연 정보를 입력하세요" style="width:100%; height:80px; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box; font-family:inherit;"></textarea></label>
         </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
-            <button onclick="submitAdminCreatePerformance()" style="background:#8e44ad;">등록하기</button>
-            <button onclick="closeAdminCreateModal()" style="background:#95a5a6;">취소</button>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:24px;">
+            <button onclick="submitAdminCreatePerformance()" style="background:#7c3aed; color:#fff; padding:10px 20px; font-weight:700; border-radius:8px; border:none; cursor:pointer;">등록하기</button>
+            <button onclick="closeAdminCreateModal()" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; padding:10px 18px; font-weight:600; border-radius:8px; cursor:pointer;">취소</button>
         </div>
     </div>
 </div>
 
 <!-- 관리자 회차 및 좌석 생성 모달 -->
-<div id="adminScheduleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#fff; padding:25px; width:450px; border:1px solid #ccc; max-height:90vh; overflow-y:auto;">
-        <h3 style="margin-top:0; color:#8e44ad; border-bottom:1px solid #eee; padding-bottom:10px;">+ 회차 및 좌석 배치 생성 (관리자)</h3>
-        <p style="color:#666; font-size:0.85rem;">공연: <b id="schModalPerfTitle" style="color:#3498db;"></b></p>
-        <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
-            <label><b>공연 일시:</b> <input type="datetime-local" id="newPerfTime" style="width:100%; padding:8px;"></label>
-            <label><b>티켓 오픈 일시:</b> <input type="datetime-local" id="newOpenTime" style="width:100%; padding:8px;"></label>
-            <label><b>생성할 총 좌석 수:</b> <input type="number" id="newTotalSeats" value="1241" min="1" max="50000" style="width:100%; padding:8px;"></label>
-            <label><b>좌석 단가 (원):</b> <input type="number" id="newSeatPrice" value="150000" step="10000" style="width:100%; padding:8px;"></label>
+<div id="adminScheduleModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+    <div style="background:#fff; padding:32px; width:480px; border-radius:18px; border:1px solid #e2e8f0; max-height:90vh; overflow-y:auto; box-shadow:0 20px 40px rgba(0,0,0,0.15);">
+        <h3 style="margin-top:0; color:#0f172a; border-bottom:1px solid #e2e8f0; padding-bottom:12px; font-size:1.25rem; font-weight:800;">+ 회차 및 좌석 배치 생성</h3>
+        <p style="color:#64748b; font-size:0.9rem; margin-bottom:16px;">대상 공연: <b id="schModalPerfTitle" style="color:#2563eb;"></b></p>
+        <div style="display:flex; flex-direction:column; gap:14px; text-align:left;">
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">공연 일시 <input type="datetime-local" id="newPerfTime" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">티켓 오픈 일시 <input type="datetime-local" id="newOpenTime" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">생성할 총 좌석 수 <input type="number" id="newTotalSeats" value="1241" min="1" max="50000" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
+            <label style="font-size:0.88rem; font-weight:700; color:#334155;">좌석 단가 (원) <input type="number" id="newSeatPrice" value="150000" step="10000" style="width:100%; padding:10px; margin-top:4px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box;"></label>
         </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
-            <button onclick="submitAdminScheduleAndSeats()" style="background:#8e44ad;">회차 및 좌석 생성</button>
-            <button onclick="closeAdminScheduleModal()" style="background:#95a5a6;">취소</button>
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:24px;">
+            <button onclick="submitAdminScheduleAndSeats()" style="background:#7c3aed; color:#fff; padding:10px 20px; font-weight:700; border-radius:8px; border:none; cursor:pointer;">회차 및 좌석 생성</button>
+            <button onclick="closeAdminScheduleModal()" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; padding:10px 18px; font-weight:600; border-radius:8px; cursor:pointer;">취소</button>
         </div>
     </div>
 </div>
 
 <!-- 관리자 KOPIS 공연 검색 및 선택 수집 모달 -->
-<div id="adminKopisModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:#fff; padding:25px; width:650px; border:1px solid #ccc; max-height:85vh; overflow-y:auto; text-align:left;">
-        <h3 style="margin-top:0; color:#2980b9; border-bottom:1px solid #eee; padding-bottom:10px;">+ KOPIS 공연 데이터 선택 수집 (관리자)</h3>
-        <div style="display:flex; gap:10px; margin-bottom:15px;">
-            <input type="text" id="kopisSearchKeyword" placeholder="검색어 (예: 뮤지컬, 콘서트, 캣츠)" style="flex:1; padding:8px;" onkeyup="if(event.key==='Enter') executeKopisSearch();">
-            <button onclick="executeKopisSearch()" style="background:#2980b9;">조회</button>
+<div id="adminKopisModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+    <div style="background:#fff; padding:32px; width:680px; border-radius:18px; border:1px solid #e2e8f0; max-height:85vh; overflow-y:auto; text-align:left; box-shadow:0 20px 40px rgba(0,0,0,0.15);">
+        <h3 style="margin-top:0; color:#0f172a; border-bottom:1px solid #e2e8f0; padding-bottom:12px; font-size:1.25rem; font-weight:800;">+ KOPIS 공연 데이터 선택 수집</h3>
+        <div style="display:flex; gap:10px; margin-bottom:16px;">
+            <input type="text" id="kopisSearchKeyword" placeholder="검색어 (예: 뮤지컬, 콘서트, 캣츠)" style="flex:1; padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:0.95rem;" onkeyup="if(event.key==='Enter') executeKopisSearch();">
+            <button onclick="executeKopisSearch()" style="background:#2563eb; color:#fff; font-weight:700; padding:10px 20px; border-radius:8px; border:none; cursor:pointer;">조회</button>
         </div>
-        <div id="kopisSearchResultArea" style="max-height:400px; overflow-y:auto; border:1px solid #eee; padding:10px; margin-bottom:15px;">
-            <p style="color:#888; text-align:center;">검색어를 입력하고 [조회] 버튼을 클릭하세요.</p>
+        <div id="kopisSearchResultArea" style="max-height:400px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:18px; background:#f8fafc;">
+            <p style="color:#64748b; text-align:center;">검색어를 입력하고 [조회] 버튼을 클릭하세요.</p>
         </div>
         <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button onclick="submitSelectedKopisImport()" style="background:#27ae60;">선택한 공연 DB 수집</button>
-            <button onclick="closeAdminKopisModal()" style="background:#95a5a6;">닫기</button>
+            <button onclick="submitSelectedKopisImport()" style="background:#10b981; color:#fff; font-weight:700; padding:10px 20px; border-radius:8px; border:none; cursor:pointer;">선택한 공연 DB 수집</button>
+            <button onclick="closeAdminKopisModal()" style="background:#f1f5f9; color:#64748b; border:1px solid #e2e8f0; padding:10px 18px; font-weight:600; border-radius:8px; cursor:pointer;">닫기</button>
         </div>
     </div>
 </div>
@@ -509,38 +595,51 @@
                 
                 let adminButtonsHtml = '';
                 if (currentRole === 'ADMIN') {
-                    const hardDeleteBtn = `<button onclick="event.stopPropagation(); hardDeletePerformance(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="background:#c0392b; font-size:0.75rem; padding:4px 8px; margin-left:4px;">영구 삭제</button>`;
+                    const hardDeleteBtn = `<button onclick="event.stopPropagation(); hardDeletePerformance(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; margin-left:4px;">영구 삭제</button>`;
                     if (p.active) {
-                        adminButtonsHtml = `<button onclick="event.stopPropagation(); deactivatePerformance(${p.id});" style="background:#e74c3c; font-size:0.75rem; padding:4px 8px;">비활성화</button>` + hardDeleteBtn;
+                        adminButtonsHtml = `<button onclick="event.stopPropagation(); deactivatePerformance(${p.id});" style="background:#fef3c7; color:#d97706; border:1px solid #fde68a; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">비활성화</button>` + hardDeleteBtn;
                     } else {
-                        adminButtonsHtml = `<button onclick="event.stopPropagation(); activatePerformance(${p.id});" style="background:#2ecc71; font-size:0.75rem; padding:4px 8px;">재활성화(복구)</button>` + hardDeleteBtn;
+                        adminButtonsHtml = `<button onclick="event.stopPropagation(); activatePerformance(${p.id});" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">재활성화(복구)</button>` + hardDeleteBtn;
                     }
                 }
 
                 const statusBadgeHtml = (!p.active) ? 
-                    `<span style="background:#e74c3c; color:#fff; padding:3px 8px; font-size:0.8rem; font-weight:bold; margin-left:5px;">비활성화 됨</span>` : '';
+                    `<span style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; padding:3px 8px; font-size:0.75rem; font-weight:bold; border-radius:6px; margin-left:5px;">비활성화 됨</span>` : '';
 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <div>
-                            <span class="badge">${p.category || '공연'}</span>
+                            <span class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; font-size:0.8rem; padding:4px 10px; border-radius:6px;">${p.category || '공연'}</span>
                             ${statusBadgeHtml}
                         </div>
                         <div>${adminButtonsHtml}</div>
                     </div>
-                    <h3>${p.title} <span style="font-size:0.85rem; color:#64748b; font-weight:bold; margin-left:6px;">(${p.seatscale ? p.seatscale.toLocaleString() + '석' : '좌석 미정'})</span></h3>
-                    <p style="margin:5px 0; font-size:0.9rem;">공연장: ${p.venue} (${p.runtimeMinutes}분)</p>
+                    <h3 style="margin:0 0 8px 0; font-size:1.15rem; color:#0f172a; font-weight:750;">${p.title} <span style="font-size:0.85rem; color:#64748b; font-weight:600;">(${p.seatscale ? p.seatscale.toLocaleString() + '석' : '좌석 미정'})</span></h3>
+                    <p style="margin:0 0 12px 0; font-size:0.9rem; color:#64748b;">📍 ${p.venue} (${p.runtimeMinutes}분)</p>
                     ${p.originalBookId ? 
-						`<div style="margin:6px 0; font-size:0.85rem;">
-                            <span style="color:#d35400; font-weight:bold;">원작 도서: </span>
-                            <button onclick="event.stopPropagation(); location.href='/book-detail.html?id=${p.originalBookId}';" style="background:#e67e22; font-size:0.75rem; padding:3px 8px; margin-left:4px;">상세 보기 (ID: ${p.originalBookId})</button>
+						`<div style="margin:8px 0 14px 0; padding:10px 14px; background:#fff7ed; border-radius:8px; border:1px solid #ffedd5; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div style="font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                <span style="color:#c2410c; font-weight:bold;">📖 연관 원작 도서: </span>
+                                <span id="book-title-${p.id}" style="color:#334155; font-weight:bold;">도서 ID ${p.originalBookId}</span>
+                            </div>
+                            <button onclick="event.stopPropagation(); location.href='/book-detail.html?id=${p.originalBookId}';" style="background:#ea580c; color:#fff; border:none; font-weight:700; font-size:0.75rem; padding:5px 12px; border-radius:6px; cursor:pointer; white-space:nowrap;">도서 상세 ➔</button>
                         </div>` : ''}
-                    <div style="margin-top:10px; display:flex; gap:8px;">
-                        <button onclick="event.stopPropagation(); viewPerformanceDetail(${p.id});" style="background:#7f8c8d; font-size:0.8rem; padding:6px 10px;"> 상세보기</button>
-                        ${p.active ? `<button onclick="event.stopPropagation(); selectPerformance(${p.id}, '${p.title}');" style="background:#3498db; font-size:0.8rem; padding:6px 10px;">예매하기</button>` : ''}
+                    <div style="margin-top:14px; display:flex; gap:10px;">
+                        <button onclick="event.stopPropagation(); viewPerformanceDetail(${p.id});" style="flex:1; background:#f8fafc; color:#475569; border:1px solid #e2e8f0; font-weight:700; font-size:0.88rem; padding:10px 0; border-radius:8px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">상세보기</button>
+                        ${p.active ? `<button onclick="event.stopPropagation(); selectPerformance(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="flex:1; background:#2563eb; color:#fff; border:none; font-weight:700; font-size:0.88rem; padding:10px 0; border-radius:8px; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.2); transition:all 0.15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">예매하기</button>` : ''}
                     </div>
                 `;
                 listEl.appendChild(card);
+
+                if (p.originalBookId) {
+                    fetch(`/books/${p.originalBookId}`)
+                        .then(r => r.json())
+                        .then(d => {
+                            const el = document.getElementById(`book-title-${p.id}`);
+                            if (el && d && d.title) el.innerText = d.title;
+                        })
+                        .catch(() => {});
+                }
             });
         } catch (e) {
             log(`에러 발생: ${e.message}`);
@@ -649,27 +748,42 @@
                 const openTimeStr = openTime.toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 
                 const btn = document.createElement('button');
-                btn.style.marginRight = '10px';
-                btn.style.marginBottom = '10px';
+                btn.style.marginRight = '12px';
+                btn.style.marginBottom = '12px';
                 btn.style.textAlign = 'left';
-                btn.style.lineHeight = '1.5';
+                btn.style.lineHeight = '1.4';
                 btn.style.background = '#ffffff';
-                btn.style.color = '#1e293b';
-                btn.style.border = '2px solid #cbd5e1';
-                btn.style.borderRadius = '8px';
-                btn.style.padding = '10px 16px';
+                btn.style.color = '#0f172a';
+                btn.style.border = '1px solid #cbd5e1';
+                btn.style.borderRadius = '12px';
+                btn.style.padding = '12px 18px';
                 btn.style.cursor = 'pointer';
-                btn.style.transition = 'all 0.2s ease';
+                btn.style.transition = 'all 0.15s ease';
+                btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)';
                 btn.dataset.scheduleId = s.id;
 
-                const seatInfoStr = (s.totalSeats > 0) ? `<div style="font-size:0.85rem; color:#16a34a; font-weight:bold; margin-top:3px;">(잔여 ${s.availableSeats}석 / 총 ${s.totalSeats}석)</div>` : '';
+                const seatInfoStr = (s.totalSeats > 0) ? `<div style="font-size:0.85rem; color:#059669; font-weight:700; margin-top:4px;">잔여 ${s.availableSeats}석 / 총 ${s.totalSeats}석</div>` : '';
                 if (isOpen) {
-                    btn.innerHTML = `<div style="font-size:0.95rem; font-weight:bold;">${perfTimeStr}</div>${seatInfoStr}<div style="font-size:0.78rem; color:#64748b; margin-top:2px;">티켓 오픈: ${openTimeStr}</div>`;
-                    btn.onclick = () => loadSeats(s.id);
+                    btn.innerHTML = `<div style="font-size:1rem; font-weight:800; color:#0f172a;">${perfTimeStr}</div>${seatInfoStr}<div style="font-size:0.75rem; color:#64748b; margin-top:4px;">티켓 오픈: ${openTimeStr}</div>`;
+                    btn.onmouseover = () => { if (!btn.classList.contains('selected-sch')) { btn.style.borderColor = '#2563eb'; btn.style.background = '#eff6ff'; } };
+                    btn.onmouseout = () => { if (!btn.classList.contains('selected-sch')) { btn.style.borderColor = '#cbd5e1'; btn.style.background = '#ffffff'; } };
+                    btn.onclick = () => {
+                        document.querySelectorAll('#scheduleList button').forEach(b => {
+                            b.classList.remove('selected-sch');
+                            b.style.borderColor = '#cbd5e1';
+                            b.style.background = '#ffffff';
+                        });
+                        btn.classList.add('selected-sch');
+                        btn.style.borderColor = '#2563eb';
+                        btn.style.background = '#eff6ff';
+                        btn.style.boxShadow = '0 0 0 2px #2563eb';
+                        loadSeats(s.id);
+                    };
                 } else {
-                    btn.innerHTML = `<div style="font-size:0.95rem; font-weight:bold;">${perfTimeStr}</div>${seatInfoStr}<div style="font-size:0.78rem; color:#dc2626; font-weight:bold; margin-top:2px;">오픈 예정: ${openTimeStr}</div>`;
+                    btn.innerHTML = `<div style="font-size:1rem; font-weight:800; color:#94a3b8;">${perfTimeStr}</div>${seatInfoStr}<div style="font-size:0.75rem; color:#dc2626; font-weight:700; margin-top:4px;">오픈 예정: ${openTimeStr}</div>`;
                     btn.disabled = true;
-                    btn.style.opacity = '0.5';
+                    btn.style.opacity = '0.6';
+                    btn.style.background = '#f8fafc';
                     btn.style.cursor = 'not-allowed';
                 }
 
@@ -922,17 +1036,19 @@
             lastHoldExpiresAt = null;
         }
 
+        let currentModalSeatStatus = seat.status;
         const tossBtn = document.getElementById('btnTossPay');
         const confirmBtn = document.getElementById('btnConfirm');
         const cancelBtn = document.getElementById('btnCancel');
 
         if (seat.status === 'RESERVED') {
-            document.getElementById('modalTitle').innerText = `${seat.seatNumber} 예매 취소`;
-            document.getElementById('modalDesc').innerText = '이미 예매 확정이 완료된 좌석입니다. 예매를 취소하시겠습니까?';
+            document.getElementById('modalTitle').innerText = `${seat.seatNumber} 결제 취소 (환불)`;
+            document.getElementById('modalDesc').innerText = '이미 결제가 완료된 예매 좌석입니다. 결제를 취소(환불)하시겠습니까?';
             document.getElementById('modalTimer').style.display = 'none';
             if (tossBtn) tossBtn.style.display = 'none';
             if (confirmBtn) confirmBtn.style.display = 'none';
-            cancelBtn.innerText = '예매 취소';
+            cancelBtn.innerText = '결제 취소 (환불)';
+            cancelBtn.style.background = '#ef4444';
         } else {
             document.getElementById('modalTitle').innerText = `${seat.seatNumber} 선점 및 결제`;
             document.getElementById('modalDesc').innerText = '10분간 선점된 좌석입니다. 결제 방식을 선택하세요.';
@@ -940,6 +1056,7 @@
             if (tossBtn) tossBtn.style.display = 'block';
             if (confirmBtn) confirmBtn.style.display = 'block';
             cancelBtn.innerText = '선점 취소';
+            cancelBtn.style.background = '#f59e0b';
             startModalTimer();
         }
         document.getElementById('customModal').style.display = 'flex';
@@ -965,10 +1082,10 @@
             const timerEl = document.getElementById('modalTimer');
             const diffMs = expireTime - new Date().getTime();
             if (diffMs <= 0) {
-                timerEl.innerText = ' 선점 시간이 만료';
+                timerEl.innerText = '선점 시간이 만료되었습니다.';
                 clearInterval(modalTimerInterval);
                 setTimeout(() => {
-                    alert('선점 시간이 만료');
+                    alert('선점 시간이 만료되었습니다.');
                     closeCustomModal();
                     loadSeats(currentScheduleId);
                 }, 300);
@@ -977,9 +1094,8 @@
             const totalSec = Math.floor(diffMs / 1000);
             const min = String(Math.floor(totalSec / 60)).padStart(2, '0');
             const sec = String(totalSec % 60).padStart(2, '0');
-			timerEl.innerHTML = `<span style="color:red; font-size:0.9rem; font-weight:normal;">
-			선점시간동안 모든 작업이 완료되어야 합니다.</span><br><span style="color:black; font-size:1rem; font-weight:bold;">
-			남은 선점시간: ${min}분 ${sec}초</span>`;        };
+            timerEl.innerHTML = `<span style="color:#ef4444; font-size:0.85rem;">선점시간 동안 결제를 완료하셔야 합니다.</span><br><span style="color:var(--bk-text); font-size:0.95rem; font-weight:700;">남은 시간: ${min}분 ${sec}초</span>`;
+        };
 
         updateTimer();
         modalTimerInterval = setInterval(updateTimer, 1000);
@@ -992,13 +1108,40 @@
             alert('해당 좌석의 예매 번호 정보를 찾을 수 없습니다.');
             return;
         }
+
+        // RESERVED(결제완료) 상태에서 취소 누른 경우 ➔ 토스 환불 API로 연동
+        if (action === 'cancel' && currentModalSeatStatus === 'RESERVED') {
+            if (!confirm('정말로 결제를 취소하고 환불을 진행하시겠습니까?')) return;
+            const refundEndpoint = `/api/payments/PERF_${lastReservationId}/refund`;
+            try {
+                const res = await fetch(refundEndpoint, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ reason: '사용자 예매 취소' })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    log(`[성공] 공연 예매 결제 취소(환불) 완료!`);
+                    alert('공연 예매가 취소되고 환불 처리가 완료되었습니다!');
+                } else {
+                    log(`[실패] 환불 실패: ${data.message || res.status}`);
+                    alert(`[환불 실패] ${data.message || '환불 처리에 실패했습니다.'}`);
+                }
+                loadSeats(currentScheduleId);
+            } catch (e) {
+                log(`환불 에러: ${e.message}`);
+                alert(`환불 통신 에러: ${e.message}`);
+            }
+            return;
+        }
+
+        // 일반 선점 취소 또는 즉시 확정
         const endpoint = `/api/reservations/${lastReservationId}/${action}`;
         try {
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: getAuthHeaders()
             });
-            //63. 반환된 값 포장 
             const data = await res.json();
             if (res.ok && data.success) {
                 log(`[성공] ${action} 성공! 예매 상태: ${data.data.status}`);
@@ -1007,7 +1150,6 @@
                 log(`[실패] ${action} 실패: ${data.message}`);
                 alert(`[실패] ${data.message}`);
             }
-            //64. 좌석상태 다시 로딩 
             loadSeats(currentScheduleId);
         } catch (e) {
             log(`에러: ${e.message}`);
