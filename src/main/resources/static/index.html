@@ -81,8 +81,8 @@
             transform: translateY(-1px);
         }
 
-        .bk-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; margin-top: 20px; }
-        .bk-perf-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; transition: all 0.2s ease; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .bk-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; margin-top: 20px; }
+        .bk-perf-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 22px; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .bk-perf-card:hover { border-color: #2563eb; transform: translateY(-4px); box-shadow: 0 14px 28px rgba(37,99,235,0.08); }
     </style>
 </head>
@@ -587,7 +587,10 @@
             listEl.innerHTML = '';
             performances.forEach(p => {
                 const card = document.createElement('div');
-                card.className = 'card';
+                card.className = 'bk-perf-card';
+                card.style.display = 'flex';
+                card.style.flexDirection = 'column';
+                card.style.justifyContent = 'space-between';
                 if (!p.active) {
                     card.style.opacity = '0.6';
                     card.style.border = '1px dashed #e74c3c';
@@ -595,7 +598,7 @@
                 
                 let adminButtonsHtml = '';
                 if (currentRole === 'ADMIN') {
-                    const hardDeleteBtn = `<button onclick="event.stopPropagation(); hardDeletePerformance(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer; margin-left:4px;">영구 삭제</button>`;
+                    const hardDeleteBtn = `<button onclick="event.stopPropagation(); hardDeletePerformance(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">영구 삭제</button>`;
                     if (p.active) {
                         adminButtonsHtml = `<button onclick="event.stopPropagation(); deactivatePerformance(${p.id});" style="background:#fef3c7; color:#d97706; border:1px solid #fde68a; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">비활성화</button>` + hardDeleteBtn;
                     } else {
@@ -604,33 +607,57 @@
                 }
 
                 const statusBadgeHtml = (!p.active) ? 
-                    `<span style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; padding:3px 8px; font-size:0.75rem; font-weight:bold; border-radius:6px; margin-left:5px;">비활성화 됨</span>` : '';
+                    `<span style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; padding:3px 8px; font-size:0.75rem; font-weight:bold; border-radius:6px;">비활성화 됨</span>` : '';
 
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <div>
+                    <div>
+                        <!-- 관리자 전용 제어 바 (위치 깨짐 방지) -->
+                        ${adminButtonsHtml ? `
+                        <div style="margin-bottom:12px; padding:6px 10px; background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                            <span style="font-size:0.75rem; font-weight:700; color:#475569;">⚙️ 관리자 제어</span>
+                            <div style="display:flex; gap:6px;">${adminButtonsHtml}</div>
+                        </div>` : ''}
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                             <span class="badge" style="background:#eff6ff; color:#2563eb; font-weight:700; font-size:0.8rem; padding:4px 10px; border-radius:6px;">${p.category || '공연'}</span>
                             ${statusBadgeHtml}
                         </div>
-                        <div>${adminButtonsHtml}</div>
-                    </div>
-                    <h3 style="margin:0 0 8px 0; font-size:1.15rem; color:#0f172a; font-weight:750;">${p.title} <span style="font-size:0.85rem; color:#64748b; font-weight:600;">(${p.seatscale ? p.seatscale.toLocaleString() + '석' : '좌석 미정'})</span></h3>
-                    <p style="margin:0 0 12px 0; font-size:0.9rem; color:#64748b;">📍 ${p.venue} (${p.runtimeMinutes}분)</p>
-                    ${p.originalBookId ? 
-						`<div style="margin:8px 0 14px 0; padding:10px 14px; background:#fff7ed; border-radius:8px; border:1px solid #ffedd5; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-                            <div style="font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                <span style="color:#c2410c; font-weight:bold;">📖 연관 원작 도서: </span>
-                                <span id="book-title-${p.id}" style="color:#334155; font-weight:bold;">도서 ID ${p.originalBookId}</span>
+
+                        <h3 style="margin:0 0 12px 0; font-size:1.15rem; color:#0f172a; font-weight:750; line-height:1.4; min-height:2.8rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                            ${p.title}
+                        </h3>
+
+                        <!-- 공연 상세 메타 정보 박스 -->
+                        <div style="background:#f8fafc; border:1px solid #f1f5f9; border-radius:10px; padding:12px 14px; margin-bottom:12px; font-size:0.88rem; color:#475569; display:flex; flex-direction:column; gap:6px;">
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>📍 <b>공연장:</b> ${p.venue}</span>
+                                <span style="color:#64748b; font-weight:600;">${p.seatscale ? p.seatscale.toLocaleString() + '석' : '좌석 미정'}</span>
                             </div>
-                            <button onclick="event.stopPropagation(); location.href='/book-detail.html?id=${p.originalBookId}';" style="background:#ea580c; color:#fff; border:none; font-weight:700; font-size:0.75rem; padding:5px 12px; border-radius:6px; cursor:pointer; white-space:nowrap;">도서 상세 ➔</button>
-                        </div>` : ''}
-                    <div style="margin-top:14px; display:flex; gap:10px;">
-                        <button onclick="event.stopPropagation(); viewPerformanceDetail(${p.id});" style="flex:1; background:#f8fafc; color:#475569; border:1px solid #e2e8f0; font-weight:700; font-size:0.88rem; padding:10px 0; border-radius:8px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">상세보기</button>
+                            <div style="display:flex; justify-content:space-between;">
+                                <span>💵 <b>티켓 가격:</b> <span id="price-${p.id}" style="color:#0f172a; font-weight:700;">150,000원 ~</span></span>
+                                <span>⏱️ <b>관람:</b> ${p.runtimeMinutes}분</span>
+                            </div>
+                            <div id="first-schedule-${p.id}">🕒 <b>첫 회차:</b> <span style="color:#64748b;">회차 확인 중...</span></div>
+                        </div>
+
+                        ${p.originalBookId ? 
+                            `<div style="margin:0 0 14px 0; padding:10px 14px; background:#fff7ed; border-radius:8px; border:1px solid #ffedd5; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                                <div style="font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    <span style="color:#c2410c; font-weight:bold;">📖 연관 원작 도서: </span>
+                                    <span id="book-title-${p.id}" style="color:#334155; font-weight:bold;">도서 ID ${p.originalBookId}</span>
+                                </div>
+                                <button onclick="event.stopPropagation(); location.href='/book-detail.html?id=${p.originalBookId}';" style="background:#ea580c; color:#fff; border:none; font-weight:700; font-size:0.75rem; padding:5px 12px; border-radius:6px; cursor:pointer; white-space:nowrap;">도서 상세 ➔</button>
+                            </div>` : ''}
+                    </div>
+
+                    <div style="margin-top:auto; padding-top:12px; display:flex; gap:10px;">
+                        <button onclick="event.stopPropagation(); viewPerformanceDetail(${p.id});" style="flex:1; background:#f8fafc; color:#475569; border:1px solid #cbd5e1; font-weight:700; font-size:0.88rem; padding:10px 0; border-radius:8px; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">상세보기</button>
                         ${p.active ? `<button onclick="event.stopPropagation(); selectPerformance(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="flex:1; background:#2563eb; color:#fff; border:none; font-weight:700; font-size:0.88rem; padding:10px 0; border-radius:8px; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.2); transition:all 0.15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">예매하기</button>` : ''}
                     </div>
                 `;
                 listEl.appendChild(card);
 
+                // 1. 연계 원작 도서명 비동기 조회
                 if (p.originalBookId) {
                     fetch(`/books/${p.originalBookId}`)
                         .then(r => r.json())
@@ -640,6 +667,42 @@
                         })
                         .catch(() => {});
                 }
+
+                // 2. 첫 회차 공연 일정 및 좌석 가격 비동기 조회
+                fetch(`/api/performances/${p.id}/schedules`)
+                    .then(r => r.json())
+                    .then(d => {
+                        const schedules = (d && Array.isArray(d.data)) ? d.data : [];
+                        const scheduleEl = document.getElementById(`first-schedule-${p.id}`);
+                        const priceEl = document.getElementById(`price-${p.id}`);
+                        if (schedules.length > 0) {
+                            const first = schedules[0];
+                            const dt = new Date(first.performanceTime);
+                            const dtStr = `${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+                            if (scheduleEl) scheduleEl.innerHTML = `🕒 <b>첫 회차:</b> <span style="color:#2563eb; font-weight:700;">${dtStr}</span>`;
+
+                            // 첫 회차 좌석 가격 조회
+                            fetch(`/api/reservations/schedules/${first.id}/seats`)
+                                .then(sr => sr.json())
+                                .then(sd => {
+                                    const seats = (sd && Array.isArray(sd.data)) ? sd.data : [];
+                                    if (seats.length > 0 && priceEl) {
+                                        const prices = seats.map(s => s.price || 0).filter(pr => pr > 0);
+                                        if (prices.length > 0) {
+                                            const minP = Math.min(...prices);
+                                            priceEl.innerText = `${minP.toLocaleString()}원 ~`;
+                                        }
+                                    }
+                                })
+                                .catch(() => {});
+                        } else {
+                            if (scheduleEl) scheduleEl.innerHTML = `🕒 <b>첫 회차:</b> <span style="color:#94a3b8;">등록된 회차 없음</span>`;
+                        }
+                    })
+                    .catch(() => {
+                        const scheduleEl = document.getElementById(`first-schedule-${p.id}`);
+                        if (scheduleEl) scheduleEl.innerHTML = `🕒 <b>첫 회차:</b> <span style="color:#94a3b8;">회차 미정</span>`;
+                    });
             });
         } catch (e) {
             log(`에러 발생: ${e.message}`);

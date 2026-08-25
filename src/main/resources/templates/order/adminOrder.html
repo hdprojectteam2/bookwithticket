@@ -2,14 +2,34 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>관리자 주문 관리</title>
+<title>관리자 주문 관리 | Booketing</title>
 <script src="/js/order/admin-order.js" defer></script>
+<link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/order/admin-order.css">
-<body>
-	<div style="margin-bottom: 15px;">
-		<a href="/mainpage.html" style="font-size: 1.3rem; font-weight: bold; color: #2c3e50; text-decoration: none;">BookWithTicket</a>
-	</div>
-	<h1>관리자 주문 관리</h1>
+</head>
+<body class="bk-page bk-soft-page">
+<div class="bk-wide-shell" style="padding-top:16px;">
+    <header class="bk-topbar" style="margin-bottom:24px;">
+        <a href="/mainpage.html" class="bk-brand">
+            <span class="bk-logo">B</span>
+            <span>Booketing</span>
+        </a>
+        <nav class="bk-nav">
+            <a href="/mainpage.html">홈</a>
+            <a href="/books.html">도서</a>
+            <a href="/index.html">공연</a>
+            <a href="/cart">장바구니</a>
+            <a href="/history">구매내역</a>
+            <a href="/mypage.html">마이페이지</a>
+        </nav>
+    </header>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;">
+        <h1 style="margin:0; font-size:1.6rem; color:#0f172a; font-weight:800;">📦 관리자 주문/예매 관리</h1>
+        <button onclick="location.href='/admin.html'" style="background:#2563eb; color:#fff; padding:10px 20px; border-radius:8px; font-weight:700; font-size:0.9rem; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(37,99,235,0.2); transition:all 0.15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+            📚 도서 관리자로 이동 ➔
+        </button>
+    </div>
 
 	<div class="admin-tabs">
 		<button type="button" id="book-tab" class="admin-tab active" onclick="changeAdminTab('book')">
@@ -68,9 +88,6 @@
 
 	</section>
 
-<div style="position:fixed; top:15px; right:15px; z-index:9999; display:flex; gap:10px;">
-    <button onclick="location.href='/mainpage.html'" style="background:#34495e; color:#fff; border:none; padding:8px 16px; cursor:pointer; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2);">메인페이지로 이동</button>
-    <button onclick="location.href='/admin.html'" style="background:#8e44ad; color:#fff; border:none; padding:8px 16px; cursor:pointer; font-weight:bold; box-shadow:0 2px 5px rgba(0,0,0,0.2);">도서 관리자 이동</button>
 </div>
 
 </body>

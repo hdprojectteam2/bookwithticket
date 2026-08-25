@@ -7,6 +7,7 @@
 
 .history-tabs {
     display: flex;
+ 
     width: 100%;
     margin: 0 auto;
     gap: 20px;
@@ -35,6 +36,7 @@
     border: 1px solid var(--bk-blue);
     background-color: var(--bk-blue);
     font-weight: 600;
+ 
 }
 
 .history-tabs button.active:hover {
@@ -236,6 +238,7 @@
 }
 
 .history-actions button {
+ 
     padding: 10px 20px;
     border-radius: 10px;
     cursor: pointer;
@@ -250,4 +253,5 @@
     border-color:#93c5fd;
     background:var(--bk-blue-soft);
     color:var(--bk-blue)
+ 
 }

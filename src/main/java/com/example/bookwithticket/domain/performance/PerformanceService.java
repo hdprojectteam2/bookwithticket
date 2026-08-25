@@ -58,9 +58,13 @@ public class PerformanceService {
 
     //detail에서 사용 
     public PerformanceResponse getPerformance(Long id) {
+        return getPerformance(id, false);
+    }
+
+    public PerformanceResponse getPerformance(Long id, boolean allowInactive) {
         Performance performance = performanceRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "공연을 찾을 수 없습니다."));
-        if (!performance.isActive()) {
+        if (!performance.isActive() && !allowInactive) {
             throw new BusinessException(HttpStatus.NOT_FOUND, "삭제되거나 비활성화된 공연입니다.");
         }
         return PerformanceResponse.from(performance);

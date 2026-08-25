@@ -95,8 +95,17 @@ public class PerformanceController {
 
     //상세보기 
     @GetMapping("/{id}")
-    public ApiResponse<PerformanceResponse> getPerformance(@PathVariable("id") Long id) {
-        return ApiResponse.ok(performanceService.getPerformance(id));
+    public ApiResponse<PerformanceResponse> getPerformance(
+            @PathVariable("id") Long id,
+            Authentication authentication) {
+        boolean allowInactive = false;
+        if (authentication != null && authentication.isAuthenticated()) {
+            Member member = memberRepository.findByEmail(authentication.getName()).orElse(null);
+            if (member != null && "ADMIN".equalsIgnoreCase(member.getRole())) {
+                allowInactive = true;
+            }
+        }
+        return ApiResponse.ok(performanceService.getPerformance(id, allowInactive));
     }
 
     //회차조회
