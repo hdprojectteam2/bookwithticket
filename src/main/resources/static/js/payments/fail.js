@@ -1,19 +1,35 @@
 async function savePaymentFailure() {
-    const params = new URLSearchParams(window.location.search);
 
-    const orderId = params.get("orderId");
+    const params =
+        new URLSearchParams(window.location.search);
 
-    const code = params.get("code") || "PAYMENT_FAILED";
+    const orderId =
+        params.get("orderId");
 
-    const message = params.get("message") || "결제에 실패했습니다.";
+    const code =
+        params.get("code")
+        || "PAYMENT_FAILED";
 
-    setText("error-code", code);
+    const message =
+        params.get("message")
+        || "결제에 실패했습니다.";
 
-    setText("error-message", message);
+
+    setText(
+        "error-code",
+        code
+    );
+
+    setText(
+        "error-message",
+        message
+    );
+
 
     if (!orderId) {
         return;
     }
+
 
     try {
 
@@ -24,7 +40,6 @@ async function savePaymentFailure() {
                     method: "POST",
 
                     headers: {
-
                         "Content-Type":
                             "application/json",
 
@@ -33,7 +48,6 @@ async function savePaymentFailure() {
 
                     body:
                         JSON.stringify({
-
                             orderId:
                                 orderId,
 
@@ -48,78 +62,149 @@ async function savePaymentFailure() {
 
 
         if (!response.ok) {
-            const responseMessage = await response.text();
-            console.error("결제 실패 기록 저장 실패:",responseMessage);
+
+            const responseMessage =
+                await response.text();
+
+            console.error(
+                "결제 실패 기록 저장 실패:",
+                responseMessage
+            );
         }
 
     } catch (error) {
-        console.error("결제 실패 기록 저장 중 오류:",error);
+
+        console.error(
+            "결제 실패 기록 저장 중 오류:",
+            error
+        );
     }
 }
 
 
 
 function setupRetryButton() {
+
     const params = new URLSearchParams(window.location.search);
 
     const orderId = params.get("orderId");
 
-
     const retryButton = document.getElementById("retry-button");
 
-    if (!retryButton) {
 
+    if (!retryButton) {
         return;
     }
 
 
-    retryButton.addEventListener("click", function () {
-            if (!orderId) {
-                alert("주문 정보를 확인할 수 없습니다.");
-                return;
-            }
+    const isPerformance = orderId && orderId.startsWith("PERF_");
 
-            location.href = `/payments/checkout?orderNumber=${encodeURIComponent(orderId)}`;
+
+    if (isPerformance) {
+
+        retryButton.textContent = "다시 결제하기";
+
+
+        retryButton.addEventListener(
+            "click",
+            function() {
+                const reservationId = orderId.replace(/^PERF_/, "");
+
+                location.href = `/payments/checkout?orderNumber=${encodeURIComponent(reservationId)}`;
+            }
+        );
+
+    } else {
+
+        retryButton.textContent =
+            "장바구니로 돌아가기";
+
+
+        retryButton.addEventListener(
+            "click",
+            function() {
+
+                location.href =
+                    "/cart";
+            }
+        );
+    }
 }
-    );
-}
+
+
 
 function setupHomeButton() {
-    const homeButton = document.getElementById("home-button");
+
+    const homeButton =
+        document.getElementById(
+            "home-button"
+        );
+
 
     if (!homeButton) {
         return;
     }
 
-    homeButton.addEventListener("click", function () {
-            location.href = "/mainpage.html";
+
+    homeButton.addEventListener(
+        "click",
+        function() {
+
+            location.href =
+                "/mainpage.html";
         }
     );
 }
 
+
+
 function getAuthHeaders() {
-    const token = localStorage.getItem("token");
+
+    const token =
+        localStorage.getItem(
+            "token"
+        );
+
 
     if (!token) {
-
-        throw new Error("로그인이 필요합니다.");
+        throw new Error(
+            "로그인이 필요합니다."
+        );
     }
 
-    return {
 
-        "Authorization": `Bearer ${token}`
+    return {
+        "Authorization":
+            `Bearer ${token}`
     };
 }
 
-function setText(elementId, value) {
-    const element = document.getElementById(elementId);
+
+
+function setText(
+    elementId,
+    value
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
 
     if (!element) {
         return;
     }
-    element.textContent = value ?? "";
+
+
+    element.textContent =
+        value ?? "";
 }
 
+
+
 savePaymentFailure();
+
 setupRetryButton();
+
 setupHomeButton();

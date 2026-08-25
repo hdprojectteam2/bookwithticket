@@ -1,138 +1,137 @@
 .history-card {
-    background: white;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 25px;
+	background: white;
+	border-radius: 12px;
+	padding: 15px;
+	margin-bottom: 25px;
 }
 
 .history-tabs {
-    display: flex;
- 
-    width: 100%;
-    margin: 0 auto;
-    gap: 20px;
+	display: flex;
+	width: 100%;
+	margin: 0 auto;
+	gap: 20px;
 }
 
 .history-tabs button {
-    position: relative;
-    border-radius: 10px;
-    padding: 14px 24px;
-    border: 1px solid #cbd5e1;
+	position: relative;
+	border-radius: 999px;
+	padding: 9px 20px;
+	border: 1px solid #cbd5e1;
 	background: white;
-    cursor: pointer;
+	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+	cursor: pointer;
 	color: #334155;
-    font-size: 16px;
-    font-weight: 800;
+	font-size: 11px;
+	font-weight: 600;
 }
 
 .history-tabs button:hover {
-    border-color:#93c5fd;
-    background:var(--bk-blue-soft);
-    color:var(--bk-blue)
+	border-color: #93c5fd;
+	background: var(--bk-blue-soft);
+	color: var(--bk-blue)
 }
 
 .history-tabs button.active {
-    color: white;
-    border: 1px solid var(--bk-blue);
-    background-color: var(--bk-blue);
-    font-weight: 600;
- 
+	color: white;
+	border: 1px solid var(--bk-blue);
+	background-color: var(--bk-blue);
+	font-weight: 600;
 }
 
 .history-tabs button.active:hover {
-    border-color:var(--bk-blue-dark);
-    background:var(--bk-blue-dark)
+	border-color: var(--bk-blue-dark);
+	background: var(--bk-blue-dark)
 }
 
-#book_sub_title, #ticket_sub_title{
-	font-size:20px;
+#book_sub_title, #ticket_sub_title {
+	font-size: 20px;
 	font-weight: bold;
 	margin-bottom: 10px;
 }
 
 .history-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
 }
 
-.orderNumber{
+.orderNumber {
 	display: inline-block;
-	font-size:15px;
+	font-size: 15px;
 	color: oklch(70.4% 0.04 256.788);
 }
 
 .history-status {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: wrap;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	flex-wrap: wrap;
 }
 
 .delivery-status {
-    display: inline-block;
-    padding: 8px 18px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: bold;
+	display: inline-block;
+	padding: 8px 18px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: bold;
 }
 
 .delivery-status.preparing {
-    background-color: #fff4df;
-    color: #e89900;
+	background-color: #fff4df;
+	color: #e89900;
 }
 
 .delivery-status.shipping {
-    background-color: #eef4ff;
-    color: #2463eb;
+	background-color: #eef4ff;
+	color: #2463eb;
 }
 
 .delivery-status.completed {
-    background-color: #edf9f1;
-    color: #20a052;
+	background-color: #edf9f1;
+	color: #20a052;
 }
 
 .refund-status {
-    display: inline-block;
-    padding: 8px 18px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: bold;
+	display: inline-block;
+	padding: 8px 18px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: bold;
 }
 
 .refund-status.requested {
-    background-color: #fff4df;
-    color: #e89900;
+	background-color: #fff4df;
+	color: #e89900;
 }
 
 .refund-status.completed {
-    background-color: #edf9f1;
-    color: #20a052;
+	background-color: #edf9f1;
+	color: #20a052;
 }
 
 .refund-status.rejected {
-    background-color: #fff0f0;
-    color: #e54848;
+	background-color: #fff0f0;
+	color: #e54848;
 }
 
-.history-actions{
+.history-actions {
 	display: flex;
-    flex-direction: column;
-    gap: 5px;
+	flex-direction: column;
+	gap: 5px;
 }
 
 .history-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 20px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 20px;
 	border-bottom: 1px solid oklch(70.4% 0.04 256.788);
 }
 
-.empty-history{
+.empty-history {
 	padding: 80px 20px;
 	background-color: white;
 	border-radius: 16px;
@@ -141,151 +140,211 @@
 	font-size: 16px;
 }
 
-.book-item{
+.book-item {
 	display: flex;
 	align-items: center;
-    gap: 25px;
-    margin-bottom: 15px;
+	gap: 25px;
+	margin-bottom: 15px;
 }
 
 .book-info {
 	display: flex;
-    flex-direction: column;
-    gap: 5px;
+	flex-direction: column;
+	gap: 5px;
 }
 
 .book-info h3, .book-info p {
-    margin: 0;
+	margin: 0;
 }
 
 .book-detail-box {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 7px;
-    color: #94a3b8;
-    font-size: 14px;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin-top: 7px;
+	color: #94a3b8;
+	font-size: 14px;
 }
 
-.book-price{
+.book-price {
 	font-weight: bold;
 }
 
 /* 티켓 */
-
 .performance-item {
-    display: flex;
-    align-items: center;
-    gap: 25px;
+	display: flex;
+	align-items: center;
+	gap: 25px;
 }
 
 .performance-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
 }
 
-.performance-info h3,
-.performance-info p {
-    margin: 0;
+.performance-info h3, .performance-info p {
+	margin: 0;
 }
 
 .performance-detail-box {
-    gap: 5px;
-    color: oklch(70.4% 0.04 256.788);
+	gap: 5px;
+	color: oklch(70.4% 0.04 256.788);
 }
 
 .performance-seat {
-    font-weight: bold;
+	font-weight: bold;
 }
 
 .reservation-status {
-    display: inline-block;
-    padding: 8px 18px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: bold;
+	display: inline-block;
+	padding: 8px 18px;
+	border-radius: 999px;
+	font-size: 13px;
+	font-weight: bold;
 }
 
 .reservation-status.confirmed {
-    background-color: #edf9f1;
-    color: #20a052;
+	background-color: #edf9f1;
+	color: #20a052;
 }
 
 .reservation-status.cancelled {
-    background-color: #fff0f0;
-    color: #e54848;
+	background-color: #fff0f0;
+	color: #e54848;
 }
 
 .history-more-button {
-    display: block;
-    margin: 10px auto 0;
-    padding: 0;
-    border: none;
-    background: none;
-    font-size: 15px;
-    color: oklch(70.4% 0.04 256.788);
+	display: block;
+	margin: 10px auto 0;
+	padding: 0;
+	border: none;
+	background: none;
+	font-size: 15px;
+	color: oklch(70.4% 0.04 256.788);
 }
 
 .history-more-button:hover {
 	cursor: pointer;
-    text-decoration: underline;
+	text-decoration: underline;
 }
 
 .history-actions button {
- 
-    padding: 10px 20px;
-    border-radius: 10px;
-    cursor: pointer;
+	padding: 10px 20px;
+	border-radius: 10px;
+	cursor: pointer;
 	border: 1px solid #cbd5e1;
 	background: white;
-    color: #334155;
-    font-size: 16px;
-    font-weight: 800;
+	color: #334155;
+	font-size: 16px;
+	font-weight: 800;
 }
 
 .history-actions button:hover {
-    border-color:#93c5fd;
-    background:var(--bk-blue-soft);
-    color:var(--bk-blue)
+	border-color: #93c5fd;
+	background: var(--bk-blue-soft);
+	color: var(--bk-blue)
 }
 
-.book-image-wrap,
-.performance-image-wrap {
-    flex-shrink: 0;
-    overflow: hidden;
-    background: #edf1fa;
+.book-image-wrap, .performance-image-wrap {
+	flex-shrink: 0;
+	overflow: hidden;
+	background: #edf1fa;
 }
 
 .book-image-wrap {
-    width: 120px;
-    height: 190px;
+	width: 120px;
+	height: 190px;
 }
 
 .performance-image-wrap {
-    width: 120px;
-    height: 190px;
+	width: 120px;
+	height: 190px;
 }
 
-.book-image,
-.performance-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.book-image, .performance-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
-.book-image-placeholder,
-.performance-image-placeholder {
-    width: 100%;
-    height: 100%;
+.book-image-placeholder, .performance-image-placeholder {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #edf1fa;
+	color: #9fa9c1;
+	font-size: 28px;
+	font-weight: 700;
+}
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #edf1fa;
-    color: #9fa9c1;
-
-    font-size: 28px;
-    font-weight: 700;
+@media ( max-width : 768px) {
+	.history-card {
+		padding: 16px;
+		margin-bottom: 20px;
+	}
+	.history-top {
+		align-items: flex-start;
+		gap: 10px;
+	}
+	.orderNumber {
+		font-size: 13px;
+		word-break: break-all;
+	}
+	.delivery-status, .refund-status, .reservation-status {
+		flex-shrink: 0;
+		padding: 7px 12px;
+		font-size: 11px;
+	}
+	.history-bottom {
+		display: block;
+		padding-bottom: 15px;
+	}
+	.book-item, .performance-item {
+		align-items: flex-start;
+		gap: 14px;
+		margin-bottom: 18px;
+	}
+	.book-image-wrap, .performance-image-wrap {
+		width: 95px;
+		height: 140px;
+	}
+	.book-info, .performance-info {
+		flex: 1;
+		min-width: 0;
+	}
+	.book-info h3, .performance-info h3 {
+		font-size: 16px;
+		line-height: 1.4;
+		word-break: keep-all;
+	}
+	.book-info p, .performance-info p {
+		font-size: 12px;
+	}
+	.book-detail-box, .performance-detail-box {
+		font-size: 12px;
+		flex-wrap: wrap;
+	}
+	.book-price {
+		font-size: 15px;
+	}
+	.history-actions {
+		width: 100%;
+		margin-top: 10px;
+		flex-direction: row;
+		justify-content: flex-end;
+	}
+	.history-actions button {
+		width: auto;
+		min-width: 100px;
+		padding: 10px 16px;
+		font-size: 13px;
+		white-space: nowrap;
+	}
+	.history-more-button {
+		margin-top: 12px;
+		font-size: 13px;
+	}
 }
