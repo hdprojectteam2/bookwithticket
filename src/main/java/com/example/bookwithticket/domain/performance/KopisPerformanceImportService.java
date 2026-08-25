@@ -57,14 +57,17 @@ public class KopisPerformanceImportService {
             // KOPIS 공연시설 상세 API(/prfplc)에서 수신한 진짜 객석수 (없을 시 100석)
             int actualSeatScale = (item.getSeatscale() != null && item.getSeatscale() > 0) ? item.getSeatscale() : 100;
 
+            int runtime = parseRuntime(item.getPrfruntime());
+            String description = buildDescription(item, actualSeatScale);
+
             PerformanceCategory category = parseCategory(item.getGenrenm());
             Performance p = new Performance(
                     item.getPrfnm(),
                     category,
                     item.getFcltynm() != null ? item.getFcltynm() : "주요 공연장",
                     item.getPoster(),
-                    150,
-                    "KOPIS 수집 공연 (실제 수용 좌석 수: " + actualSeatScale + "석, 시간안내: " + (item.getDtguidance() != null ? item.getDtguidance() : "19:30") + "): " + item.getPrfnm(),
+                    runtime,
+                    description,
                     null
             );
             p.setSeatscale(actualSeatScale);
@@ -197,5 +200,52 @@ public class KopisPerformanceImportService {
         if (upper.contains("클래식") || upper.contains("CLASSIC")) return PerformanceCategory.CLASSIC;
         if (upper.contains("전시") || upper.contains("EXHIBITION")) return PerformanceCategory.EXHIBITION;
         return PerformanceCategory.MUSICAL;
+    }
+
+    private int parseRuntime(String runtimeStr) {
+        if (runtimeStr == null || runtimeStr.isBlank()) return 150;
+        try {
+            String cleaned = runtimeStr.replaceAll("[^0-9]", "");
+            if (!cleaned.isEmpty()) {
+                int r = Integer.parseInt(cleaned);
+                if (r > 0 && r <= 600) return r;
+            }
+        } catch (Exception ignored) {}
+        return 150;
+    }
+
+    private String buildDescription(KopisPerformanceResponse.Item item, int seatScale) {
+        StringBuilder sb = new StringBuilder();
+
+        // 1. 실제 줄거리/시놉시스가 있는 경우
+        if (item.getSty() != null && !item.getSty().isBlank()) {
+            sb.append(item.getSty().trim());
+        } else {
+            sb.append(item.getPrfnm()).append(" 공식 공연 안내입니다.");
+        }
+
+        // 2. 부가 공연 메타 정보 깔끔하게 추가
+        List<String> metaList = new ArrayList<>();
+        if (item.getPrfcast() != null && !item.getPrfcast().isBlank()) {
+            metaList.add("• 출연진: " + item.getPrfcast().trim());
+        }
+        if (item.getPcseguidance() != null && !item.getPcseguidance().isBlank()) {
+            metaList.add("• 티켓가격: " + item.getPcseguidance().trim());
+        }
+        if (item.getPrfage() != null && !item.getPrfage().isBlank()) {
+            metaList.add("• 관람연령: " + item.getPrfage().trim());
+        }
+        if (item.getDtguidance() != null && !item.getDtguidance().isBlank()) {
+            metaList.add("• 공연시간: " + item.getDtguidance().trim());
+        }
+        if (seatScale > 0) {
+            metaList.add("• 객석규모: " + seatScale + "석");
+        }
+
+        if (!metaList.isEmpty()) {
+            sb.append("\n\n[공연 상세 정보]\n").append(String.join("\n", metaList));
+        }
+
+        return sb.toString();
     }
 }

@@ -69,7 +69,7 @@ public class KopisPerformanceClient {
                                 String genre = getTagValue("genrenm", eElement);
 
                                 // KOPIS 상세 연동:
-                                // 1) /pblprfr/{mt20id} 호출 ➔ mt10id (공연시설ID), prfpdfrom(시작일), dtguidance(시간안내) 파싱
+                                // 1) /pblprfr/{mt20id} 호출 ➔ mt10id (공연시설ID), sty(줄거리), prfcast(출연진), pcseguidance(티켓가), prfruntime(관람시간), dtguidance(시간안내) 파싱
                                 // 2) /prfplc/{mt10id} 호출 ➔ seatscale (객석수) 실시간 파싱
                                 PerformanceDetailInfo detailInfo = fetchPerformanceDetailInfo(id);
 
@@ -78,7 +78,12 @@ public class KopisPerformanceClient {
                                             id, title, venue, poster, genre,
                                             detailInfo.seatscale,
                                             detailInfo.prfpdfrom,
-                                            detailInfo.dtguidance
+                                            detailInfo.dtguidance,
+                                            detailInfo.sty,
+                                            detailInfo.prfcast,
+                                            detailInfo.pcseguidance,
+                                            detailInfo.prfruntime,
+                                            detailInfo.prfage
                                     ));
                                 }
                             }
@@ -105,15 +110,21 @@ public class KopisPerformanceClient {
     private static class PerformanceDetailInfo {
         String mt10id;
         String prfpdfrom;
+        String prfpdto;
         String dtguidance;
         Integer seatscale;
+        String sty;
+        String prfcast;
+        String pcseguidance;
+        String prfruntime;
+        String prfage;
     }
 
     private PerformanceDetailInfo fetchPerformanceDetailInfo(String mt20id) {
         PerformanceDetailInfo info = new PerformanceDetailInfo();
         if (mt20id == null || mt20id.isBlank()) return info;
         try {
-            // 1단계: 공연 상세조회 -> mt10id, prfpdfrom, dtguidance 구하기
+            // 1단계: 공연 상세조회 -> mt10id, prfpdfrom, dtguidance, sty, prfcast, pcseguidance, prfruntime, prfage 구하기
             String perfDetailUrl = "http://www.kopis.or.kr/openApi/restful/pblprfr/" + mt20id + "?service=" + URLEncoder.encode(apiKey.trim(), StandardCharsets.UTF_8);
 
             URL url1 = new URL(perfDetailUrl);
@@ -134,7 +145,13 @@ public class KopisPerformanceClient {
                         Element eElement = (Element) nList.item(0);
                         info.mt10id = getTagValue("mt10id", eElement);
                         info.prfpdfrom = getTagValue("prfpdfrom", eElement);
+                        info.prfpdto = getTagValue("prfpdto", eElement);
                         info.dtguidance = getTagValue("dtguidance", eElement);
+                        info.sty = getTagValue("sty", eElement);
+                        info.prfcast = getTagValue("prfcast", eElement);
+                        info.pcseguidance = getTagValue("pcseguidance", eElement);
+                        info.prfruntime = getTagValue("prfruntime", eElement);
+                        info.prfage = getTagValue("prfage", eElement);
                     }
                 }
             }
