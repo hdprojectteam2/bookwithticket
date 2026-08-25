@@ -153,14 +153,43 @@ function createBookItem(item) {
 
     const price = item.quantity > 1 ? item.totalPrice : item.unitPrice;
 
+    const imageUrl = item.imageUrl || "";
+
     return `
         <div class="book-item">
 
-            <img
-                class="book-image"
-                src="${item.imageUrl}"
-                alt="${item.bookTitle}"
-            >
+			<div class="book-image-wrap">
+
+				${
+					imageUrl
+            			? `
+							<img
+								class="book-image"
+								src="${imageUrl}"
+								alt="${item.bookTitle}"
+								onerror="
+									this.style.display='none';
+									this.nextElementSibling.style.display='flex';
+								"
+							>
+
+							<div
+								class="book-image-placeholder"
+								style="display:none;"
+							>
+								B
+							</div>
+						`
+						: `
+						
+							<div class="book-image-placeholder">
+								B
+							</div>
+						`
+					}
+
+			</div>
+
 
             <div class="book-info">
 
@@ -220,16 +249,16 @@ async function loadPerformanceHistory() {
             return;
         }
 
-		const visibleHistories = histories.slice(0, performanceHistoryVisibleCount);
+        const visibleHistories = histories.slice(0, performanceHistoryVisibleCount);
 
-		let html =
-		    visibleHistories
-		        .map(history => createPerformanceHistory(history))
-		        .join("");
+        let html =
+            visibleHistories
+                .map(history => createPerformanceHistory(history))
+                .join("");
 
-		if (histories.length > performanceHistoryVisibleCount) {
+        if (histories.length > performanceHistoryVisibleCount) {
 
-		    html += `
+            html += `
 		        <button
 		            type="button"
 		            class="history-more-button"
@@ -238,9 +267,9 @@ async function loadPerformanceHistory() {
 		            더보기
 		        </button>
 		    `;
-		}
+        }
 
-		box.innerHTML = html;
+        box.innerHTML = html;
 
     } catch (error) {
         console.error("티켓 구매내역 조회 오류:", error);
@@ -272,6 +301,8 @@ function createPerformanceHistory(history) {
 
     const refundButton = getPerformanceRefundButton(history);
 
+	const posterUrl = history.posterUrl || "";
+	
     return `
         <article class="history-card">
 
@@ -294,11 +325,36 @@ function createPerformanceHistory(history) {
 
                     <div class="performance-item">
 
-                        <img
-                            class="performance-image"
-                            src="${history.posterUrl}"
-                            alt="${history.performanceTitle}"
-                        >
+						<div class="performance-image-wrap">
+	
+						    ${
+						        posterUrl
+						            ? `
+						                <img
+						                    class="performance-image"
+						                    src="${posterUrl}"
+						                    alt="${history.performanceTitle}"
+						                    onerror="
+						                        this.style.display='none';
+						                        this.nextElementSibling.style.display='flex';
+						                    "
+						                >
+	
+						                <div
+						                    class="performance-image-placeholder"
+						                    style="display:none;"
+						                >
+						                    🎭
+						                </div>
+						            `
+						            : `
+						                <div class="performance-image-placeholder">
+						                    🎭
+						                </div>
+						            `
+						    }
+	
+						</div>
 
                         <div class="performance-info">
 
@@ -429,7 +485,7 @@ function getPerformanceRefundButton(history) {
 }
 
 function moveToRefundPage(type, id, deliveryStatus) {
-    const url = "/refund.html?type=" + encodeURIComponent(type) + "&id=" + encodeURIComponent(id) 	+ "&deliveryStatus=" + encodeURIComponent(deliveryStatus || "");;
+    const url = "/refund.html?type=" + encodeURIComponent(type) + "&id=" + encodeURIComponent(id) + "&deliveryStatus=" + encodeURIComponent(deliveryStatus || "");;
 
     const width = 500;
     const height = 650;

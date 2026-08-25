@@ -125,7 +125,7 @@
         try{
         	let response;
             if (currentStatus === 'CONFIRMED') {
-            	window.open(`/refund.html?type=performance&id=${encodeURIComponent(`PERF_${reservationId}`)}`, "_blank", "width=500,height=650");
+            	window.open(`/refund.html?type=performance&id=${encodeURIComponent(`PERF_${reservationId}`)}`, "_blank", "width=500,height=600");
             	return;
             } else {
             	response = await fetch(

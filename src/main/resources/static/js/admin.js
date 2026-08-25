@@ -1,10 +1,67 @@
-window.onload = function(){
+window.onload = async function(){
 
+	const isAdmin = await checkAdmin();
+
+	if (!isAdmin) {
+	    return;
+	}
+	
     loadBooks();
 
 };
 
+// 관리자 접근 확인
 
+async function checkAdmin() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        alert("로그인이 필요합니다.");
+        location.href = "/login.html";
+        return false;
+    }
+
+    const response = await fetch("/api/admin/check", {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    if (response.ok) {
+        return true;
+    }
+
+    if (response.status === 403) {
+        alert("관리자만 접근할 수 있습니다.");
+        location.href = "/";
+        return false;
+    }
+
+    if (response.status === 401) {
+        alert("로그인이 필요합니다.");
+        location.href = "/login.html";
+        return false;
+    }
+
+    alert("관리자 페이지에 접근할 수 없습니다.");
+    location.href = "/";
+
+    return false;
+}
+
+function getAuthHeaders() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        throw new Error("로그인이 필요합니다.");
+    }
+
+    return {
+        Authorization: `Bearer ${token}`
+    };
+}
 
 
 // 도서 목록
