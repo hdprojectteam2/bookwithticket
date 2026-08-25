@@ -110,9 +110,10 @@ function renderBookDetail(order) {
     content.innerHTML = `
 
         <section class="detail-section">
-
+			
+			<span class="bk-eyebrow">Order History</span>
             <div class="title">
-                주문 정보
+                주문 내역
             </div>
 			
 			<div class="detail-item-list">
@@ -212,9 +213,12 @@ function renderBookDetail(order) {
         </section>
 
         <section class="detail-section">
+		
+			<span class="bk-eyebrow">Ordered product</span>
 
+		
             <div class="title">
-                주문상품
+                주문 상품
             </div>
 
 
@@ -228,8 +232,10 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
+			<span class="bk-eyebrow">Recipient information</span>
+		
             <div class="title">
-                수신자정보
+                수신자 정보
             </div>
 
 
@@ -265,8 +271,10 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
+			<span class="bk-eyebrow">Payment information</span>
+		
             <div class="title">
-                결제정보
+                결제 정보
             </div>
 
 
@@ -344,16 +352,43 @@ function renderBookDetail(order) {
 
 
 function createBookDetailItem(item) {
+	
+	const imageUrl = item.imageUrl || "";
 
     return `
 
         <div class="detail-book-item">
 
-            <img
-                class="detail-image"
-                src="${item.imageUrl || ""}"
-                alt="${item.bookTitle || "도서 이미지"}"
-            >
+			<div class="detail-image-wrap">
+
+				${
+					imageUrl
+						? `
+							<img
+								class="detail-image"
+								src="${imageUrl}"
+								alt="${item.bookTitle || "도서 이미지"}"
+								onerror="
+									this.style.display='none';
+									this.nextElementSibling.style.display='flex';
+								"
+							>
+
+							<div
+								class="detail-image-placeholder"
+								style="display:none;"
+							>
+								B
+							</div>
+						`
+						: `
+							<div class="detail-image-placeholder">
+								B
+							</div>
+						`
+				}
+
+			</div>
 
 
 			<div class="detail-book-info">
@@ -435,6 +470,7 @@ function renderPerformanceDetail(reservation) {
 
     setDetailTitle("공연 예매 상세");
 
+	const posterUrl = reservation.posterUrl || "";
 
     const refundStatus = reservation.refundStatus
 
@@ -468,6 +504,8 @@ function renderPerformanceDetail(reservation) {
     content.innerHTML = `
 
         <section class="detail-section">
+
+			<span class="bk-eyebrow">Reservation information</span>
 
             <div class="title">
                 예매 정보
@@ -505,6 +543,8 @@ function renderPerformanceDetail(reservation) {
         </section>
 
         <section class="detail-section">
+	
+			<span class="bk-eyebrow">Performance information</span>
 
             <div class="title">
                 공연 정보
@@ -514,11 +554,36 @@ function renderPerformanceDetail(reservation) {
             <div class="detail-performance">
 
 
-                <img
-                    class="detail-image"
-                    src="${reservation.posterUrl || ""}"
-                    alt="${reservation.performanceTitle || "공연 이미지"}"
-                >
+				<div class="detail-image-wrap">
+	
+				    ${
+				        posterUrl
+				            ? `
+				                <img
+				                    class="detail-image"
+				                    src="${posterUrl}"
+				                    alt="${reservation.performanceTitle || "공연 이미지"}"
+				                    onerror="
+				                        this.style.display='none';
+				                        this.nextElementSibling.style.display='flex';
+				                    "
+				                >
+	
+				                <div
+				                    class="detail-image-placeholder performance"
+				                    style="display:none;"
+				                >
+				                    🎭
+				                </div>
+				            `
+				            : `
+				                <div class="detail-image-placeholder performance">
+				                    🎭
+				                </div>
+				            `
+				    }
+	
+				</div>
 
 
 				<div class="detail-performance-info">
@@ -564,9 +629,11 @@ function renderPerformanceDetail(reservation) {
         </section>
 
         <section class="detail-section">
+	
+			<span class="bk-eyebrow">Payment information</span>
 
             <div class="title">
-                결제정보
+                결제 정보
             </div>
 
 

@@ -88,10 +88,19 @@ body {
 	color: #333;
 }
 
+.cancel-button:hover{
+	background: #f8fafc;
+}
+
 .submit-button {
 	border: none;
-	background: #4f6bea;
+	background: #2563eb;
 	color: #fff;
+}
+
+.submit-button:hover{
+	background: #1d4ed8;
+
 }
 
 .submit-button:disabled {

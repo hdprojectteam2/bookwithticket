@@ -6,6 +6,7 @@ window.addEventListener(
     initializeAdminPage
 );
 
+
 async function initializeAdminPage() {
 
     try {
@@ -1303,23 +1304,6 @@ function renderPerformanceOrders(reservations) {
 
             `)
             .join("");
-}
-
-function togglePerformanceDetail(reservationId) {
-
-    const detailRow = document.getElementById(`performance-detail-${reservationId}`);
-
-    if (!detailRow) {
-        return;
-    }
-
-    if (detailRow.style.display === "none" || !detailRow.style.display) {
-     
-		detailRow.style.display = "table-row";
-
-    } else {
-        detailRow.style.display = "none";
-    }
 }
 
 function createPerformanceDetail(reservation) {

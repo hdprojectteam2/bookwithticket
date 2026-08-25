@@ -42,13 +42,6 @@
     background:var(--bk-blue-dark)
 }
 
-#bookHistory img, #ticketHistory img {
-    width: 120px;
-    height: 160px;
-    object-fit: cover;
-    border-radius: 12px;
-}
-
 #book_sub_title, #ticket_sub_title{
 	font-size:20px;
 	font-weight: bold;
@@ -70,9 +63,11 @@
 
 .history-status {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .delivery-status {
@@ -250,4 +245,44 @@
     border-color:#93c5fd;
     background:var(--bk-blue-soft);
     color:var(--bk-blue)
+}
+
+.book-image-wrap,
+.performance-image-wrap {
+    flex-shrink: 0;
+    overflow: hidden;
+    background: #edf1fa;
+}
+
+.book-image-wrap {
+    width: 120px;
+    height: 190px;
+}
+
+.performance-image-wrap {
+    width: 120px;
+    height: 190px;
+}
+
+.book-image,
+.performance-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-image-placeholder,
+.performance-image-placeholder {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #edf1fa;
+    color: #9fa9c1;
+
+    font-size: 28px;
+    font-weight: 700;
 }

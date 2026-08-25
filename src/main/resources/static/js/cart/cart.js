@@ -157,6 +157,8 @@ function createBookCartItem(item) {
 
     const purchasable = item.purchasable === true;
 
+    const thumbnail = item.thumbnail || "";
+
     return `
 			<div
 			    class="cart-item
@@ -179,12 +181,36 @@ function createBookCartItem(item) {
             >
 
 
-            <img
-                class="cart-book-image"
-                src="${item.thumbnail}"
-                alt="${item.bookTitle}"
-				onclick="goBookDetail(${item.bookId})"
-            >
+			<div class="cart-book-image-wrap"
+			     onclick="goBookDetail(${item.bookId})">
+
+			    ${thumbnail
+            ? `
+			                <img
+			                    class="cart-book-image"
+			                    src="${thumbnail}"
+			                    alt="${item.bookTitle}"
+			                    onerror="
+			                        this.style.display='none';
+			                        this.nextElementSibling.style.display='flex';
+			                    "
+			                >
+
+			                <div
+			                    class="cart-book-placeholder"
+			                    style="display:none;"
+			                >
+			                    B
+			                </div>
+			            `
+            : `
+			                <div class="cart-book-placeholder">
+			                    B
+			                </div>
+			            `
+        }
+
+			</div>
 
 
             <div class="cart-item-info">
@@ -220,15 +246,14 @@ function createBookCartItem(item) {
 
 			<div class="cart-unit-price">
 	
-			    ${
-			        item.price !== item.salePrice
-			            ? `
+			    ${item.price !== item.salePrice
+            ? `
 			                <span class="original-price">
 			                    ${formatPrice(item.price)}원
 			                </span>
 			            `
-			            : ""
-			    }
+            : ""
+        }
 	
 			    <span class="sale-price">
 			        ${formatPrice(item.salePrice)}원
@@ -463,7 +488,7 @@ function updateSelectedSummary() {
 
     let selectedItemCount = 0;
     let selectedTotalQuantity = 0;
-	let selectedOriginalPrice = 0;
+    let selectedOriginalPrice = 0;
     let selectedTotalPrice = 0;
 
 
@@ -488,24 +513,24 @@ function updateSelectedSummary() {
 
         const price = Number(cartItem.dataset.price);
 
-		const originalPrice = Number(cartItem.dataset.originalPrice);
+        const originalPrice = Number(cartItem.dataset.originalPrice);
 
         selectedItemCount++;
 
         selectedTotalQuantity += quantity;
-		
-		selectedOriginalPrice += originalPrice * quantity;
+
+        selectedOriginalPrice += originalPrice * quantity;
 
         selectedTotalPrice += price * quantity;
     });
 
-	const selectedDiscountPrice = selectedOriginalPrice - selectedTotalPrice;
+    const selectedDiscountPrice = selectedOriginalPrice - selectedTotalPrice;
 
     const quantityElement = document.getElementById("selectTotalQuantity");
 
-	const originalPriceElement = document.getElementById("selectOriginalPrice");
+    const originalPriceElement = document.getElementById("selectOriginalPrice");
 
-	const discountPriceElement = document.getElementById("selectDiscountPrice");
+    const discountPriceElement = document.getElementById("selectDiscountPrice");
 
     const finalPriceElement = document.getElementById("finalTotalPrice");
 
@@ -517,14 +542,14 @@ function updateSelectedSummary() {
     }
 
 
-	if (originalPriceElement) {
-	    originalPriceElement.textContent = formatPrice(selectedOriginalPrice);
-	}
+    if (originalPriceElement) {
+        originalPriceElement.textContent = formatPrice(selectedOriginalPrice);
+    }
 
 
-	if (discountPriceElement) {
-	    discountPriceElement.textContent = formatPrice(selectedDiscountPrice);
-	}
+    if (discountPriceElement) {
+        discountPriceElement.textContent = formatPrice(selectedDiscountPrice);
+    }
 
 
     if (finalPriceElement) {
@@ -734,6 +759,7 @@ async function deleteCartItem(cartItemId) {
 
         await loadBookCart();
 
+		showToast("상품이 삭제되었습니다.");
 
     } catch (error) {
 
@@ -773,7 +799,7 @@ async function deleteAllItems() {
 
 
         await loadBookCart();
-
+		showToast("상품이 모두 삭제되었습니다.");
 
     } catch (error) {
 
@@ -897,12 +923,12 @@ async function loadPerformanceCart() {
 	                >
 	
 	                    ${items
-	                .map(item =>
-	                    createPerformanceCartItem(
-	                        item
-	                    )
-	                )
-	                .join("")}
+                .map(item =>
+                    createPerformanceCartItem(
+                        item
+                    )
+                )
+                .join("")}
 	
 	                </div>
 	
@@ -929,15 +955,40 @@ async function loadPerformanceCart() {
 
 
 function createPerformanceCartItem(item) {
+    const poster = item.posterUrl || "";
 
     return `
         <div class="performance-cart-item">
 
-            <img
-                class="performance-cart-image"
-                src="${item.posterUrl || ""}"
-                alt="${item.title}"
-            >
+			<div class="performance-cart-image-wrap">
+	
+			    ${poster
+            ? `
+			                <img
+			                    class="performance-cart-image"
+			                    src="${poster}"
+			                    alt="${item.title}"
+			                    onerror="
+			                        this.style.display='none';
+			                        this.nextElementSibling.style.display='flex';
+			                    "
+			                >
+	
+			                <div
+			                    class="performance-cart-placeholder"
+			                    style="display:none;"
+			                >
+			                    🎭
+			                </div>
+			            `
+            : `
+			                <div class="performance-cart-placeholder">
+			                    🎭
+			                </div>
+			            `
+        }
+	
+			</div>
 
 
             <div class="performance-cart-info">
@@ -955,16 +1006,16 @@ function createPerformanceCartItem(item) {
                 <p>
                     공연 일시
                     ${formatDateTime(
-        item.performanceTime
-    )}
+            item.performanceTime
+        )}
                 </p>
 
 
                 <p>
                     예매 시작
                     ${formatDateTime(
-        item.ticketOpenTime
-    )}
+            item.ticketOpenTime
+        )}
                 </p>
 
 
@@ -1080,7 +1131,7 @@ async function deletePerformanceCartItem(
 
 
         await loadPerformanceCart();
-
+		showToast("상품이 삭제되었습니다.");
 
     } catch (error) {
 
@@ -1127,8 +1178,8 @@ async function deleteAllPerformanceItems() {
 
 
         await loadPerformanceCart();
-
-
+		showToast("상품이 모두 삭제되었습니다.");
+	
     } catch (error) {
 
         console.error("공연 장바구니 전체 삭제 오류:", error);
