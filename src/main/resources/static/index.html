@@ -104,18 +104,6 @@
         </nav>
     </header>
 
-    <!-- 계정 스왑 및 관리자 툴바 -->
-    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:14px 22px; margin-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-weight:700; color:#334155; font-size:0.88rem;">테스트 계정 전환:</span>
-            <button onclick="switchAccount('USER')" class="bk-swap-btn bk-swap-btn-user">USER (일반회원)</button>
-            <button onclick="switchAccount('ADMIN')" class="bk-swap-btn bk-swap-btn-admin">ADMIN (관리자)</button>
-        </div>
-        <div>
-            <span id="userRoleBadge" style="padding:6px 14px; background:#0f172a; color:#fff; font-weight:700; font-size:0.82rem; border-radius:20px; letter-spacing:0.5px;">ROLE : USER</span>
-        </div>
-    </div>
-
     <!-- 공연 검색 및 목록 섹션 -->
     <div class="bk-detail-section" style="margin-top:22px; padding:28px; background:#ffffff; border:1px solid #e2e8f0; border-radius:16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
@@ -344,13 +332,16 @@
             return;
         }
 
+        const formattedPerfTime = perfTimeVal.length === 16 ? perfTimeVal + ':00' : perfTimeVal;
+        const formattedOpenTime = openTimeVal.length === 16 ? openTimeVal + ':00' : openTimeVal;
+
         try {
             const res = await fetch(`/api/performances/${currentPerfId}/schedules`, {
                 method: 'POST',
                 headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({
-                    performanceTime: perfTimeVal,
-                    ticketOpenTime: openTimeVal,
+                    performanceTime: formattedPerfTime,
+                    ticketOpenTime: formattedOpenTime,
                     totalSeats: totalSeats,
                     seatPrice: seatPrice
                 })
@@ -360,12 +351,14 @@
                 log(`[관리자] 회차 및 8x8 섹터 좌석 배치 자동 생성 성공!`);
                 alert('회차 및 8x8 섹터 좌석 배치가 성공적으로 생성되었습니다!');
                 closeAdminScheduleModal();
+                await loadPerformances();
                 selectPerformance(currentPerfId, currentPerfTitle);
             } else {
-                alert(`생성 실패: ${data.message}`);
+                alert(`생성 실패: ${data.message || '회차 생성 중 오류가 발생했습니다.'}`);
             }
         } catch (e) {
             log(`회차 생성 에러: ${e.message}`);
+            alert(`회차 생성 통신 에러: ${e.message}`);
         }
     }
 
@@ -402,38 +395,18 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
+                const createdPerf = data.data;
                 log(`[관리자] 신규 공연 등록 성공: ${title}`);
                 closeAdminCreateModal();
-                loadPerformances();
+                await loadPerformances();
+                if (confirm(`'${title}' 공연이 성공적으로 등록되었습니다!\n지금 바로 첫 공연 회차 및 좌석 배치를 생성하시겠습니까?`)) {
+                    openAdminScheduleModal(createdPerf.id, title);
+                }
             } else {
                 alert(`등록 실패: ${data.message}`);
             }
         } catch (e) {
             alert(`통신 에러: ${e.message}`);
-        }
-    }
-
-    async function switchAccount(roleType) {
-        try {
-            const res = await fetch(`/api/performances/test-token?type=${roleType}`);
-            const data = await res.json();
-            if (res.ok && data.success && data.data && data.data.token) {
-                localStorage.setItem('token', data.data.token);
-                localStorage.setItem('accessToken', data.data.token);
-                currentRole = data.data.role || roleType;
-                updateRoleUI(currentRole, data.data.email);
-                log(`[계정 스왑 성공] ${data.data.email} (${currentRole})`);
-                await fetchMyReservationIds();
-                await loadPerformances();
-                if (currentScheduleId) {
-                    await loadSeats(currentScheduleId);
-                }
-            } else {
-                alert(`계정 스왑 실패: ${data.message || '토큰 수신 실패'}`);
-            }
-        } catch (e) {
-            log(`[계정 스왑 실패] ${e.message}`);
-            alert(`계정 스왑 에러: ${e.message}`);
         }
     }
 
@@ -598,11 +571,12 @@
                 
                 let adminButtonsHtml = '';
                 if (currentRole === 'ADMIN') {
+                    const addScheduleBtn = `<button onclick="event.stopPropagation(); openAdminScheduleModal(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="background:#ede9fe; color:#6d28d9; border:1px solid #ddd6fe; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">+ 회차 추가</button>`;
                     const hardDeleteBtn = `<button onclick="event.stopPropagation(); hardDeletePerformance(${p.id}, '${p.title.replace(/'/g, "\\'")}');" style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">영구 삭제</button>`;
                     if (p.active) {
-                        adminButtonsHtml = `<button onclick="event.stopPropagation(); deactivatePerformance(${p.id});" style="background:#fef3c7; color:#d97706; border:1px solid #fde68a; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">비활성화</button>` + hardDeleteBtn;
+                        adminButtonsHtml = addScheduleBtn + `<button onclick="event.stopPropagation(); deactivatePerformance(${p.id});" style="background:#fef3c7; color:#d97706; border:1px solid #fde68a; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">비활성화</button>` + hardDeleteBtn;
                     } else {
-                        adminButtonsHtml = `<button onclick="event.stopPropagation(); activatePerformance(${p.id});" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">재활성화(복구)</button>` + hardDeleteBtn;
+                        adminButtonsHtml = addScheduleBtn + `<button onclick="event.stopPropagation(); activatePerformance(${p.id});" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; font-size:0.75rem; font-weight:700; padding:4px 8px; border-radius:6px; cursor:pointer;">재활성화(복구)</button>` + hardDeleteBtn;
                     }
                 }
 

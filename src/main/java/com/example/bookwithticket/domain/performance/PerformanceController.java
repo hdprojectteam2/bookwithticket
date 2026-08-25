@@ -32,38 +32,6 @@ public class PerformanceController {
         this.kopisImportService = kopisImportService;
     }
 
-    // 임시 테스트용 토큰 발급 API (type: USER / ADMIN)
-    @GetMapping("/test-token")
-    public ApiResponse<Map<String, String>> getTestToken(
-            @RequestParam(value = "type", required = false, defaultValue = "USER") String type) {
-        String targetEmail = "ADMIN".equalsIgnoreCase(type) ? "admin@example.com" : "test@example.com";
-        Member member = memberRepository.findByEmail(targetEmail)
-                .orElseGet(() -> {
-                    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-                    boolean isAdmin = "ADMIN".equalsIgnoreCase(type);
-                    Member m = Member.createLocalMember(
-                            targetEmail,
-                            encoder.encode(isAdmin ? "admin123" : "password123"),
-                            isAdmin ? "관리자" : "일반사용자",
-                            isAdmin ? "010-9876-5432" : "010-1234-5678",
-                            "12345",
-                            "서울시",
-                            "101호",
-                            true
-                    );
-                    m.setRole(isAdmin ? "ADMIN" : "USER");
-                    return memberRepository.save(m);
-                });
-
-        String token = jwtUtil.createToken(member.getEmail(), member.getRole());
-        return ApiResponse.ok(Map.of(
-                "token", token,
-                "email", member.getEmail(),
-                "name", member.getName(),
-                "role", member.getRole()
-        ));
-    }
-
     // 관리자 권한 검증 메소드
     private void checkAdmin(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
