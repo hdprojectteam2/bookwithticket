@@ -13,6 +13,11 @@ public class KopisPerformanceResponse {
         private String prfstate;
         private String dtguidance;
         private Integer seatscale;
+        private String sty;
+        private String prfcast;
+        private String pcseguidance;
+        private String prfruntime;
+        private String prfage;
 
         public Item() {}
 
@@ -21,6 +26,11 @@ public class KopisPerformanceResponse {
         }
 
         public Item(String mt20id, String prfnm, String fcltynm, String poster, String genrenm, Integer seatscale, String prfpdfrom, String dtguidance) {
+            this(mt20id, prfnm, fcltynm, poster, genrenm, seatscale, prfpdfrom, dtguidance, null, null, null, null, null);
+        }
+
+        public Item(String mt20id, String prfnm, String fcltynm, String poster, String genrenm, Integer seatscale,
+                    String prfpdfrom, String dtguidance, String sty, String prfcast, String pcseguidance, String prfruntime, String prfage) {
             this.mt20id = mt20id;
             this.prfnm = prfnm;
             this.fcltynm = fcltynm;
@@ -29,6 +39,11 @@ public class KopisPerformanceResponse {
             this.seatscale = seatscale;
             this.prfpdfrom = prfpdfrom;
             this.dtguidance = dtguidance;
+            this.sty = sty;
+            this.prfcast = prfcast;
+            this.pcseguidance = pcseguidance;
+            this.prfruntime = prfruntime;
+            this.prfage = prfage;
         }
 
         public String getMt20id() { return mt20id; }
@@ -60,5 +75,20 @@ public class KopisPerformanceResponse {
 
         public Integer getSeatscale() { return seatscale; }
         public void setSeatscale(Integer seatscale) { this.seatscale = seatscale; }
+
+        public String getSty() { return sty; }
+        public void setSty(String sty) { this.sty = sty; }
+
+        public String getPrfcast() { return prfcast; }
+        public void setPrfcast(String prfcast) { this.prfcast = prfcast; }
+
+        public String getPcseguidance() { return pcseguidance; }
+        public void setPcseguidance(String pcseguidance) { this.pcseguidance = pcseguidance; }
+
+        public String getPrfruntime() { return prfruntime; }
+        public void setPrfruntime(String prfruntime) { this.prfruntime = prfruntime; }
+
+        public String getPrfage() { return prfage; }
+        public void setPrfage(String prfage) { this.prfage = prfage; }
     }
 }
