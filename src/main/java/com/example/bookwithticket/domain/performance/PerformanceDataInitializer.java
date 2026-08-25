@@ -7,15 +7,11 @@ import com.example.bookwithticket.cart.repository.PerformanceCartItemRepository;
 import com.example.bookwithticket.domain.reservation.ReservationRepository;
 import com.example.bookwithticket.domain.reservation.Seat;
 import com.example.bookwithticket.domain.reservation.SeatRepository;
-import com.example.bookwithticket.member.entity.Member;
-import com.example.bookwithticket.member.jwt.JwtUtil;
-import com.example.bookwithticket.member.repository.MemberRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,9 +24,7 @@ public class PerformanceDataInitializer implements CommandLineRunner {
     private final ReservationRepository reservationRepository;
     private final PerformanceCartItemRepository performanceCartItemRepository;
     private final CartItemRepository cartItemRepository;
-    private final MemberRepository memberRepository;
     private final BookRepository bookRepository;
-    private final JwtUtil jwtUtil;
 
     public PerformanceDataInitializer(
             PerformanceRepository performanceRepository,
@@ -39,70 +33,19 @@ public class PerformanceDataInitializer implements CommandLineRunner {
             ReservationRepository reservationRepository,
             PerformanceCartItemRepository performanceCartItemRepository,
             CartItemRepository cartItemRepository,
-            MemberRepository memberRepository,
-            BookRepository bookRepository,
-            JwtUtil jwtUtil) {
+            BookRepository bookRepository) {
         this.performanceRepository = performanceRepository;
         this.scheduleRepository = scheduleRepository;
         this.seatRepository = seatRepository;
         this.reservationRepository = reservationRepository;
         this.performanceCartItemRepository = performanceCartItemRepository;
         this.cartItemRepository = cartItemRepository;
-        this.memberRepository = memberRepository;
         this.bookRepository = bookRepository;
-        this.jwtUtil = jwtUtil;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-
-        // 1. 일반 사용자 계정 생성 (USER 권한)
-        String testEmail = "test@example.com";
-        Member userMember = memberRepository.findByEmail(testEmail)
-                .orElseGet(() -> {
-                    Member m = Member.createLocalMember(
-                            testEmail,
-                            encoder.encode("password123"),
-                            "일반사용자",
-                            "010-1234-5678",
-                            "12345",
-                            "서울시 강남구",
-                            "101호",
-                            true
-                    );
-                    m.setRole("USER");
-                    return memberRepository.save(m);
-                });
-
-        // 2. 관리자 계정 생성 (ADMIN 권한)
-        String adminEmail = "admin@example.com";
-        Member adminMember = memberRepository.findByEmail(adminEmail)
-                .orElseGet(() -> {
-                    Member m = Member.createLocalMember(
-                            adminEmail,
-                            encoder.encode("admin123"),
-                            "관리자",
-                            "010-9876-5432",
-                            "54321",
-                            "서울시 종로구",
-                            "909호",
-                            true
-                    );
-                    m.setRole("ADMIN");
-                    return memberRepository.save(m);
-                });
-
-        String userToken = jwtUtil.createToken(userMember.getEmail(), userMember.getRole());
-        String adminToken = jwtUtil.createToken(adminMember.getEmail(), adminMember.getRole());
-
-        System.out.println("==================================================");
-        System.out.println("[테스트용 회원 계정 및 JWT 토큰 생성 완료]");
-        System.out.println("일반 사용자 (USER): " + userMember.getEmail() + " | Token: " + userToken);
-        System.out.println("관리자 계정 (ADMIN): " + adminMember.getEmail() + " | Token: " + adminToken);
-        System.out.println("==================================================");
-
         // 동시성 테스트용 더미 공연이 DB에 있다면 비활성화(deactivate)하여 일반 사용자에게 숨김 처리 (관리자에게만 노출)
         performanceRepository.findByTitleContainingOrderByIdDesc("동시성 검증 뮤지컬")
                 .forEach(p -> {
