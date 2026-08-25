@@ -1696,3 +1696,38 @@ button, input, select, textarea {
     font-size: 16px;
     line-height: 1.7;
 }
+
+.bk-quantity-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 18px 0;
+}
+
+.bk-quantity-label {
+    font-weight: 700;
+    color: #475569;
+}
+
+.bk-quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.bk-quantity-control button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #dbe3f5;
+    border-radius: 10px;
+    background: #f8faff;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#quantityValue {
+    min-width: 24px;
+    text-align: center;
+    font-weight: 700;
+}
