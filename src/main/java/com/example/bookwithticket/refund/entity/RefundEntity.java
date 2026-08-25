@@ -28,7 +28,7 @@ public class RefundEntity {
 	private Long id;
 
 	@Column(name = "requester_id", nullable = false)
-	private Long requtserId;
+	private Long requesterId;
 
 	@Column(name = "approver_id")
 	private Long approverId;
@@ -70,7 +70,7 @@ public class RefundEntity {
 	}
 
 	public RefundEntity(Long requesterId, PaymentEntity payment, int amount, String reason) {
-		this.requtserId = requesterId;
+		this.requesterId = requesterId;
 		this.payment = payment;
 		this.amount = amount;
 		this.reason = reason;
@@ -82,8 +82,8 @@ public class RefundEntity {
 		return id;
 	}
 
-	public Long getRequtserId() {
-		return requtserId;
+	public Long getRequesterId() {
+		return requesterId;
 	}
 
 	public Long getApproverId() {

@@ -111,9 +111,9 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 주문 정보
-            </h2>
+            </div>
 			
 			<div class="detail-item-list">
 			
@@ -213,9 +213,9 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 주문상품
-            </h2>
+            </div>
 
 
             <div class="detail-item-list">
@@ -228,9 +228,9 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 수신자정보
-            </h2>
+            </div>
 
 
 			<div class="receiver-box">
@@ -265,9 +265,9 @@ function renderBookDetail(order) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 결제정보
-            </h2>
+            </div>
 
 
             <div class="payment-box">
@@ -469,9 +469,9 @@ function renderPerformanceDetail(reservation) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 예매 정보
-            </h2>
+            </div>
 
 
             <div class="detail-row">
@@ -506,9 +506,9 @@ function renderPerformanceDetail(reservation) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 공연 정보
-            </h2>
+            </div>
 
 
             <div class="detail-performance">
@@ -565,9 +565,9 @@ function renderPerformanceDetail(reservation) {
 
         <section class="detail-section">
 
-            <h2>
+            <div class="title">
                 결제정보
-            </h2>
+            </div>
 
 
             <div class="payment-box">
@@ -632,92 +632,6 @@ function renderPerformanceDetail(reservation) {
         </section>
 
     `;
-}
-
-
-async function requestRefund(id) {
-
-    const reason = prompt("환불 사유를 입력해 주세요.");
-
-
-    if (reason === null) {
-        return;
-    }
-
-
-    const trimmedReason =reason.trim();
-
-
-    if (!trimmedReason) {
-        alert("환불 사유를 입력해 주세요.");
-        return;
-    }
-
-
-    if (!confirm("환불하시겠습니까?")) {
-        return;
-    }
-
-
-    try {
-        const response =
-            await fetch(
-
-                `/api/payments/${encodeURIComponent(id)}/refund`,
-
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":"application/json",
-						...getAuthHeaders()
-                    },
-
-                    body: JSON.stringify({
-                        reason: trimmedReason
-                    })
-                }
-            );
-
-
-        let result = null;
-
-
-        try {
-            result = await response.json();
-        } catch (error) {
-            result = null;
-        }
-
-
-        if (!response.ok) {
-
-            throw new Error(
-
-                result?.message || "환불 요청 처리에 실패했습니다."
-            );
-        }
-
-
-        alert(
-            result?.message || "환불 요청이 처리되었습니다."
-        );
-
-
-        await loadDetail();
-		
-		if (window.opener && !window.opener.closed && typeof window.opener.loadMyBookHistory === "function") {
-		    window.opener.loadMyBookHistory();
-		}
-
-
-    } catch (error) {
-
-        console.error("환불 처리 오류:", error);
-
-
-        alert(error.message);
-    }
 }
 
 
