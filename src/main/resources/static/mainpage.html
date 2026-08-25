@@ -540,30 +540,6 @@
         }
 
 
-        .reset-btn {
-
-            height:
-                    46px;
-
-            padding:
-                    0 17px;
-
-            border:
-                    1px solid #dce3f7;
-
-            border-radius:
-                    12px;
-
-            background:
-                    #f7f9ff;
-
-            color:
-                    #65708a;
-
-            font-weight:
-                    700;
-
-        }
 
 
         /* =====================================================
@@ -1357,12 +1333,6 @@
             }
 
 
-            .reset-btn {
-                grid-column:
-                        1 / -1;
-            }
-
-
             .shortcut-section {
 
                 grid-template-columns:
@@ -1581,14 +1551,6 @@
                     검색
                 </button>
 
-
-                <button
-                        type="button"
-                        class="reset-btn"
-                        id="resetSearchButton"
-                >
-                    전체보기
-                </button>
 
             </div>
 
@@ -1822,21 +1784,6 @@
     }
 
 
-    function resetSearch() {
-
-        const input =
-            document.getElementById(
-                "searchInput"
-            );
-
-
-        input.value = "";
-
-
-        loadStatsAndData("");
-
-    }
-
 
     document
         .getElementById(
@@ -1845,16 +1792,6 @@
         ?.addEventListener(
             "click",
             executeIntegratedSearch
-        );
-
-
-    document
-        .getElementById(
-            "resetSearchButton"
-        )
-        ?.addEventListener(
-            "click",
-            resetSearch
         );
 
 
