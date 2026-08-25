@@ -1,26 +1,46 @@
-const params = new URLSearchParams(location.search);
-const id = params.get("id");
+const params =
+    new URLSearchParams(
+        location.search
+    );
+
+const id =
+    params.get("id");
+
 
 let favoriteStatus = false;
+
+let quantity = 1;
+
+let currentStock = 0;
 
 
 /* =====================================================
    INIT
 ===================================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    if (!id) {
-        location.href = "/books.html";
-        return;
+        if (!id) {
+
+            location.href =
+                "/books.html";
+
+            return;
+        }
+
+
+        loadBook();
+
+        loadReviews();
+
+        loadReviewInfo();
+
+        loadFavoriteStatus();
+
     }
-
-    loadBook();
-    loadReviews();
-    loadReviewInfo();
-    loadFavoriteStatus();
-
-});
+);
 
 
 /* =====================================================
@@ -28,7 +48,138 @@ document.addEventListener("DOMContentLoaded", () => {
 ===================================================== */
 
 function getToken() {
-    return localStorage.getItem("token");
+
+    return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("accessToken")
+    );
+}
+
+
+/* =====================================================
+   LOGIN REDIRECT
+===================================================== */
+
+function redirectToLogin() {
+
+    localStorage.removeItem(
+        "token"
+    );
+
+    localStorage.removeItem(
+        "accessToken"
+    );
+
+
+    alert(
+        "로그인을 해주세요."
+    );
+
+
+    location.href =
+        "/login.html";
+}
+
+
+/* =====================================================
+   AUTH ERROR
+===================================================== */
+
+async function handleAuthError(
+    response
+) {
+
+    if (
+        response.status === 401 ||
+        response.status === 403
+    ) {
+
+        redirectToLogin();
+
+        return true;
+    }
+
+
+    /*
+     * 일부 API가 인증 실패를
+     * 400으로 반환하는 경우 대응
+     */
+    if (
+        response.status === 400
+    ) {
+
+        try {
+
+            const clone =
+                response.clone();
+
+
+            let message = "";
+
+
+            try {
+
+                const data =
+                    await clone.json();
+
+
+                if (
+                    typeof data ===
+                    "string"
+                ) {
+
+                    message =
+                        data;
+
+                } else {
+
+                    message =
+                        data?.message || "";
+                }
+
+
+            } catch (error) {
+
+                const text =
+                    await response
+                        .clone()
+                        .text()
+                        .catch(
+                            () => ""
+                        );
+
+
+                message =
+                    text || "";
+            }
+
+
+            if (
+                message.includes(
+                    "로그인"
+                ) ||
+                message.includes(
+                    "인증"
+                )
+            ) {
+
+                redirectToLogin();
+
+                return true;
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "인증 응답 확인 오류:",
+                error
+            );
+        }
+    }
+
+
+    return false;
 }
 
 
@@ -42,20 +193,26 @@ async function loadBook() {
 
         const headers = {};
 
+
         if (getToken()) {
+
             headers.Authorization =
-                "Bearer " + getToken();
+                "Bearer " +
+                getToken();
         }
 
 
         const response =
             await fetch(
                 "/books/" + id,
-                { headers }
+                {
+                    headers
+                }
             );
 
 
         if (!response.ok) {
+
             throw new Error(
                 "도서 정보를 불러오지 못했습니다."
             );
@@ -66,33 +223,56 @@ async function loadBook() {
             await response.json();
 
 
-        setText("title", book.title);
-        setText("breadcrumbTitle", book.title);
+        /*
+         * 현재 재고 저장
+         */
+        currentStock =
+            Number(
+                book.stock || 0
+            );
+
+
+        setText(
+            "title",
+            book.title
+        );
+
+
+        setText(
+            "breadcrumbTitle",
+            book.title
+        );
+
 
         setText(
             "author",
             book.author || "-"
         );
 
+
         setText(
             "publisher",
             book.publisher || "-"
         );
+
 
         setText(
             "category",
             book.category || "BOOK"
         );
 
+
         setText(
             "categoryText",
             book.category || "-"
         );
 
+
         setText(
             "stock",
             book.stock ?? 0
         );
+
 
         setText(
             "description",
@@ -100,10 +280,12 @@ async function loadBook() {
             "도서 소개가 없습니다."
         );
 
+
         setText(
             "isbn",
             book.isbn || "-"
         );
+
 
         setText(
             "publishedDate",
@@ -112,7 +294,10 @@ async function loadBook() {
 
 
         const price =
-            Number(book.price ?? 0);
+            Number(
+                book.price ?? 0
+            );
+
 
         const salePrice =
             Number(
@@ -121,9 +306,11 @@ async function loadBook() {
                 0
             );
 
+
         const discountRate =
             Number(
-                book.discountRate || 0
+                book.discountRate ||
+                0
             );
 
 
@@ -132,6 +319,7 @@ async function loadBook() {
             salePrice.toLocaleString()
         );
 
+
         setText(
             "discountRate",
             discountRate > 0
@@ -139,10 +327,12 @@ async function loadBook() {
                 : ""
         );
 
+
         setText(
             "originalPrice",
             discountRate > 0
-                ? price.toLocaleString() + "원"
+                ? price.toLocaleString()
+                + "원"
                 : ""
         );
 
@@ -158,34 +348,66 @@ async function loadBook() {
             image.src =
                 book.thumbnail || "";
 
-            image.onerror = () => {
 
-                image.style.display =
-                    "none";
+            image.onerror =
+                () => {
 
-            };
-
+                    image.style.display =
+                        "none";
+                };
         }
 
 
+        /*
+         * 품절 처리
+         */
         const cartButton =
             document.getElementById(
                 "cartButton"
             );
 
 
+        const buyButton =
+            document.getElementById(
+                "buyButton"
+            );
+
+
         if (
-            cartButton &&
-            Number(book.stock || 0) <= 0
+            Number(
+                book.stock || 0
+            ) <= 0
         ) {
 
-            cartButton.disabled = true;
-            cartButton.textContent = "품절";
+            if (cartButton) {
 
+                cartButton.disabled =
+                    true;
+
+                cartButton.textContent =
+                    "품절";
+            }
+
+
+            if (buyButton) {
+
+                buyButton.disabled =
+                    true;
+
+                buyButton.textContent =
+                    "품절";
+            }
         }
 
-        // 연관 공연 조회 연동
-        loadLinkedPerformance(book.id, book.title);
+
+        /*
+         * 연관 공연 조회
+         */
+        loadLinkedPerformance(
+            book.id,
+            book.title
+        );
+
 
     } catch (error) {
 
@@ -194,59 +416,282 @@ async function loadBook() {
             "도서 정보를 불러오지 못했습니다."
         );
 
-        console.error(error);
 
+        console.error(
+            "도서 상세 조회 오류:",
+            error
+        );
     }
-
 }
 
+
 /* =====================================================
-   LINKED PERFORMANCE (연관 공연 연동)
+   QUANTITY
 ===================================================== */
 
-async function loadLinkedPerformance(bookId, bookTitle) {
-    try {
-        const res = await fetch('/api/performances');
-        if (!res.ok) return;
-        const result = await res.json();
-        const performances = (result && Array.isArray(result.data)) ? result.data : [];
+function increaseQuantity() {
 
-        // 1. 도서 ID와 직접 연결된 공연 또는 2. 제목 키워드가 매칭되는 공연 탐색
-        const linkedPerf = performances.find(p => 
-            (p.originalBookId && p.originalBookId == bookId) || 
-            (bookTitle && p.title && (
-                (bookTitle.includes('오페라') && p.title.includes('오페라')) ||
-                (bookTitle.includes('팬텀') && p.title.includes('팬텀')) ||
-                (bookTitle.includes('레미제라블') && p.title.includes('레미제라블')) ||
-                (bookTitle.includes('지킬') && p.title.includes('지킬'))
-            ))
+    if (
+        currentStock <= 0
+    ) {
+
+        showToast(
+            "품절된 도서입니다."
         );
 
-        if (linkedPerf) {
-            const box = document.getElementById('linkedPerformanceBox');
-            const titleEl = document.getElementById('linkedPerfTitle');
-            const venueEl = document.getElementById('linkedPerfVenue');
-            const btnEl = document.getElementById('linkedPerfBtn');
-            if (box && titleEl && venueEl && btnEl) {
-                titleEl.textContent = linkedPerf.title;
-                venueEl.textContent = `공연장: ${linkedPerf.venue} (${linkedPerf.runtimeMinutes || 150}분)`;
-                btnEl.onclick = () => location.href = `/detail.html?id=${linkedPerf.id}`;
-                box.style.display = 'block';
-            }
-        }
-    } catch (e) {
-        console.error('연관 공연 조회 실패:', e);
+        return;
+    }
+
+
+    if (
+        quantity >=
+        currentStock
+    ) {
+
+        showToast(
+            "재고 수량을 초과할 수 없습니다."
+        );
+
+        return;
+    }
+
+
+    quantity++;
+
+
+    updateQuantity();
+}
+
+
+function decreaseQuantity() {
+
+    if (
+        quantity <= 1
+    ) {
+
+        return;
+    }
+
+
+    quantity--;
+
+
+    updateQuantity();
+}
+
+
+function updateQuantity() {
+
+    const element =
+        document.getElementById(
+            "quantityValue"
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            quantity;
     }
 }
 
 
 /* =====================================================
-   FAVORITE
+   LINKED PERFORMANCE
+===================================================== */
+
+async function loadLinkedPerformance(
+    bookId,
+    bookTitle
+) {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/performances"
+            );
+
+
+        if (!response.ok) {
+
+            return;
+        }
+
+
+        const result =
+            await response.json();
+
+
+        const performances =
+            result &&
+            Array.isArray(
+                result.data
+            )
+                ? result.data
+                : [];
+
+
+        /*
+         * 1. 도서 ID 직접 연결
+         * 2. 제목 키워드 연결
+         */
+        const linkedPerformance =
+            performances.find(
+                performance =>
+
+                    (
+                        performance.originalBookId &&
+                        performance.originalBookId ==
+                        bookId
+                    ) ||
+
+                    (
+                        bookTitle &&
+                        performance.title &&
+
+                        (
+                            (
+                                bookTitle.includes(
+                                    "오페라"
+                                ) &&
+                                performance.title.includes(
+                                    "오페라"
+                                )
+                            ) ||
+
+                            (
+                                bookTitle.includes(
+                                    "팬텀"
+                                ) &&
+                                performance.title.includes(
+                                    "팬텀"
+                                )
+                            ) ||
+
+                            (
+                                bookTitle.includes(
+                                    "레미제라블"
+                                ) &&
+                                performance.title.includes(
+                                    "레미제라블"
+                                )
+                            ) ||
+
+                            (
+                                bookTitle.includes(
+                                    "지킬"
+                                ) &&
+                                performance.title.includes(
+                                    "지킬"
+                                )
+                            )
+                        )
+                    )
+            );
+
+
+        if (!linkedPerformance) {
+
+            return;
+        }
+
+
+        const box =
+            document.getElementById(
+                "linkedPerformanceBox"
+            );
+
+
+        const titleElement =
+            document.getElementById(
+                "linkedPerfTitle"
+            );
+
+
+        const venueElement =
+            document.getElementById(
+                "linkedPerfVenue"
+            );
+
+
+        const button =
+            document.getElementById(
+                "linkedPerfBtn"
+            );
+
+
+        if (
+            !box ||
+            !titleElement ||
+            !venueElement ||
+            !button
+        ) {
+
+            return;
+        }
+
+
+        titleElement.textContent =
+            linkedPerformance.title;
+
+
+        venueElement.textContent =
+            `공연장: ${
+                linkedPerformance.venue ||
+                "장소 미정"
+            } (${
+                linkedPerformance
+                    .runtimeMinutes ||
+                150
+            }분)`;
+
+
+        button.onclick =
+            () => {
+
+                location.href =
+                    "/detail.html?id=" +
+                    encodeURIComponent(
+                        linkedPerformance.id
+                    );
+            };
+
+
+        box.style.display =
+            "block";
+
+
+    } catch (error) {
+
+        console.error(
+            "연관 공연 조회 실패:",
+            error
+        );
+    }
+}
+
+
+/* =====================================================
+   FAVORITE STATUS
 ===================================================== */
 
 async function loadFavoriteStatus() {
 
+    /*
+     * 비회원도 도서 상세페이지는
+     * 볼 수 있어야 하므로
+     * 여기서는 로그인 페이지로 이동하지 않음
+     */
     if (!getToken()) {
+
+        favoriteStatus =
+            false;
+
+
+        updateFavoriteButton();
+
+
         return;
     }
 
@@ -258,6 +703,7 @@ async function loadFavoriteStatus() {
                 "/members/favorites",
                 {
                     headers: {
+
                         Authorization:
                             "Bearer " +
                             getToken()
@@ -266,7 +712,18 @@ async function loadFavoriteStatus() {
             );
 
 
+        if (
+            await handleAuthError(
+                response
+            )
+        ) {
+
+            return;
+        }
+
+
         if (!response.ok) {
+
             return;
         }
 
@@ -276,10 +733,18 @@ async function loadFavoriteStatus() {
 
 
         favoriteStatus =
+            Array.isArray(
+                favorites
+            ) &&
             favorites.some(
                 book =>
-                    String(book.id) ===
-                    String(id)
+
+                    String(
+                        book.id
+                    ) ===
+                    String(
+                        id
+                    )
             );
 
 
@@ -288,26 +753,25 @@ async function loadFavoriteStatus() {
 
     } catch (error) {
 
-        console.error(error);
-
+        console.error(
+            "관심 도서 상태 조회 오류:",
+            error
+        );
     }
-
 }
 
+
+/* =====================================================
+   FAVORITE
+===================================================== */
 
 async function favorite() {
 
     if (!getToken()) {
 
-        alert(
-            "로그인이 필요합니다."
-        );
-
-        location.href =
-            "/login.html";
+        redirectToLogin();
 
         return;
-
     }
 
 
@@ -321,10 +785,15 @@ async function favorite() {
 
         const response =
             await fetch(
-                "/members/favorites/" + id,
+                "/members/favorites/" +
+                encodeURIComponent(
+                    id
+                ),
                 {
                     method,
+
                     headers: {
+
                         Authorization:
                             "Bearer " +
                             getToken()
@@ -333,12 +802,54 @@ async function favorite() {
             );
 
 
+        if (
+            await handleAuthError(
+                response
+            )
+        ) {
+
+            return;
+        }
+
+
         if (!response.ok) {
 
-            throw new Error(
-                "관심 도서 처리에 실패했습니다."
-            );
+            let message =
+                "관심 도서 처리에 실패했습니다.";
 
+
+            try {
+
+                const data =
+                    await response.json();
+
+
+                message =
+                    data?.message ||
+                    message;
+
+
+            } catch (error) {
+
+                const text =
+                    await response
+                        .text()
+                        .catch(
+                            () => ""
+                        );
+
+
+                if (text) {
+
+                    message =
+                        text;
+                }
+            }
+
+
+            throw new Error(
+                message
+            );
         }
 
 
@@ -351,12 +862,17 @@ async function favorite() {
 
     } catch (error) {
 
-        alert(error.message);
-
+        alert(
+            error.message ||
+            "관심 도서 처리에 실패했습니다."
+        );
     }
-
 }
 
+
+/* =====================================================
+   FAVORITE BUTTON
+===================================================== */
 
 function updateFavoriteButton() {
 
@@ -367,6 +883,7 @@ function updateFavoriteButton() {
 
 
     if (!button) {
+
         return;
     }
 
@@ -381,7 +898,6 @@ function updateFavoriteButton() {
         "active",
         favoriteStatus
     );
-
 }
 
 
@@ -393,15 +909,21 @@ async function cart() {
 
     if (!getToken()) {
 
-        alert(
-            "로그인이 필요합니다."
-        );
-
-        location.href =
-            "/login.html";
+        redirectToLogin();
 
         return;
+    }
 
+
+    if (
+        currentStock <= 0
+    ) {
+
+        showToast(
+            "품절된 도서입니다."
+        );
+
+        return;
     }
 
 
@@ -411,7 +933,8 @@ async function cart() {
             await fetch(
                 "/api/cart/items",
                 {
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
 
@@ -421,25 +944,37 @@ async function cart() {
                         Authorization:
                             "Bearer " +
                             getToken()
-
                     },
 
                     body:
                         "bookId=" +
-                        encodeURIComponent(id) +
-                        "&quantity=1"
-
+                        encodeURIComponent(
+                            id
+                        ) +
+                        "&quantity=" +
+                        encodeURIComponent(
+                            quantity
+                        )
                 }
             );
 
 
-			let result = null;
+        if (
+            await handleAuthError(
+                response
+            )
+        ) {
 
-			try {
-			    result = await response.json();
-			} catch (error) {
-			    result = null;
-			}
+            return;
+        }
+
+
+        const result =
+            await response
+                .json()
+                .catch(
+                    () => null
+                );
 
 
         if (!response.ok) {
@@ -448,40 +983,199 @@ async function cart() {
                 result?.message ||
                 "장바구니 추가에 실패했습니다."
             );
-
         }
 
 
-        showToast("장바구니에 추가했니다.");
+        showToast(
+            "장바구니에 추가했습니다."
+        );
 
 
     } catch (error) {
 
-        showToast(error.message);
-
+        showToast(
+            error.message ||
+            "장바구니 추가에 실패했습니다."
+        );
     }
-
 }
 
-function showToast(message) {
-    const toast = document.createElement("div");
-    toast.className = "toast-message";
-    toast.textContent = message;
-    document.body.appendChild(toast);
 
-    setTimeout(() => {
-        toast.classList.add("show");
-    }, 10);
+/* =====================================================
+   BUY NOW
+===================================================== */
 
-    setTimeout(() => {
+async function buyNow() {
 
-        toast.classList.remove("show");
+    if (!getToken()) {
 
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
+        redirectToLogin();
 
-    }, 2000);
+        return;
+    }
+
+
+    if (
+        currentStock <= 0
+    ) {
+
+        alert(
+            "품절된 도서입니다."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        /*
+         * 현재 주문 API가 cartItemIds 기반이라
+         * 구매하기 시 장바구니에 추가 후
+         * 장바구니 페이지로 이동
+         */
+        const response =
+            await fetch(
+                "/api/cart/items",
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/x-www-form-urlencoded",
+
+                        Authorization:
+                            "Bearer " +
+                            getToken()
+                    },
+
+                    body:
+                        "bookId=" +
+                        encodeURIComponent(
+                            id
+                        ) +
+                        "&quantity=" +
+                        encodeURIComponent(
+                            quantity
+                        )
+                }
+            );
+
+
+        if (
+            await handleAuthError(
+                response
+            )
+        ) {
+
+            return;
+        }
+
+
+        const result =
+            await response
+                .json()
+                .catch(
+                    () => null
+                );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                result?.message ||
+                "구매 처리에 실패했습니다."
+            );
+        }
+
+
+        location.href =
+            "/cart";
+
+
+    } catch (error) {
+
+        alert(
+            error.message ||
+            "구매 처리에 실패했습니다."
+        );
+    }
+}
+
+
+/* =====================================================
+   TOAST
+===================================================== */
+
+function showToast(
+    message
+) {
+
+    const existingToast =
+        document.querySelector(
+            ".toast-message"
+        );
+
+
+    if (existingToast) {
+
+        existingToast.remove();
+    }
+
+
+    const toast =
+        document.createElement(
+            "div"
+        );
+
+
+    toast.className =
+        "toast-message";
+
+
+    toast.textContent =
+        message;
+
+
+    document.body.appendChild(
+        toast
+    );
+
+
+    setTimeout(
+        () => {
+
+            toast.classList.add(
+                "show"
+            );
+
+        },
+        10
+    );
+
+
+    setTimeout(
+        () => {
+
+            toast.classList.remove(
+                "show"
+            );
+
+
+            setTimeout(
+                () => {
+
+                    toast.remove();
+
+                },
+                300
+            );
+
+        },
+        2000
+    );
 }
 
 
@@ -496,6 +1190,7 @@ function getMyEmail() {
 
 
     if (!token) {
+
         return null;
     }
 
@@ -503,30 +1198,47 @@ function getMyEmail() {
     try {
 
         const payload =
-            token.split(".")[1];
+            token
+                .split(".")[1];
+
+
+        if (!payload) {
+
+            return null;
+        }
 
 
         const normalized =
             payload
-                .replace(/-/g, "+")
-                .replace(/_/g, "/");
+                .replace(
+                    /-/g,
+                    "+"
+                )
+                .replace(
+                    /_/g,
+                    "/"
+                );
 
 
         const decoded =
             JSON.parse(
-                atob(normalized)
+                atob(
+                    normalized
+                )
             );
 
 
-        return decoded.sub || null;
+        return (
+            decoded.sub ||
+            decoded.email ||
+            null
+        );
 
 
     } catch (error) {
 
         return null;
-
     }
-
 }
 
 
@@ -542,6 +1254,12 @@ async function loadReviews() {
         );
 
 
+    if (!container) {
+
+        return;
+    }
+
+
     try {
 
         const response =
@@ -555,7 +1273,6 @@ async function loadReviews() {
             throw new Error(
                 "리뷰 조회 실패"
             );
-
         }
 
 
@@ -564,20 +1281,26 @@ async function loadReviews() {
 
 
         if (
-            !Array.isArray(reviews) ||
+            !Array.isArray(
+                reviews
+            ) ||
             reviews.length === 0
         ) {
 
             container.innerHTML = `
-                <div class="bk-empty-state compact">
+
+                <div
+                    class="bk-empty-state compact"
+                >
                     <p>
                         아직 작성된 리뷰가 없습니다.
                     </p>
                 </div>
+
             `;
 
-            return;
 
+            return;
         }
 
 
@@ -587,11 +1310,12 @@ async function loadReviews() {
 
         container.innerHTML =
             reviews
-                .map(review =>
-                    createReviewHtml(
-                        review,
-                        myEmail
-                    )
+                .map(
+                    review =>
+                        createReviewHtml(
+                            review,
+                            myEmail
+                        )
                 )
                 .join("");
 
@@ -599,17 +1323,25 @@ async function loadReviews() {
     } catch (error) {
 
         container.innerHTML = `
+
             <p class="bk-error-text">
                 리뷰를 불러오지 못했습니다.
             </p>
+
         `;
 
-        console.error(error);
 
+        console.error(
+            "리뷰 조회 오류:",
+            error
+        );
     }
-
 }
 
+
+/* =====================================================
+   REVIEW HTML
+===================================================== */
 
 function createReviewHtml(
     review,
@@ -617,20 +1349,35 @@ function createReviewHtml(
 ) {
 
     const rating =
-        Number(review.rating || 0);
+        Math.max(
+            0,
+            Math.min(
+                5,
+                Number(
+                    review.rating ||
+                    0
+                )
+            )
+        );
 
 
     const deleteButton =
         myEmail &&
-        myEmail === review.email
+        myEmail ===
+        review.email
+
             ? `
+
                 <button
                     class="bk-danger-link"
+                    type="button"
                     onclick="deleteReview(${review.id})"
                 >
                     삭제
                 </button>
+
             `
+
             : "";
 
 
@@ -643,10 +1390,12 @@ function createReviewHtml(
                 <div>
 
                     <strong>
-                        ${escapeHtml(
-        review.name ||
-        "회원"
-    )}
+                        ${
+        escapeHtml(
+            review.name ||
+            "회원"
+        )
+    }
                     </strong>
 
                     <span class="bk-stars">
@@ -664,22 +1413,26 @@ function createReviewHtml(
 
 
             <p>
-                ${escapeHtml(
-        review.content || ""
-    )}
+                ${
+        escapeHtml(
+            review.content ||
+            ""
+        )
+    }
             </p>
 
 
             <time>
-                ${formatDate(
-        review.createdAt
-    )}
+                ${
+        formatDate(
+            review.createdAt
+        )
+    }
             </time>
 
         </article>
 
     `;
-
 }
 
 
@@ -691,34 +1444,46 @@ async function saveReview() {
 
     if (!getToken()) {
 
-        alert(
-            "로그인이 필요합니다."
-        );
-
-        location.href =
-            "/login.html";
+        redirectToLogin();
 
         return;
+    }
 
+
+    const contentElement =
+        document.getElementById(
+            "reviewContent"
+        );
+
+
+    const ratingElement =
+        document.getElementById(
+            "rating"
+        );
+
+
+    if (
+        !contentElement ||
+        !ratingElement
+    ) {
+
+        alert(
+            "리뷰 입력 정보를 확인할 수 없습니다."
+        );
+
+        return;
     }
 
 
     const content =
-        document
-            .getElementById(
-                "reviewContent"
-            )
+        contentElement
             .value
             .trim();
 
 
     const rating =
         Number(
-            document
-                .getElementById(
-                    "rating"
-                )
-                .value
+            ratingElement.value
         );
 
 
@@ -729,7 +1494,22 @@ async function saveReview() {
         );
 
         return;
+    }
 
+
+    if (
+        !Number.isInteger(
+            rating
+        ) ||
+        rating < 1 ||
+        rating > 5
+    ) {
+
+        alert(
+            "평점을 선택해주세요."
+        );
+
+        return;
     }
 
 
@@ -741,10 +1521,11 @@ async function saveReview() {
 
     if (button) {
 
-        button.disabled = true;
+        button.disabled =
+            true;
+
         button.textContent =
             "등록 중...";
-
     }
 
 
@@ -754,7 +1535,8 @@ async function saveReview() {
             await fetch(
                 `/books/${id}/reviews`,
                 {
-                    method: "POST",
+                    method:
+                        "POST",
 
                     headers: {
 
@@ -764,23 +1546,35 @@ async function saveReview() {
                         Authorization:
                             "Bearer " +
                             getToken()
-
                     },
 
                     body:
-                        JSON.stringify({
-                            content,
-                            rating
-                        })
-
+                        JSON.stringify(
+                            {
+                                content,
+                                rating
+                            }
+                        )
                 }
             );
+
+
+        if (
+            await handleAuthError(
+                response
+            )
+        ) {
+
+            return;
+        }
 
 
         const data =
             await response
                 .json()
-                .catch(() => ({}));
+                .catch(
+                    () => ({})
+                );
 
 
         if (!response.ok) {
@@ -789,40 +1583,40 @@ async function saveReview() {
                 data.message ||
                 "리뷰 등록에 실패했습니다."
             );
-
         }
 
 
-        document
-            .getElementById(
-                "reviewContent"
-            )
-            .value = "";
+        contentElement.value =
+            "";
 
 
-        await Promise.all([
-            loadReviews(),
-            loadReviewInfo()
-        ]);
+        await Promise.all(
+            [
+                loadReviews(),
+                loadReviewInfo()
+            ]
+        );
 
 
     } catch (error) {
 
-        alert(error.message);
+        alert(
+            error.message ||
+            "리뷰 등록에 실패했습니다."
+        );
 
 
     } finally {
 
         if (button) {
 
-            button.disabled = false;
+            button.disabled =
+                false;
+
             button.textContent =
                 "리뷰 등록";
-
         }
-
     }
-
 }
 
 
@@ -834,11 +1628,20 @@ async function deleteReview(
     reviewId
 ) {
 
+    if (!getToken()) {
+
+        redirectToLogin();
+
+        return;
+    }
+
+
     if (
         !confirm(
             "리뷰를 삭제하시겠습니까?"
         )
     ) {
+
         return;
     }
 
@@ -847,11 +1650,16 @@ async function deleteReview(
 
         const response =
             await fetch(
-                "/reviews/" + reviewId,
+                "/reviews/" +
+                encodeURIComponent(
+                    reviewId
+                ),
                 {
-                    method: "DELETE",
+                    method:
+                        "DELETE",
 
                     headers: {
+
                         Authorization:
                             "Bearer " +
                             getToken()
@@ -860,27 +1668,72 @@ async function deleteReview(
             );
 
 
-        if (!response.ok) {
+        if (
+            await handleAuthError(
+                response
+            )
+        ) {
 
-            throw new Error(
-                "리뷰 삭제에 실패했습니다."
-            );
-
+            return;
         }
 
 
-        await Promise.all([
-            loadReviews(),
-            loadReviewInfo()
-        ]);
+        if (!response.ok) {
+
+            let message =
+                "리뷰 삭제에 실패했습니다.";
+
+
+            try {
+
+                const data =
+                    await response.json();
+
+
+                message =
+                    data?.message ||
+                    message;
+
+
+            } catch (error) {
+
+                const text =
+                    await response
+                        .text()
+                        .catch(
+                            () => ""
+                        );
+
+
+                if (text) {
+
+                    message =
+                        text;
+                }
+            }
+
+
+            throw new Error(
+                message
+            );
+        }
+
+
+        await Promise.all(
+            [
+                loadReviews(),
+                loadReviewInfo()
+            ]
+        );
 
 
     } catch (error) {
 
-        alert(error.message);
-
+        alert(
+            error.message ||
+            "리뷰 삭제에 실패했습니다."
+        );
     }
-
 }
 
 
@@ -899,7 +1752,10 @@ async function loadReviewInfo() {
 
 
         if (!response.ok) {
-            throw new Error();
+
+            throw new Error(
+                "리뷰 정보를 불러오지 못했습니다."
+            );
         }
 
 
@@ -909,13 +1765,15 @@ async function loadReviewInfo() {
 
         const average =
             Number(
-                info.averageRating || 0
+                info.averageRating ||
+                0
             ).toFixed(1);
 
 
         const count =
             Number(
-                info.reviewCount || 0
+                info.reviewCount ||
+                0
             );
 
 
@@ -941,21 +1799,21 @@ async function loadReviewInfo() {
 
             reviewInfo.textContent =
                 `★ ${average} · ${count}개 리뷰`;
-
         }
 
 
     } catch (error) {
 
-        console.error(error);
-
+        console.error(
+            "리뷰 정보 조회 오류:",
+            error
+        );
     }
-
 }
 
 
 /* =====================================================
-   UTIL
+   SET TEXT
 ===================================================== */
 
 function setText(
@@ -969,39 +1827,61 @@ function setText(
         );
 
 
-    if (element) {
+    if (!element) {
 
-        element.textContent =
-            value ?? "";
-
+        return;
     }
 
+
+    element.textContent =
+        value ?? "";
 }
 
 
-function formatDate(value) {
+/* =====================================================
+   FORMAT DATE
+===================================================== */
+
+function formatDate(
+    value
+) {
 
     if (!value) {
+
         return "";
     }
 
 
     const date =
-        new Date(value);
-
-
-    return Number.isNaN(
-        date.getTime()
-    )
-        ? value
-        : date.toLocaleDateString(
-            "ko-KR"
+        new Date(
+            value
         );
 
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return value;
+    }
+
+
+    return date
+        .toLocaleDateString(
+            "ko-KR"
+        );
 }
 
 
-function escapeHtml(value) {
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHtml(
+    value
+) {
 
     return String(
         value ?? ""
@@ -1026,5 +1906,4 @@ function escapeHtml(value) {
             "'",
             "&#039;"
         );
-
 }
