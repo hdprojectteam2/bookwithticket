@@ -1,3 +1,7 @@
+body{
+	overflow-x: scroll;
+}
+
 #back-area {
     display: flex;
     gap: 15px;
