@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>공연 상세 | Booketing</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/common/toast.css">
 </head>
 <body class="bk-page bk-detail-page">
 
@@ -305,25 +306,71 @@
                 },
                 body: params
             });
-
             if (res.ok) {
                 log(`[성공] 공연 회차 #${scheduleId} 장바구니 등록 완료`);
-                if (confirm('공연이 장바구니에 담겼습니다.\n장바구니 페이지로 이동하시겠습니까?')) {
-                    localStorage.setItem('openPerformanceCart', 'true');
-                    location.href = '/cart';
-                }
+                showToast("공연이 장바구니에 담겼습니다.");
             } else {
-                const msg = await res.text();
-                log(`[실패] 장바구니 등록 실패: ${msg}`);
-                alert(`장바구니 담기 실패: ${msg || '오류가 발생했습니다.'}`);
-            }
+            	const result =await res.json().catch(() => null);
+            	throw new Error(result?.message || "장바구니 추가에 실패했습니다.");
+                 }
         } catch (e) {
             log(`장바구니 에러: ${e.message}`);
-            alert(`에러: ${e.message}`);
+            showToast(e.message || "장바구니 처리 중 오류가 발생했습니다.");
         }
     }
 
     loadDetail();
+    
+    function showToast(message) {
+    	    const existingToast = document.querySelector(".toast-message");
+
+    	    if (existingToast) {
+    	        existingToast.remove();
+    	    }
+
+    	    const toast = document.createElement("div");
+
+
+    	    toast.className = "toast-message";
+
+
+    	    toast.textContent = message;
+
+
+    	    document.body.appendChild(toast	);
+
+
+    	    setTimeout(
+    	        () => {
+
+    	            toast.classList.add(
+    	                "show"
+    	            );
+
+    	        },
+    	        10
+    	    );
+
+
+    	    setTimeout(
+    	        () => {
+
+    	            toast.classList.remove("show");
+
+
+    	            setTimeout(
+    	                () => {
+
+    	                    toast.remove();
+
+    	                },
+    	                300
+    	            );
+
+    	        },
+    	        2000
+    	    );
+    	}
 </script>
 </body>
 </html>
