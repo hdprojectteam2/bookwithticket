@@ -533,62 +533,11 @@ async function loadLinkedPerformance(
 
 
         /*
-         * 1. 도서 ID 직접 연결
-         * 2. 제목 키워드 연결
+         * DB originalBookId 기반 도서-공연 1:1 정규 연동
          */
-        const linkedPerformance =
-            performances.find(
-                performance =>
-
-                    (
-                        performance.originalBookId &&
-                        performance.originalBookId ==
-                        bookId
-                    ) ||
-
-                    (
-                        bookTitle &&
-                        performance.title &&
-
-                        (
-                            (
-                                bookTitle.includes(
-                                    "오페라"
-                                ) &&
-                                performance.title.includes(
-                                    "오페라"
-                                )
-                            ) ||
-
-                            (
-                                bookTitle.includes(
-                                    "팬텀"
-                                ) &&
-                                performance.title.includes(
-                                    "팬텀"
-                                )
-                            ) ||
-
-                            (
-                                bookTitle.includes(
-                                    "레미제라블"
-                                ) &&
-                                performance.title.includes(
-                                    "레미제라블"
-                                )
-                            ) ||
-
-                            (
-                                bookTitle.includes(
-                                    "지킬"
-                                ) &&
-                                performance.title.includes(
-                                    "지킬"
-                                )
-                            )
-                        )
-                    )
-            );
+        const linkedPerformance = performances.find(
+            performance => performance.originalBookId && String(performance.originalBookId) === String(bookId)
+        );
 
 
         if (!linkedPerformance) {
