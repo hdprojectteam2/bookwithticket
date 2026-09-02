@@ -148,10 +148,14 @@
         <div id="seatArea" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
                 <h3 style="margin:0; font-size:1.1rem; color:#1e293b; font-weight:700;">실시간 좌석 배치도</h3>
-                <div style="font-size:0.85rem; display:flex; gap:14px; align-items:center; font-weight:600; color:#475569;">
-                    <span><span style="display:inline-block; width:12px; height:12px; background:#10b981; border-radius:3px; vertical-align:middle; margin-right:5px;"></span>예매가능</span>
-                    <span><span style="display:inline-block; width:12px; height:12px; background:#f59e0b; border-radius:3px; vertical-align:middle; margin-right:5px;"></span>10분선점</span>
-                    <span><span style="display:inline-block; width:12px; height:12px; background:#ef4444; border-radius:3px; vertical-align:middle; margin-right:5px;"></span>예매완료</span>
+                <div style="font-size:0.82rem; display:flex; gap:10px; align-items:center; font-weight:600; color:#475569; flex-wrap:wrap;">
+                    <span><span style="display:inline-block; width:11px; height:11px; background:#0f766e; border-radius:3px; vertical-align:middle; margin-right:4px;"></span>VIP석</span>
+                    <span><span style="display:inline-block; width:11px; height:11px; background:#10b981; border-radius:3px; vertical-align:middle; margin-right:4px;"></span>R석</span>
+                    <span><span style="display:inline-block; width:11px; height:11px; background:#0891b2; border-radius:3px; vertical-align:middle; margin-right:4px;"></span>S석</span>
+                    <span><span style="display:inline-block; width:11px; height:11px; background:#65a30d; border-radius:3px; vertical-align:middle; margin-right:4px;"></span>A석</span>
+                    <span style="color:#cbd5e1; margin:0 2px;">|</span>
+                    <span><span style="display:inline-block; width:11px; height:11px; background:#f59e0b; border-radius:3px; vertical-align:middle; margin-right:4px;"></span>10분선점</span>
+                    <span><span style="display:inline-block; width:11px; height:11px; background:#ef4444; border-radius:3px; vertical-align:middle; margin-right:4px;"></span>예매완료</span>
                 </div>
             </div>
             <div id="seatsGrid" class="seats-grid"></div>
@@ -262,6 +266,7 @@
     let currentScheduleId = null;
     let lastReservationId = null;
     let lastHoldExpiresAt = null;
+    let currentModalSeatStatus = null;
     let modalTimerInterval = null;
     let currentCategory = null;
     let currentRole = 'USER';
@@ -418,6 +423,7 @@
         }
         const createBtn = document.getElementById('adminCreateBtn');
         const importBtn = document.getElementById('adminImportBtn');
+        const resyncBtn = document.getElementById('adminResyncBtn');
         if (createBtn) {
             createBtn.style.display = (role === 'ADMIN') ? 'inline-block' : 'none';
         }
@@ -833,6 +839,29 @@
 
     let currentSelectedZone = null;
 
+    function getSeatGrade(seat) {
+        if (!seat) return 'A';
+        const num = seat.seatNumber || '';
+        if (num.includes('VIP')) return 'VIP';
+        if (num.includes('R-') || num.includes('R석') || num.includes(' R-')) return 'R';
+        if (num.includes('S-') || num.includes('S석') || num.includes(' S-')) return 'S';
+        if (num.includes('A-') || num.includes('A석') || num.includes(' A-')) return 'A';
+        if (seat.price >= 170000) return 'VIP';
+        if (seat.price >= 140000) return 'R';
+        if (seat.price >= 90000) return 'S';
+        return 'A';
+    }
+
+    function getSeatGradeColor(grade) {
+        switch (grade) {
+            case 'VIP': return '#0f766e'; // 다크 틸 / 딥 에메랄드
+            case 'R': return '#10b981';   // 선명한 에메랄드 그린
+            case 'S': return '#0891b2';   // 청량한 아쿠아 시안
+            case 'A': return '#65a30d';   // 산뜻한 올리브/라임 그린
+            default: return '#10b981';
+        }
+    }
+
     function resetZoneSelection() {
         currentSelectedZone = null;
         if (currentScheduleId) {
@@ -877,25 +906,33 @@
             grid.style.margin = '0 auto';
             grid.style.padding = '15px';
 
-            // 섹터 태그 및 각 섹터별 잔여 좌석 수 집계 ([1섹터 (1~64번)] 등)
+            // 섹터 태그 및 각 섹터별 등급별 잔여 좌석 수 집계
             const sectorMap = new Map();
             allSeats.forEach(s => {
                 if (s.seatNumber) {
                     const match = s.seatNumber.match(/\[(.*?)\]/) || s.seatNumber.match(/(.*?섹터|.*?구역)/);
-                    if (match && match[1]) {
-                        const secName = match[1];
-                        if (!sectorMap.has(secName)) {
-                            sectorMap.set(secName, { total: 0, available: 0, seats: [] });
-                        }
-                        const secInfo = sectorMap.get(secName);
-                        secInfo.total++;
-                        if (s.status === 'AVAILABLE') secInfo.available++;
-                        secInfo.seats.push(s);
+                    const secName = (match && match[1]) ? match[1] : '전체 구역';
+                    if (!sectorMap.has(secName)) {
+                        sectorMap.set(secName, {
+                            total: 0,
+                            available: 0,
+                            grades: { VIP: { total: 0, avail: 0 }, R: { total: 0, avail: 0 }, S: { total: 0, avail: 0 }, A: { total: 0, avail: 0 } },
+                            seats: []
+                        });
                     }
+                    const secInfo = sectorMap.get(secName);
+                    secInfo.total++;
+                    const grade = getSeatGrade(s);
+                    if (secInfo.grades[grade]) {
+                        secInfo.grades[grade].total++;
+                        if (s.status === 'AVAILABLE') secInfo.grades[grade].avail++;
+                    }
+                    if (s.status === 'AVAILABLE') secInfo.available++;
+                    secInfo.seats.push(s);
                 }
             });
 
-            // 1단계: 섹터 미선택 시 ➔ 64개 단위 섹터 블록 카드만 목록으로 표시
+            // 1단계: 섹터 미선택 시 ➔ 섹터 블록 카드 및 등급별 잔여석 요약 표시
             if (!currentSelectedZone && sectorMap.size > 0) {
                 const headerBox = document.createElement('div');
                 headerBox.style.marginBottom = '20px';
@@ -908,7 +945,7 @@
 
                 const cardsContainer = document.createElement('div');
                 cardsContainer.style.display = 'grid';
-                cardsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(170px, 1fr))';
+                cardsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(210px, 1fr))';
                 cardsContainer.style.gap = '14px';
                 cardsContainer.style.width = '100%';
 
@@ -916,17 +953,17 @@
                     const card = document.createElement('div');
                     card.style.background = '#f8fafc';
                     card.style.border = '2px solid #cbd5e1';
-                    card.style.borderRadius = '10px';
-                    card.style.padding = '14px 10px';
+                    card.style.borderRadius = '14px';
+                    card.style.padding = '16px 12px';
                     card.style.cursor = 'pointer';
                     card.style.textAlign = 'center';
                     card.style.transition = 'all 0.2s ease';
-                    card.style.boxShadow = '0 2px 6px rgba(0,0,0,0.05)';
+                    card.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
                     card.style.wordBreak = 'keep-all';
 
                     card.onmouseover = () => {
-                        card.style.borderColor = '#3498db';
-                        card.style.background = '#ebf5fb';
+                        card.style.borderColor = '#2563eb';
+                        card.style.background = '#eff6ff';
                         card.style.transform = 'translateY(-2px)';
                     };
                     card.onmouseout = () => {
@@ -937,10 +974,26 @@
 
                     card.onclick = () => loadSeats(scheduleId, secName);
 
+                    let gradeBadges = '';
+                    ['VIP', 'R', 'S', 'A'].forEach(g => {
+                        const gData = info.grades[g];
+                        if (gData && gData.total > 0) {
+                            const color = getSeatGradeColor(g);
+                            gradeBadges += `
+                                <div style="display:inline-flex; align-items:center; gap:5px; background:#ffffff; border:1.5px solid ${color}; padding:4px 8px; font-size:0.78rem; border-radius:6px; margin:2px; font-weight:800; color:#1e293b; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                                    <span style="display:inline-block; width:9px; height:9px; background:${color}; border-radius:50%; flex-shrink:0;"></span>
+                                    <span style="color:#334155;">${g}</span>
+                                    <span style="color:${gData.avail > 0 ? '#059669' : '#94a3b8'}; font-weight:850; margin-left:1px;">${gData.avail}/${gData.total}</span>
+                                </div>
+                            `;
+                        }
+                    });
+
                     card.innerHTML = `
-                        <div style="font-weight:bold; font-size:0.95rem; color:#2c3e50; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${secName}">${secName}</div>
-                        <div style="font-size:0.8rem; color:#16a34a; font-weight:bold; margin-bottom:10px; white-space:nowrap;">잔여 ${info.available}석 / 총 ${info.total}석</div>
-                        <button style="background:#3498db; color:#fff; border:none; padding:6px 14px; border-radius:5px; font-size:0.82rem; font-weight:bold; cursor:pointer; white-space:nowrap; display:inline-block;">입장하기 ➔</button>
+                        <div style="font-weight:800; font-size:1.02rem; color:#0f172a; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${secName}">${secName}</div>
+                        <div style="font-size:0.85rem; color:#059669; font-weight:800; margin-bottom:10px; white-space:nowrap;">잔여 ${info.available}석 / 총 ${info.total}석</div>
+                        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin-bottom:12px;">${gradeBadges}</div>
+                        <button style="background:#2563eb; color:#fff; border:none; padding:8px 18px; border-radius:8px; font-size:0.85rem; font-weight:800; cursor:pointer; white-space:nowrap; display:inline-block; box-shadow:0 2px 6px rgba(37,99,235,0.25);">입장하기 ➔</button>
                     `;
                     cardsContainer.appendChild(card);
                 });
@@ -995,11 +1048,36 @@
 
             filteredSeats.forEach(seat => {
                 const btn = document.createElement('button');
-                btn.className = `seat-btn seat-${(seat.status || 'AVAILABLE').toLowerCase()}`;
-                btn.innerText = `${seat.seatNumber}\n(${(seat.price || 0).toLocaleString()}원)`;
-                btn.style.fontSize = '0.75rem';
-                btn.style.padding = '8px 4px';
-                btn.style.minHeight = '52px';
+                const status = (seat.status || 'AVAILABLE').toUpperCase();
+                const grade = getSeatGrade(seat);
+                
+                // 좌석명 간소화: "[1섹터 (1~64번)] VIP-1번" -> "VIP-1"
+                let shortSeatName = (seat.seatNumber || '').replace(/\[.*?\]\s*/g, '');
+                if (shortSeatName.endsWith('번')) shortSeatName = shortSeatName.slice(0, -1);
+                
+                btn.className = `seat-btn seat-${status.toLowerCase()}`;
+                btn.innerHTML = `<div style="font-weight:750; font-size:0.75rem; line-height:1.2;">${shortSeatName}</div><div style="font-size:0.68rem; opacity:0.9; margin-top:2px;">${(seat.price || 0).toLocaleString()}원</div>`;
+                btn.style.padding = '6px 2px';
+                btn.style.minHeight = '48px';
+                btn.style.borderRadius = '8px';
+                btn.style.cursor = 'pointer';
+                btn.style.transition = 'all 0.15s ease';
+                btn.style.color = '#ffffff';
+                btn.style.border = 'none';
+
+                if (status === 'AVAILABLE') {
+                    const gradeBg = getSeatGradeColor(grade);
+                    btn.style.background = gradeBg;
+                    btn.onmouseover = () => { btn.style.filter = 'brightness(1.18)'; btn.style.transform = 'scale(1.04)'; };
+                    btn.onmouseout = () => { btn.style.filter = 'none'; btn.style.transform = 'scale(1)'; };
+                } else if (status === 'HELD') {
+                    btn.style.background = '#f59e0b'; // 주황 (10분 선점)
+                    btn.style.cursor = (myReservationIds.includes(seat.reservationId)) ? 'pointer' : 'not-allowed';
+                } else if (status === 'RESERVED') {
+                    btn.style.background = '#ef4444'; // 빨강 (예매 완료)
+                    btn.style.cursor = (myReservationIds.includes(seat.reservationId)) ? 'pointer' : 'not-allowed';
+                }
+
                 btn.onclick = () => handleSeatClick(seat);
                 seatContainer.appendChild(btn);
             });
@@ -1073,7 +1151,7 @@
             lastHoldExpiresAt = null;
         }
 
-        let currentModalSeatStatus = seat.status;
+        currentModalSeatStatus = seat ? seat.status : null;
         const tossBtn = document.getElementById('btnTossPay');
         const confirmBtn = document.getElementById('btnConfirm');
         const cancelBtn = document.getElementById('btnCancel');
@@ -1085,7 +1163,9 @@
             if (tossBtn) tossBtn.style.display = 'none';
             if (confirmBtn) confirmBtn.style.display = 'none';
             cancelBtn.innerText = '결제 취소 (환불)';
-            cancelBtn.style.background = '#ef4444';
+            cancelBtn.style.background = '#dc2626';
+            cancelBtn.style.color = '#ffffff';
+            cancelBtn.style.border = 'none';
         } else {
             document.getElementById('modalTitle').innerText = `${seat.seatNumber} 선점 및 결제`;
             document.getElementById('modalDesc').innerText = '10분간 선점된 좌석입니다. 결제 방식을 선택하세요.';
@@ -1093,7 +1173,9 @@
             if (tossBtn) tossBtn.style.display = 'block';
             if (confirmBtn) confirmBtn.style.display = 'block';
             cancelBtn.innerText = '선점 취소';
-            cancelBtn.style.background = '#f59e0b';
+            cancelBtn.style.background = '#fee2e2';
+            cancelBtn.style.color = '#dc2626';
+            cancelBtn.style.border = '1px solid #fecaca';
             startModalTimer();
         }
         document.getElementById('customModal').style.display = 'flex';
@@ -1124,7 +1206,7 @@
                 setTimeout(() => {
                     alert('선점 시간이 만료되었습니다.');
                     closeCustomModal();
-                    loadSeats(currentScheduleId);
+                    loadSeats(currentScheduleId, currentSelectedZone);
                 }, 300);
                 return;
             }
@@ -1164,7 +1246,7 @@
                     log(`[실패] 환불 실패: ${data.message || res.status}`);
                     alert(`[환불 실패] ${data.message || '환불 처리에 실패했습니다.'}`);
                 }
-                loadSeats(currentScheduleId);
+                loadSeats(currentScheduleId, currentSelectedZone);
             } catch (e) {
                 log(`환불 에러: ${e.message}`);
                 alert(`환불 통신 에러: ${e.message}`);
@@ -1182,14 +1264,15 @@
             const data = await res.json();
             if (res.ok && data.success) {
                 log(`[성공] ${action} 성공! 예매 상태: ${data.data.status}`);
-                alert(`[${action} 성공] 처리되었습니다!`);
+                alert(`[${action === 'cancel' ? '선점 취소' : '예매 확정'} 성공] 정상 처리되었습니다!`);
             } else {
                 log(`[실패] ${action} 실패: ${data.message}`);
-                alert(`[실패] ${data.message}`);
+                alert(`[실패] ${data.message || '처리 중 오류가 발생했습니다.'}`);
             }
-            loadSeats(currentScheduleId);
+            loadSeats(currentScheduleId, currentSelectedZone);
         } catch (e) {
             log(`에러: ${e.message}`);
+            alert(`통신 에러: ${e.message}`);
         }
     }
 
