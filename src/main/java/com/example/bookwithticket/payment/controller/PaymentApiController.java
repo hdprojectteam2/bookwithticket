@@ -99,38 +99,24 @@ public class PaymentApiController {
 
 	private ResponseEntity<PaymentCheckoutResponse> getPerformanceCheckoutInfo(Long memberId, String orderNumber) {
 
-		Long reservationId;
-
-		try {
-
-			reservationId = Long.parseLong(orderNumber);
-
-		} catch (NumberFormatException e) {
-
-			throw new IllegalArgumentException("올바르지 않은 예매 ID입니다.");
-		}
-
-		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
+		Reservation reservation = reservationRepository.findByReservationNumberAndMemberId(orderNumber, memberId)
 				.orElseThrow(() -> new IllegalArgumentException("결제할 수 없는 공연 예매입니다."));
 
 		if (reservation.getStatus() != ReservationStatus.HELD) {
-
 			throw new IllegalArgumentException("결제 대기 상태의 공연 예매가 아닙니다.");
 		}
 
 		if (reservation.isExpired()) {
-
 			throw new IllegalArgumentException("좌석 선점 시간이 만료되었습니다.");
 		}
 
 		if (reservation.getTotalPrice() <= 0) {
-
 			throw new IllegalArgumentException("결제 금액이 올바르지 않습니다.");
 		}
 
 		String orderName = reservation.getSchedule().getPerformance().getTitle();
 
-		String paymentOrderId = "PERF_" + reservation.getId();
+		String paymentOrderId = reservation.getReservationNumber();
 
 		PaymentCheckoutResponse response = new PaymentCheckoutResponse(paymentOrderId, orderName,
 				reservation.getTotalPrice(), clientKey, reservation.getSeat().getSeatNumber());

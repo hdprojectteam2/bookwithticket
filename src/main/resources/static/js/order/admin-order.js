@@ -597,8 +597,8 @@ async function saveDeliveryStatus(orderNumber) {
 }
 
 function createRefundControl(order) {
-	
-	const returnMethodText = getReturnMethodText(order.returnMethod);
+
+    const returnMethodText = getReturnMethodText(order.returnMethod);
 
     if (order.refundStatus === "REQUESTED" && order.refundId) {
 
@@ -619,8 +619,8 @@ function createRefundControl(order) {
 
 				반품 방법:
 			    ${escapeHtml(
-					returnMethodText
-				)}
+            returnMethodText
+        )}
 				
 			</div>
 
@@ -669,8 +669,8 @@ function createRefundControl(order) {
 
 					반품 방법:
 				    ${escapeHtml(
-						returnMethodText
-					)}
+            returnMethodText
+        )}
 					
 				</div>
 
@@ -710,8 +710,8 @@ function createRefundControl(order) {
 
 					반품 방법:
 				    ${escapeHtml(
-						returnMethodText
-					)}
+            returnMethodText
+        )}
 					
 				</div>
 
@@ -743,7 +743,7 @@ function getReturnMethodText(returnMethod) {
     if (!returnMethod) {
         return "-";
     }
-	
+
     if (returnMethod === "PICKUP") {
         return "택배 수거 요청";
     }
@@ -867,7 +867,7 @@ function createCourierOptions(currentCourier) {
     const couriers = [
         "",
         "우체국택배",
-		"CJ대한통운",
+        "CJ대한통운",
         "한진택배",
         "로젠택배",
         "롯데택배",
@@ -885,18 +885,18 @@ function createCourierOptions(currentCourier) {
         "우리택배(구호남택배)",
         "CU편의점택배",
         "농협택배",
-		"홈픽택배",
-		"IK물류",
-		"성훈물류",
-		"CR로지텍",
-		"용마로지스",
-		"원더스퀵",
-		"컬리넥스트마일",
-		"풀앳홈",
-		"두발히어로",
-		"위니아딤채",
-		"지니고 당일배송",
-		"카카오 T 당일배송"
+        "홈픽택배",
+        "IK물류",
+        "성훈물류",
+        "CR로지텍",
+        "용마로지스",
+        "원더스퀵",
+        "컬리넥스트마일",
+        "풀앳홈",
+        "두발히어로",
+        "위니아딤채",
+        "지니고 당일배송",
+        "카카오 T 당일배송"
     ];
 
 
@@ -1197,7 +1197,7 @@ async function loadPerformanceOrders() {
     const reservations = await response.json();
 
     renderPerformanceOrders(reservations);
-	}
+}
 
 function renderPerformanceOrders(reservations) {
 
@@ -1230,13 +1230,11 @@ function renderPerformanceOrders(reservations) {
                 <tr>
 
                     <td>
-                        ${reservation.reservationId}
+                        ${escapeHtml(getPerformanceReservationNumber(reservation))}
                     </td>
 
                     <td>
-                        ${formatDate(
-                            reservation.reservedAt
-                        )}
+					${reservation.createdAt ? formatDate(reservation.createdAt) : "-"}
                     </td>
 
                     <td>
@@ -1245,32 +1243,32 @@ function renderPerformanceOrders(reservations) {
 
                     <td>
                         ${escapeHtml(
-                            reservation.performanceTitle
-                        )}
+                reservation.performanceTitle
+            )}
                     </td>
 
                     <td>
                         ${formatDate(
-                            reservation.performanceTime
-                        )}
+                reservation.performanceTime
+            )}
                     </td>
 
                     <td>
                         ${escapeHtml(
-                            reservation.seatNumber
-                        )}
+                reservation.seatNumber
+            )}
                     </td>
 
                     <td>
                         ${formatPrice(
-                            reservation.totalPrice
-                        )}원
+                reservation.totalPrice
+            )}원
                     </td>
 
                     <td>
                         ${getReservationStatusText(
-                            reservation.reservationStatus
-                        )}
+                reservation.reservationStatus
+            )}
                     </td>
 
                     <td>
@@ -1296,8 +1294,8 @@ function renderPerformanceOrders(reservations) {
                     <td colspan="9">
 
                         ${createPerformanceDetail(
-                            reservation
-                        )}
+                reservation
+            )}
 
                     </td>
                 </tr>
@@ -1319,7 +1317,7 @@ function createPerformanceDetail(reservation) {
 
                 <div>
                     예매번호:
-                    ${reservation.reservationId ?? "-"}
+                    ${escapeHtml(getPerformanceReservationNumber(reservation))}
                 </div>
 
                 <div>
@@ -1329,31 +1327,31 @@ function createPerformanceDetail(reservation) {
 
                 <div>
                     예매일:
-					${reservation.reservedAt
-						? formatDate(reservation.reservedAt)
-					    : "-"
-					}
+					${reservation.createdAt
+            ? formatDate(reservation.createdAt)
+            : "-"
+        }
                 </div>
 
                 <div>
                     예매상태:
                     ${getReservationStatusText(
-                        reservation.reservationStatus
-                    )}
+            reservation.reservationStatus
+        )}
                 </div>
 
                 <div>
                     좌석:
                     ${escapeHtml(
-                        reservation.seatNumber ?? "-"
-                    )}
+            reservation.seatNumber ?? "-"
+        )}
                 </div>
 
                 <div>
                     결제금액:
                     ${formatPrice(
-                        reservation.totalPrice
-                    )}원
+            reservation.totalPrice
+        )}원
                 </div>
 
             </div>
@@ -1366,8 +1364,8 @@ function createPerformanceDetail(reservation) {
                 </h3>
 
                 ${createPerformanceRefundControl(
-                    reservation
-                )}
+            reservation
+        )}
 
             </div>
 
@@ -1469,7 +1467,7 @@ function togglePerformanceDetail(reservationId) {
 
     if (openedReservationId) {
 
-        const previousRow =document.getElementById(`performance-detail-${openedReservationId}`);
+        const previousRow = document.getElementById(`performance-detail-${openedReservationId}`);
 
         if (previousRow) {
             previousRow.style.display = "none";
@@ -1480,4 +1478,18 @@ function togglePerformanceDetail(reservationId) {
     selectedRow.style.display = "table-row";
 
     openedReservationId = reservationId;
+}
+
+function getPerformanceReservationNumber(reservation) {
+    const reservationNumber = reservation.reservationNumber;
+
+    if (reservationNumber && reservationNumber.trim() !== "" && reservationNumber !== "-" && reservationNumber !== "--") {
+        return reservationNumber;
+    }
+
+    if (reservation.reservationId !== null && reservation.reservationId !== undefined) {
+        return `PERF_${reservation.reservationId}`;
+    }
+
+    return "--";
 }

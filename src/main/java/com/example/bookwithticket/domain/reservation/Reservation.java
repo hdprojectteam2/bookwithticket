@@ -15,6 +15,9 @@ public class Reservation extends BaseTimeEntity {
 
     @Column(nullable = false)
     private Long memberId;
+    
+    @Column(name = "reservation_number", unique = true, length = 30)
+    private String reservationNumber;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "schedule_id")
@@ -35,16 +38,18 @@ public class Reservation extends BaseTimeEntity {
 
     protected Reservation() {}
 
-    public Reservation(Long memberId, PerformanceSchedule schedule, Seat seat, int totalPrice, int holdMinutes) {
+    public Reservation(Long memberId, PerformanceSchedule schedule, Seat seat, int totalPrice, int holdMinutes, String reservationNumber) {
         this.memberId = memberId;
         this.schedule = schedule;
         this.seat = seat;
         this.totalPrice = totalPrice;
         this.status = ReservationStatus.HELD;
         this.holdExpiresAt = LocalDateTime.now().plusMinutes(holdMinutes);
+        this.reservationNumber = reservationNumber;
     }
 
     public Long getId() { return id; }
+    public String getReservationNumber() { return reservationNumber; }
     public Long getMemberId() { return memberId; }
     public PerformanceSchedule getSchedule() { return schedule; }
     public Seat getSeat() { return seat; }
@@ -76,4 +81,5 @@ public class Reservation extends BaseTimeEntity {
     public void expire() {
         this.status = ReservationStatus.EXPIRED;
     }
+
 }

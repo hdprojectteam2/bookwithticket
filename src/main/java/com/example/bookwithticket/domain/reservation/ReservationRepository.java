@@ -21,4 +21,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     
     // 스케줄 ID에 연관된 모든 예매 삭제
     void deleteByScheduleId(Long scheduleId);
+    
+	Optional<Reservation> findByReservationNumberAndMemberId(String reservationNumber, Long memberId);
+
+	Optional<Reservation> findByReservationNumber(String reservationNumber);
 }

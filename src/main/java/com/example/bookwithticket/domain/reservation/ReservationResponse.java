@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record ReservationResponse(
     Long id,
+    String reservationNumber,
     Long scheduleId,
     String performanceTitle,
     LocalDateTime performanceTime,
@@ -17,6 +18,7 @@ public record ReservationResponse(
     public static ReservationResponse from(Reservation r) {
         return new ReservationResponse(
             r.getId(),
+            r.getReservationNumber(),
             r.getSchedule().getId(),
             r.getSchedule().getPerformance() != null ? r.getSchedule().getPerformance().getTitle() : "공연",
             r.getSchedule().getPerformanceTime(),

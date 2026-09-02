@@ -108,9 +108,7 @@ function setupRetryButton() {
         retryButton.addEventListener(
             "click",
             function() {
-                const reservationId = orderId.replace(/^PERF_/, "");
-
-                location.href = `/payments/checkout?orderNumber=${encodeURIComponent(reservationId)}`;
+                location.href = `/payments/checkout?orderNumber=${encodeURIComponent(orderId)}`;
             }
         );
 

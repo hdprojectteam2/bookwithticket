@@ -26,9 +26,7 @@ async function loadDetail() {
 
     if (type === "performance") {
 
-        const reservationId = id.replace(/^PERF_/, "");
-
-        await loadPerformanceDetail(reservationId);
+        await loadPerformanceDetail(id);
 
         return;
     }
@@ -430,13 +428,13 @@ function createBookDetailItem(item) {
 }
 
 
-async function loadPerformanceDetail(reservationId) {
+async function loadPerformanceDetail(reservationNumber) {
 
     try {
 
         const response =
             await fetch(
-                `/api/history/performances/${encodeURIComponent(reservationId)}`,
+                `/api/history/performances/${encodeURIComponent(reservationNumber)}`,
 				{
 					headers: getAuthHeaders()
 				}

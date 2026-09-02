@@ -1,18 +1,23 @@
 	//redis
 package com.example.bookwithticket.domain.reservation;
 
-import com.example.bookwithticket.domain.performance.PerformanceSchedule;
-import com.example.bookwithticket.domain.performance.PerformanceScheduleRepository;
-import com.example.bookwithticket.global.exception.BusinessException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.bookwithticket.domain.performance.PerformanceSchedule;
+import com.example.bookwithticket.domain.performance.PerformanceScheduleRepository;
+import com.example.bookwithticket.global.exception.BusinessException;
 
 @Service
 @Transactional(readOnly = true)
@@ -121,7 +126,7 @@ public class ReservationService {
 
             // 5. DB 상태 변경 및 예약 생성
             seat.updateStatus(SeatStatus.HELD);
-            Reservation reservation = new Reservation(memberId, schedule, seat, seat.getPrice(), 10);
+            Reservation reservation = new Reservation(memberId, schedule, seat, seat.getPrice(), 10, createReservationNumber());
             Reservation saved = reservationRepository.save(reservation);
             com.example.bookwithticket.global.websocket.SeatWebSocketHandler.broadcastSeatUpdate(request.scheduleId(), request.seatId(), "HELD");
             return ReservationResponse.from(saved);
@@ -187,5 +192,17 @@ public class ReservationService {
                 .stream()
                 .map(ReservationResponse::from)
                 .toList();
+    }
+    
+    private String createReservationNumber() {
+        String date = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        String randomValue = UUID.randomUUID()
+                .toString()
+                .replace("-", "")
+                .substring(0, 6)
+                .toUpperCase();
+
+        return "PERF_" + date + randomValue;
     }
 }

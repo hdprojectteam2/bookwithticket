@@ -221,51 +221,21 @@ async function showPerformanceSuccess(paymentResult, originalOrderId, requestAmo
 
 async function loadPerformanceReservation(reservationNumber) {
 
-    const reservationId = parseReservationId(reservationNumber);
-
-    const response =
-        await fetch(
-            `/api/history/performances/${encodeURIComponent(reservationId)}`,
-            {
-                headers:
-                    getAuthHeaders()
-            }
-        );
-
+    const response = await fetch(
+        `/api/history/performances/${encodeURIComponent(reservationNumber)}`,
+        {
+            headers: getAuthHeaders()
+        }
+    );
 
     if (!response.ok) {
         const message = await response.text();
-
         throw new Error(message || "예매 정보를 불러오지 못했습니다.");
     }
 
     return await response.json();
 }
 
-function parseReservationId(reservationNumber) {
-
-    if (!reservationNumber) {
-        throw new Error("예매번호를 확인할 수 없습니다.");
-    }
-
-
-    let value = String(reservationNumber);
-
-
-    if (value.startsWith("PERF_")) {
-        value = value.substring("PERF_".length);
-    }
-
-
-    const reservationId = Number(value);
-
-    if (!Number.isInteger(reservationId) || reservationId <= 0) {
-
-        throw new Error("올바르지 않은 예매번호입니다.");
-    }
-
-    return reservationId;
-}
 
 function renderPerformanceInfo(reservation) {
 

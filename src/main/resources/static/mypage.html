@@ -113,19 +113,19 @@
                 const status={HELD:'선점 중',CONFIRMED:'예매 완료',CANCELED:'취소됨',EXPIRED:'시간 만료'}[r.status]||r.status;
                 const cls={HELD:'held',CONFIRMED:'confirmed',CANCELED:'canceled',EXPIRED:'canceled'}[r.status]||'canceled';
                 const time=r.performanceTime?new Date(r.performanceTime).toLocaleString('ko-KR'):'-';
-                const cancel=r.status==='HELD'||r.status==='CONFIRMED'?`<button class="bk-secondary bk-small-btn" onclick="cancelMyReservation(${r.id}, '${r.status}')">${r.status==='HELD'?'선점 취소':'예매 취소'}</button>`:'';
-                return `<article class="bk-reservation-item"><div class="bk-reservation-main"><div class="bk-reservation-top"><strong>예매 #${r.id}</strong><span class="bk-status ${cls}">${status}</span></div><h3>${r.performanceTitle||'공연'}</h3><p>${time} · 좌석 ${r.seatNumber||'-'} · ${Number(r.price||0).toLocaleString()}원</p></div>${cancel}</article>`;
+                const cancel=r.status==='HELD'||r.status==='CONFIRMED'?`<button class="bk-secondary bk-small-btn" onclick="cancelMyReservation(${r.id}, '${r.status}', '${r.reservationNumber ?? ""}')">${r.status==='HELD'?'선점 취소':'예매 취소'}</button>`:'';
+                return `<article class="bk-reservation-item"><div class="bk-reservation-main"><div class="bk-reservation-top"><strong>예매 #${r.reservationNumber}</strong><span class="bk-status ${cls}">${status}</span></div><h3>${r.performanceTitle||'공연'}</h3><p>${time} · 좌석 ${r.seatNumber||'-'} · ${Number(r.price||0).toLocaleString()}원</p></div>${cancel}</article>`;
             }).join('')+'</div>';
         } catch(e){container.innerHTML='<p class="bk-error-text">예매 내역을 불러오지 못했습니다.</p>';}
     }
-    async function cancelMyReservation(reservationId,currentStatus){
+    async function cancelMyReservation(reservationId,currentStatus,reservationNumber){
         const msg=currentStatus==='CONFIRMED'?`예매 번호 #${reservationId} 건을 결제 취소 및 환불하시겠습니까?`:`예매 번호 #${reservationId} 건의 좌석 선점을 취소하시겠습니까?`;
         if(!confirm(msg)) return;
         const token=localStorage.getItem('token')||localStorage.getItem('accessToken');
         try{
         	let response;
             if (currentStatus === 'CONFIRMED') {
-            	window.open(`/refund.html?type=performance&id=${encodeURIComponent(`PERF_${reservationId}`)}`, "_blank", "width=500,height=600");
+            	window.open(`/refund.html?type=performance&id=${encodeURIComponent(reservationNumber)}`, "_blank", "width=500,height=600");
             	return;
             } else {
             	response = await fetch(

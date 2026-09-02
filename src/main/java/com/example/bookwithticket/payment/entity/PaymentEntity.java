@@ -128,6 +128,10 @@ public class PaymentEntity {
 	public LocalDateTime getApprovedAt() {
 		return approvedAt;
 	}
+	
+	public LocalDateTime getCreatedAt() {
+	    return createdAt;
+	}
 
 	public Long getReservationId() {
 		return reservationId;

@@ -81,7 +81,7 @@ public class PerformanceHistoryServiceImpl implements PerformanceHistoryService 
 			}
 		}
 
-		return new PerformanceHistoryDto("PERF_" + reservation.getId(), performance.getTitle(),
+		return new PerformanceHistoryDto(reservation.getReservationNumber(), performance.getTitle(),
 				schedule.getPerformanceTime(), performance.getPosterUrl(), performance.getVenue(),
 				reservation.getSeat().getSeatNumber(), reservation.getTotalPrice(),
 				convertReservationStatus(reservation.getStatus()), reservation.getStatus().name(), refundStatus,
@@ -111,9 +111,9 @@ public class PerformanceHistoryServiceImpl implements PerformanceHistoryService 
 
 	@Override
 	@Transactional(readOnly = true)
-	public PerformanceHistoryDto findReservationHistoryDetail(Long memberId, Long reservationId) {
+	public PerformanceHistoryDto findReservationHistoryDetail(Long memberId, String reservationNumber) {
 
-		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
+		Reservation reservation = reservationRepository.findByReservationNumberAndMemberId(reservationNumber, memberId)
 				.orElseThrow(() -> new IllegalArgumentException("예매 내역을 찾을 수 없습니다."));
 
 		return toDto(reservation);

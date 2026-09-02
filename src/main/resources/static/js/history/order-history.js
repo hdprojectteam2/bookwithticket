@@ -467,7 +467,13 @@ function getBookRefundButton(history) {
 
 
 function getPerformanceRefundButton(history) {
-    const canRefund = history.reservationStatusCode === "CONFIRMED" && history.refundStatusCode == null;
+	const performanceTime = new Date(history.performanceStartAt);
+
+	const now = new Date();
+
+	const performanceStarted = now >= performanceTime;
+			
+    const canRefund = history.reservationStatusCode === "CONFIRMED" && history.refundStatusCode == null && !performanceStarted;
 
     if (!canRefund) {
         return "";

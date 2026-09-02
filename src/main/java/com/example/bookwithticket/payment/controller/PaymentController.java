@@ -21,13 +21,11 @@ public class PaymentController {
 			return "payments/checkout";
 		}
 
-		try {
-			Long.parseLong(orderNumber);
-		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("올바르지 않은 주문번호 또는 예매번호입니다.");
+		if (orderNumber.startsWith("PERF_")) {
+			return "payments/performanceCheckout";
 		}
 
-		return "payments/performanceCheckout";
+		throw new IllegalArgumentException("올바르지 않은 주문번호 또는 예매번호입니다.");
 	}
 
 	@GetMapping("/payments/success")

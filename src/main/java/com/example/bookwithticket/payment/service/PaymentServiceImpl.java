@@ -195,9 +195,8 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	private PaymentConfirmResponse confirmPerformancePayment(Long memberId, PaymentConfirmRequest request) {
-		Long reservationId = parsePerformanceOrderId(request.getOrderId());
-
-		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
+		Reservation reservation = reservationRepository
+				.findByReservationNumberAndMemberId(request.getOrderId(), memberId)
 				.orElseThrow(() -> new IllegalArgumentException("결제할 수 없는 공연 예매입니다."));
 
 		if (reservation.getTotalPrice() != request.getAmount()) {
@@ -220,7 +219,7 @@ public class PaymentServiceImpl implements PaymentService {
 			throw new IllegalArgumentException("이미 결제가 완료된 예매입니다.");
 		}
 
-		String paymentOrderId = "PERF_" + reservation.getId();
+		String paymentOrderId = reservation.getReservationNumber();
 
 		String idempotencyKey = createIdempotencyKey(paymentOrderId, request.getPaymentKey());
 
@@ -472,11 +471,10 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	private void savePerformancePaymentFailure(Long memberId, PaymentFailureRequest request) {
-		Long reservationId = parsePerformanceOrderId(request.getOrderId());
-
-		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
-				.orElseThrow(() -> new IllegalArgumentException("실패 처리할 공연 예매가 없습니다."));
-
+		Reservation reservation = reservationRepository
+				.findByReservationNumberAndMemberId(request.getOrderId(), memberId)
+				.orElseThrow(() -> new IllegalArgumentException("결제할 수 없는 공연 예매입니다."));
+		
 		String idempotencyKey = UUID.randomUUID().toString();
 
 		paymentFailureService.savePerformanceFailure(reservation.getId(), null, idempotencyKey,
@@ -497,19 +495,6 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 
 		return "UNKNOWN_PAYMENT_ERROR";
-	}
-
-	private Long parsePerformanceOrderId(String orderId) {
-
-		if (orderId == null || !orderId.startsWith("PERF_")) {
-			throw new IllegalArgumentException("올바르지 않은 공연 결제번호입니다.");
-		}
-
-		try {
-			return Long.parseLong(orderId.substring(5));
-		} catch (NumberFormatException e) {
-			throw new IllegalArgumentException("올바르지 않은 공연 결제번호입니다.");
-		}
 	}
 
 	private void requestTossCompensationCancel(String paymentKey) {

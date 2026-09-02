@@ -5,21 +5,23 @@ import java.time.LocalDateTime;
 public class AdminReservationResponse {
 
 	private final Long reservationId;
+	private final String reservationNumber;
 	private final Long memberId;
-	private final LocalDateTime reservedAt;
+	private final LocalDateTime createdAt;
 	private final String performanceTitle;
 	private final LocalDateTime performanceTime;
 	private final String seatNumber;
 	private final int totalPrice;
 	private final String reservationStatus;
 
-	public AdminReservationResponse(Long reservationId, Long memberId, LocalDateTime reservedAt,
+	public AdminReservationResponse(Long reservationId, String reservationNumber, Long memberId, LocalDateTime createdAt,
 			String performanceTitle, LocalDateTime performanceTime, String seatNumber, int totalPrice,
 			String reservationStatus) {
 
 		this.reservationId = reservationId;
+	    this.reservationNumber = reservationNumber;
 		this.memberId = memberId;
-		this.reservedAt = reservedAt;
+		this.createdAt = createdAt;
 		this.performanceTitle = performanceTitle;
 		this.performanceTime = performanceTime;
 		this.seatNumber = seatNumber;
@@ -30,13 +32,17 @@ public class AdminReservationResponse {
 	public Long getReservationId() {
 		return reservationId;
 	}
+	
+	public String getReservationNumber() {
+	    return reservationNumber;
+	}
 
 	public Long getMemberId() {
 		return memberId;
 	}
 
-	public LocalDateTime getReservedAt() {
-		return reservedAt;
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
 	}
 
 	public String getPerformanceTitle() {

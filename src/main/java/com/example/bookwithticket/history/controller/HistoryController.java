@@ -87,14 +87,14 @@ public class HistoryController {
 		return ResponseEntity.ok(response);
 	}
 
-	@GetMapping("/api/history/performances/{reservationId}")
+	@GetMapping("/api/history/performances/{reservationNumber}")
 	public ResponseEntity<PerformanceHistoryDto> performanceOrderDetail(
-			@PathVariable(name = "reservationId") Long reservationId, Authentication authentication) {
+			@PathVariable(name = "reservationNumber") String reservationNumber, Authentication authentication) {
 
 		Long memberId = getCurrentMemberId(authentication);
 
 		PerformanceHistoryDto response = performanceHistoryService.findReservationHistoryDetail(memberId,
-				reservationId);
+				reservationNumber);
 
 		return ResponseEntity.ok(response);
 	}

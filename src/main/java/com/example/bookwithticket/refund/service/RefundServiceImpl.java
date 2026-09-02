@@ -1,5 +1,7 @@
 package com.example.bookwithticket.refund.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -155,14 +157,20 @@ public class RefundServiceImpl implements RefundService {
 
 		validateReason(reason);
 
-		Long reservationId = parsePerformanceReservationId(reservationNumber);
-
-		Reservation reservation = reservationRepository.findByIdAndMemberId(reservationId, memberId)
+		Reservation reservation = reservationRepository.findByReservationNumberAndMemberId(reservationNumber, memberId)
 				.orElseThrow(() -> new IllegalArgumentException("환불할 수 있는 예매가 없습니다."));
-
+		
 		if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
 
 			throw new IllegalArgumentException("예매 완료 상태만 환불할 수 있습니다.");
+		}
+		
+		if (!LocalDateTime.now().isBefore(
+		        reservation.getSchedule().getPerformanceTime())) {
+
+		    throw new IllegalArgumentException(
+		            "공연이 시작된 이후에는 환불할 수 없습니다."
+		    );
 		}
 
 		PaymentEntity payment = paymentRepository
@@ -187,30 +195,6 @@ public class RefundServiceImpl implements RefundService {
 		refund.complete();
 
 		return new RefundResponse(refund.getId(), refund.getStatus().name(), "환불이 완료되었습니다.");
-	}
-
-	private Long parsePerformanceReservationId(String reservationNumber) {
-
-		if (reservationNumber == null || reservationNumber.isBlank()) {
-
-			throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
-		}
-
-		String reservationId = reservationNumber;
-
-		if (reservationNumber.startsWith("PERF_")) {
-
-			reservationId = reservationNumber.substring("PERF_".length());
-		}
-
-		try {
-
-			return Long.parseLong(reservationId);
-
-		} catch (NumberFormatException e) {
-
-			throw new IllegalArgumentException("올바르지 않은 예매번호입니다.");
-		}
 	}
 
 	@Override
