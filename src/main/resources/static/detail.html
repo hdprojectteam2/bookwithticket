@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공연 상세 | Booketing</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/common/toast.css">
+</head>
+<body class="bk-page bk-detail-page">
+
+<div class="bk-wide-shell">
+    <header class="bk-topbar">
+        <a href="/mainpage.html" class="bk-brand">
+            <span class="bk-logo">B</span>
+            <span>Booketing</span>
+        </a>
+        <nav class="bk-nav">
+            <a href="/mainpage.html">홈</a>
+            <a href="/books.html">도서</a>
+            <a href="/index.html" class="active">공연</a>
+            <a href="/cart">장바구니</a>
+            <a href="/history">구매내역</a>
+            <a href="/mypage.html">마이페이지</a>
+        </nav>
+    </header>
+
+    <main style="padding-top: 32px;">
+        <div id="detailContent">
+            <p style="color: var(--bk-sub); text-align: center; padding: 40px 0;">공연 정보를 불러오는 중입니다...</p>
+        </div>
+    </main>
+</div>
+
+<script>
+    function log(msg) {
+        console.log(`[${new Date().toLocaleTimeString()}] ${msg}`);
+    }
+
+    async function loadDetail() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+
+        if (!id) {
+            document.getElementById('detailContent').innerHTML = '<div class="bk-detail-section" style="text-align:center; padding:40px;"><p style="color:var(--bk-danger); font-weight:bold;">잘못된 접근입니다. 공연 ID가 없습니다.</p><button onclick="location.href=\'/index.html\'" class="bk-primary" style="margin-top:12px;">← 공연 목록으로 이동</button></div>';
+            log('[실패] 공연 ID가 전달되지 않음');
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/performances/${id}`, { headers: getAuthHeaders() });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                const p = data.data;
+                log(`GET /api/performances/${id} -> HTTP ${res.status} : ${p.title}`);
+
+                // 회차 목록 가져오기
+                let scheduleHtml = '<p style="color:var(--bk-muted); font-size:0.9rem;">등록된 회차가 없습니다.</p>';
+                try {
+                    const schRes = await fetch(`/api/performances/${id}/schedules`);
+                    const schData = await schRes.json();
+                    if (schRes.ok && schData.success && Array.isArray(schData.data) && schData.data.length > 0) {
+                        scheduleHtml = `<div style="display:flex; flex-wrap:wrap; gap:12px;">` + schData.data.map(s => {
+                            const timeStr = new Date(s.performanceTime).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                            const seatInfoStr = (s.totalSeats > 0) ? ` <span style="font-size:0.82rem; color:var(--bk-success); font-weight:bold; margin-left:4px;">(잔여 ${s.availableSeats} / ${s.totalSeats}석)</span>` : '';
+                            const reserveBtns = p.active ? `
+                                <div style="display:flex; gap:8px;">
+                                    <button onclick="location.href='/index.html?perfId=${id}&scheduleId=${s.id}'" style="background:linear-gradient(135deg, #3b82f6, var(--bk-blue)); color:#fff; border:none; padding:7px 14px; border-radius:8px; font-weight:bold; font-size:0.85rem; cursor:pointer;">예매하기</button>
+                                    <button onclick="addPerformanceToCart(${s.id})" style="background:#fff; color:#d97706; border:1px solid #fde68a; padding:7px 14px; border-radius:8px; font-weight:bold; font-size:0.85rem; cursor:pointer;">장바구니</button>
+                                </div>` : `<span style="font-size:0.82rem; color:#dc2626; font-weight:bold;">비활성화 상태</span>`;
+                            return `<div style="padding:14px 18px; background:var(--bk-bg); border:1px solid var(--bk-line); border-radius:12px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;">
+                                <div>
+                                    <strong style="color:var(--bk-text); font-size:0.95rem;">${timeStr}</strong>
+                                    ${seatInfoStr}
+                                </div>
+                                ${reserveBtns}
+                            </div>`;
+                        }).join('') + `</div>`;
+                    }
+                } catch (err) {
+                    log(`회차 로드 실패: ${err.message}`);
+                }
+
+                document.getElementById('detailContent').innerHTML = `
+                    <div style="background:#fff; border:1px solid var(--bk-line); border-radius:20px; padding:36px; box-shadow:var(--bk-shadow); margin-bottom:30px;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                            <div>
+                                <span style="display:inline-block; background:var(--bk-blue-soft); color:var(--bk-blue); font-size:0.82rem; font-weight:bold; padding:4px 12px; border-radius:6px;">${p.category || '공연'}</span>
+                                ${!p.active ? `<span style="display:inline-block; background:#fee2e2; color:#dc2626; border:1px solid #fecaca; font-size:0.82rem; font-weight:bold; padding:4px 10px; border-radius:6px; margin-left:8px;">⚠️ 비활성화된 공연 (관리자 열람 모드)</span>` : ''}
+                            </div>
+                            <button onclick="location.href='/index.html'" style="background:var(--bk-bg); color:var(--bk-sub); border:1px solid var(--bk-line); padding:6px 14px; border-radius:8px; font-size:0.85rem; cursor:pointer; font-weight:bold;">← 목록으로</button>
+                        </div>
+                        <h1 style="margin:0 0 12px 0; font-size:1.8rem; color:var(--bk-text); letter-spacing:-0.5px;">${p.title}</h1>
+                        <p style="margin:0 0 20px 0; font-size:1.05rem; color:var(--bk-sub);"><b>공연장:</b> ${p.venue} <span style="margin:0 8px; color:var(--bk-line);">|</span> <b>관람시간:</b> ${p.runtimeMinutes}분</p>
+                        
+                        ${p.originalBookId ? `
+                        <div style="margin:16px 0; padding:14px 20px; background:#fff3e0; border-left:4px solid #e67e22; border-radius:6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <div>
+                                <span style="color:#d35400; font-weight:bold; font-size:0.95rem;">📖 연관 원작 도서: </span>
+                                <span id="detailLinkedBookTitle" style="color:#111; font-weight:bold; font-size:0.95rem;">도서 정보 로딩 중...</span>
+                            </div>
+                            <button onclick="location.href='/book-detail.html?id=${p.originalBookId}'" style="background:#e67e22; color:#fff; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; font-size:0.85rem; cursor:pointer;">원작 도서 상세 보기 ➔</button>
+                        </div>` : ''}
+
+                        <div style="margin-top:28px; padding-top:24px; border-top:1px solid var(--bk-line);">
+                            <span class="bk-eyebrow" style="color:var(--bk-blue); margin-bottom:6px;">ABOUT PERFORMANCE</span>
+                            <h3 style="margin:0 0 12px 0; color:var(--bk-text); font-size:1.2rem;">공연 소개</h3>
+                            <p style="margin:0; font-size:0.98rem; color:var(--bk-sub); line-height:1.7; white-space:pre-line;">${p.description || '등록된 상세 설명이 없습니다.'}</p>
+                        </div>
+
+                        <div style="margin-top:32px; padding-top:24px; border-top:1px solid var(--bk-line);">
+                            <span class="bk-eyebrow" style="color:var(--bk-blue); margin-bottom:6px;">SCHEDULE</span>
+                            <h3 style="margin:0 0 14px 0; color:var(--bk-text); font-size:1.2rem;">공연 회차 일정</h3>
+                            <div>${scheduleHtml}</div>
+                        </div>
+
+                        <!-- 공연 리뷰 섹션 -->
+                        <div style="margin-top:36px; padding-top:28px; border-top:1px solid var(--bk-line);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:gap:10px;">
+                                <div>
+                                    <span class="bk-eyebrow" style="color:var(--bk-blue); margin-bottom:4px;">REVIEWS</span>
+                                    <h3 style="margin:0; color:var(--bk-text); font-size:1.2rem;">관람 후기</h3>
+                                </div>
+                                <div id="reviewInfoArea" style="font-size:0.95rem; color:var(--bk-sub);"></div>
+                            </div>
+
+                            <div id="reviewFormArea" style="margin-bottom:28px; padding:24px; background:#f8fafc; border-radius:16px; border:1px solid #e2e8f0;">
+                                <h4 style="margin:0 0 14px 0; color:#0f172a; font-size:1.05rem; font-weight:750;">리뷰 작성</h4>
+                                <div style="margin-bottom:14px; display:flex; align-items:center; gap:10px;">
+                                    <label style="font-size:0.9rem; font-weight:700; color:#475569;">평점 선택:</label>
+                                    <select id="reviewRating" style="padding:8px 14px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; font-size:0.9rem; font-weight:600; outline:none; cursor:pointer;">
+                                        <option value="5">⭐⭐⭐⭐⭐ (5점)</option>
+                                        <option value="4">⭐⭐⭐⭐ (4점)</option>
+                                        <option value="3">⭐⭐⭐ (3점)</option>
+                                        <option value="2">⭐⭐ (2점)</option>
+                                        <option value="1">⭐ (1점)</option>
+                                    </select>
+                                </div>
+                                <textarea id="reviewContent" rows="3" placeholder="공연 관람 후기를 솔직하게 남겨주세요." style="width:100%; padding:14px 16px; border:1px solid #cbd5e1; border-radius:10px; resize:vertical; box-sizing:border-box; font-size:0.95rem; font-family:inherit; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#cbd5e1'"></textarea>
+                                <div style="text-align:right; margin-top:12px;">
+                                    <button onclick="submitReview(${p.id})" style="background:#2563eb; color:#fff; border:none; padding:12px 28px; border-radius:10px; font-weight:700; font-size:0.95rem; cursor:pointer; box-shadow:0 2px 8px rgba(37,99,235,0.25); transition:all 0.15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">리뷰 등록하기</button>
+                                </div>
+                            </div>
+
+                            <div id="reviewListArea"><p style="color:var(--bk-muted);">리뷰를 불러오는 중...</p></div>
+                        </div>
+                    </div>
+                `;
+
+                if (p.originalBookId) {
+                    fetch(`/books/${p.originalBookId}`)
+                        .then(r => r.json())
+                        .then(d => {
+                            const titleEl = document.getElementById('detailLinkedBookTitle');
+                            if (titleEl && d && d.title) {
+                                titleEl.innerText = d.title;
+                            } else if (titleEl) {
+                                titleEl.innerText = `도서 ID ${p.originalBookId}`;
+                            }
+                        })
+                        .catch(() => {
+                            const titleEl = document.getElementById('detailLinkedBookTitle');
+                            if (titleEl) titleEl.innerText = `도서 ID ${p.originalBookId}`;
+                        });
+                }
+
+                loadReviews(id);
+                loadReviewInfo(id);
+            } else {
+                log(`[실패] GET /api/performances/${id} -> HTTP ${res.status} : ${data.message}`);
+                document.getElementById('detailContent').innerHTML = `<div style="text-align:center; padding:40px;"><p style="color:var(--bk-danger); font-weight:bold;">오류: ${data.message}</p><button onclick="location.href='/index.html'" class="bk-primary" style="margin-top:12px;">← 공연 목록으로</button></div>`;
+            }
+        } catch (e) {
+            log(`에러 발생: ${e.message}`);
+            document.getElementById('detailContent').innerHTML = `<div style="text-align:center; padding:40px;"><p style="color:var(--bk-danger); font-weight:bold;">통신 에러: ${e.message}</p><button onclick="location.href='/index.html'" class="bk-primary" style="margin-top:12px;">← 공연 목록으로</button></div>`;
+        }
+    }
+
+    function getAuthHeaders(extra) {
+        let token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') token = '';
+        return Object.assign({ 'Authorization': token ? 'Bearer ' + token : '' }, extra || {});
+    }
+
+    async function loadReviewInfo(perfId) {
+        try {
+            const res = await fetch(`/api/performances/${perfId}/reviews/info`);
+            const data = await res.json();
+            document.getElementById('reviewInfoArea').innerHTML =
+                `평균 평점: <b style="color:#e67e22;">${data.averageRating}점</b> / 총 <b>${data.reviewCount}건</b>의 리뷰`;
+        } catch (e) {
+            console.log('리뷰 정보 로드 실패:', e);
+        }
+    }
+
+    async function loadReviews(perfId) {
+        try {
+            const res = await fetch(`/api/performances/${perfId}/reviews`);
+            const reviews = await res.json();
+            const area = document.getElementById('reviewListArea');
+            if (!Array.isArray(reviews) || reviews.length === 0) {
+                area.innerHTML = '<p style="color:#999;">아직 작성된 리뷰가 없습니다.</p>';
+                return;
+            }
+            let currentEmail = '';
+            try {
+                const meRes = await fetch('/members/me', { headers: getAuthHeaders() });
+                if (meRes.ok) {
+                    const meData = await meRes.json();
+                    currentEmail = meData.email || '';
+                }
+            } catch (e) {}
+
+            area.innerHTML = reviews.map(r => {
+                const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                const dateStr = new Date(r.createdAt).toLocaleString('ko-KR', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+                const deleteBtn = (r.email === currentEmail)
+                    ? `<button onclick="deleteReview(${r.id}, ${perfId})" style="background:none; border:none; color:#ef4444; font-size:0.8rem; font-weight:700; cursor:pointer; padding:4px 8px; border-radius:6px; transition:background 0.15s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">삭제</button>`
+                    : '';
+                return `<div style="padding:16px 20px; border:1px solid #f1f5f9; background:#fff; border-radius:12px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <strong style="color:#0f172a; font-size:0.95rem;">${r.name || '회원'}</strong>
+                            <span style="color:#f59e0b; font-size:0.9rem; letter-spacing:1px;">${stars}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:0.8rem; color:#94a3b8;">${dateStr}</span>
+                            ${deleteBtn}
+                        </div>
+                    </div>
+                    <p style="margin:0; color:#334155; font-size:0.92rem; line-height:1.6;">${r.content}</p>
+                </div>`;
+            }).join('');
+        } catch (e) {
+            console.log('리뷰 목록 로드 실패:', e);
+        }
+    }
+
+    async function submitReview(perfId) {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+        const content = document.getElementById('reviewContent').value.trim();
+        const rating = parseInt(document.getElementById('reviewRating').value);
+        if (!content) {
+            alert('리뷰 내용을 입력해주세요.');
+            return;
+        }
+        try {
+            const res = await fetch(`/api/performances/${perfId}/reviews`, {
+                method: 'POST',
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                body: JSON.stringify({ content, rating })
+            });
+            if (res.ok) {
+                document.getElementById('reviewContent').value = '';
+                loadReviews(perfId);
+                loadReviewInfo(perfId);
+            } else {
+                const msg = await res.text();
+                alert(`리뷰 등록 실패: ${msg}`);
+            }
+        } catch (e) {
+            alert(`에러: ${e.message}`);
+        }
+    }
+
+    async function deleteReview(reviewId, perfId) {
+        if (!confirm('리뷰를 삭제하시겠습니까?')) return;
+        try {
+            const res = await fetch(`/api/performances/reviews/${reviewId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                loadReviews(perfId);
+                loadReviewInfo(perfId);
+            } else {
+                alert('삭제 실패');
+            }
+        } catch (e) {
+            alert(`에러: ${e.message}`);
+        }
+    }
+
+    async function addPerformanceToCart(scheduleId) {
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        if (!token || token === 'undefined') {
+            alert('로그인이 필요합니다.');
+            location.href = '/login.html';
+            return;
+        }
+
+        const params = new URLSearchParams();
+        params.append("performanceScheduleId", String(scheduleId));
+
+        try {
+            const res = await fetch('/api/cart/performances', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: params
+            });
+            if (res.ok) {
+                log(`[성공] 공연 회차 #${scheduleId} 장바구니 등록 완료`);
+                showToast("공연이 장바구니에 담겼습니다.");
+            } else {
+            	const result =await res.json().catch(() => null);
+            	throw new Error(result?.message || "장바구니 추가에 실패했습니다.");
+                 }
+        } catch (e) {
+            log(`장바구니 에러: ${e.message}`);
+            showToast(e.message || "장바구니 처리 중 오류가 발생했습니다.");
+        }
+    }
+
+    loadDetail();
+    
+    function showToast(message) {
+    	    const existingToast = document.querySelector(".toast-message");
+
+    	    if (existingToast) {
+    	        existingToast.remove();
+    	    }
+
+    	    const toast = document.createElement("div");
+
+
+    	    toast.className = "toast-message";
+
+
+    	    toast.textContent = message;
+
+
+    	    document.body.appendChild(toast	);
+
+
+    	    setTimeout(
+    	        () => {
+
+    	            toast.classList.add(
+    	                "show"
+    	            );
+
+    	        },
+    	        10
+    	    );
+
+
+    	    setTimeout(
+    	        () => {
+
+    	            toast.classList.remove("show");
+
+
+    	            setTimeout(
+    	                () => {
+
+    	                    toast.remove();
+
+    	                },
+    	                300
+    	            );
+
+    	        },
+    	        2000
+    	    );
+    	}
+</script>
+</body>
+</html>

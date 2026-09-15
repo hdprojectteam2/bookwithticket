@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>환불 신청</title>
+<link rel="stylesheet" href="/css/history/refund.css">
+<script src="/js/history/refund.js"></script>
+</head>
+<body>
+	<div class="refund-container">
+
+		<h1 class="refund-title">환불 신청</h1>
+
+		<p id="refundDescription" class="refund-description">환불 사유를 선택해주세요.</p>
+
+		<section class="refund-section">
+
+			<h3>환불 사유</h3>
+
+			<div id="reasonList" class="reason-list"></div>
+
+			<div id="etcReasonBox" hidden>
+				<textarea id="etcReason" placeholder="빠른 환불 처리를 위해 상세 사유를 입력해주세요." maxlength="500"></textarea>
+			</div>
+
+		</section>
+
+		<section id="returnSection" class="refund-section" hidden>
+
+			<h3>반품 방법</h3>
+
+			<div class="return-method-list">
+
+				<label class="refund-option"> <input type="radio" name="returnMethod" value="PICKUP">
+					택배 수거 요청
+				</label> <label class="refund-option"> <input type="radio" name="returnMethod" value="SELF_SHIP">
+					직접 발송
+				</label>
+
+			</div>
+
+		</section>
+
+		<div class="refund-buttons">
+
+			<button type="button" class="cancel-button" onclick="window.close()">취소</button>
+
+			<button type="button" id="refundButton" class="submit-button">환불 신청</button>
+
+		</div>
+
+	</div>
+</body>
+</html>

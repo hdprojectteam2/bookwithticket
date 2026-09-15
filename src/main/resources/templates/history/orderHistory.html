@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>구매내역 | Booketing</title>
+<script src="/js/history/order-history.js" defer></script>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/common/common.css">
+<link rel="stylesheet" href="/css/history/order-history.css">
+</head>
+<body class="bk-page bk-soft-page">
+ 
+	<div class="bk-wide-shell">
+
+		<header class="bk-topbar">
+			<a href="/mainpage.html" class="bk-brand"><span class="bk-logo">B</span><span>Booketing</span></a>
+			<nav class="bk-nav">
+				<a href="/mainpage.html">홈</a>
+				<a href="/books.html">도서</a>
+				<a href="/index.html">공연</a>
+				<a href="/cart">장바구니</a>
+				<a href="/history" class="active">구매내역</a>
+				<a href="/mypage.html">마이페이지</a>
+			</nav>
+		</header>
+		
+		<main class="bk-page-main">
+		
+			<div class="bk-page-heading">
+				<span class="bk-eyebrow">Purchase history</span>
+				<h1>구매내역</h1>
+				<p>도서 구매와 예매 내역을 한 곳에서 확인해보세요.</p>
+			</div>
+	
+			<div class="history-tabs">
+				<button type="button" id="bookTab" onclick="historyTab('bookHistory')">도서</button>
+	
+				<button type="button" id="ticketTab" onclick="historyTab('ticketHistory')">티켓</button>
+			</div>
+	
+			<hr>
+	
+			<div class="bookHistoryItems" id="book_sub_title">주문 내역</div>
+	
+			<div class="ticketHistoryItems" id="ticket_sub_title" hidden>예매 내역</div>
+	
+			<div class="bookHistoryItems" id="bookHistory"></div>
+	
+			<div class="ticketHistoryItems" id="ticketHistory" hidden></div>		
+		</main>
+ 
+	</div>
+
+</body>
+
+</html>

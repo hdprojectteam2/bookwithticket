@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>관리자 페이지</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+
+
+<body class="bk-page bk-soft-page">
+<div class="bk-wide-shell">
+    <header class="bk-topbar" style="margin-bottom:24px;">
+        <a href="/mainpage.html" class="bk-brand">
+            <span class="bk-logo">B</span>
+            <span>Booketing</span>
+        </a>
+        <nav class="bk-nav">
+            <a href="/mainpage.html">홈</a>
+            <a href="/books.html">도서</a>
+            <a href="/index.html">공연</a>
+            <a href="/cart">장바구니</a>
+            <a href="/history">구매내역</a>
+            <a href="/mypage.html">마이페이지</a>
+        </nav>
+    </header>
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;">
+    <h1 style="margin:0; font-size:1.6rem; color:#0f172a; font-weight:800;">📚 관리자 도서 관리</h1>
+    <button onclick="location.href='/admin/orders'" style="background:#059669; color:#fff; padding:10px 20px; border-radius:8px; font-weight:700; font-size:0.9rem; border:none; cursor:pointer; box-shadow:0 2px 6px rgba(5,150,105,0.2); transition:all 0.15s;" onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
+        📦 주문/배송 관리자로 이동 ➔
+    </button>
+</div>
+
+
+
+<section>
+
+
+    <h2>
+        도서 등록
+    </h2>
+
+
+    <input id="isbn" placeholder="ISBN">
+
+    <input id="title" placeholder="제목">
+
+    <input id="author" placeholder="저자">
+
+    <input id="publisher" placeholder="출판사">
+
+    <input id="price" placeholder="가격">
+
+    <input id="thumbnail" placeholder="이미지 URL">
+
+    <input id="category" placeholder="카테고리">
+
+    <input id="stock" placeholder="재고">
+
+
+    <textarea id="description"
+              placeholder="책 소개">
+</textarea>
+
+
+
+    <button onclick="saveBook()">
+
+        등록
+
+    </button>
+
+
+</section>
+
+
+
+
+
+<hr>
+
+
+
+
+
+<section>
+
+
+    <h2>
+        도서 목록
+    </h2>
+
+
+    <div id="bookList">
+
+    </div>
+
+
+</section>
+
+</div>
+
+<script src="/js/admin.js"></script>
+
+</body>
+
+</html>
